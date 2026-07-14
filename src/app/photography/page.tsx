@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import PageHero from "@/components/PageHero";
-import PhotoGrid from "@/components/PhotoGrid";
+import PhotoFeed from "@/components/PhotoFeed";
 import ContactCta from "@/components/ContactCta";
 import { photographyGallery } from "@/lib/media";
 
@@ -19,7 +19,7 @@ export default function PhotographyPage() {
       />
 
       <section className="mx-auto max-w-6xl px-6 py-16">
-        <PhotoGrid items={photographyGallery} columns={4} />
+        <PhotoFeed items={photographyGallery} />
       </section>
 
       <ContactCta />

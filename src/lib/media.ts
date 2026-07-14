@@ -1,70 +1,73 @@
 export type Photo = {
   src: string | null;
   alt: string;
-};
-
-export type Video = {
-  title: string;
-  youtubeId: string | null;
+  width?: number;
+  height?: number;
 };
 
 export const videoCategories: {
   title: string;
   description: string;
-  videos: Video[];
+  youtubeId: string | null;
 }[] = [
   {
     title: "Wedding Videos",
     description: "Full-day coverage, highlight reels, and ceremony films.",
-    videos: [
-      { title: "Wedding sample 1", youtubeId: null },
-      { title: "Wedding sample 2", youtubeId: null },
-      { title: "Wedding sample 3", youtubeId: null },
-    ],
+    youtubeId: null,
   },
   {
     title: "Business Spotlight",
     description: "Short-form videos that introduce your business and what makes it work.",
-    videos: [
-      { title: "Business spotlight sample 1", youtubeId: null },
-      { title: "Business spotlight sample 2", youtubeId: null },
-      { title: "Business spotlight sample 3", youtubeId: null },
-    ],
+    youtubeId: null,
   },
   {
     title: "Real Estate & Home Remodels",
     description: "Walkthroughs and before/after coverage for listings and remodel projects.",
-    videos: [
-      { title: "Real estate sample 1", youtubeId: null },
-      { title: "Real estate sample 2", youtubeId: null },
-      { title: "Real estate sample 3", youtubeId: null },
-    ],
+    youtubeId: null,
   },
   {
     title: "Offroad & Cars",
     description: "Race day, trail runs, and build features for the offroad and automotive scene.",
-    videos: [
-      { title: "Offroad & cars sample 1", youtubeId: null },
-      { title: "Offroad & cars sample 2", youtubeId: null },
-      { title: "Offroad & cars sample 3", youtubeId: null },
-    ],
+    youtubeId: null,
   },
   {
     title: "Aerial Videography",
     description: "Licensed drone coverage (FAA Part 107) for any of the above.",
-    videos: [
-      { title: "Aerial sample 1", youtubeId: null },
-      { title: "Aerial sample 2", youtubeId: null },
-    ],
+    youtubeId: null,
   },
 ];
 
 export const photographyGallery: Photo[] = [
-  { src: "/photography/DJI_20251018171550_0108_D.JPG", alt: "Aerial photography sample" },
-  { src: "/photography/TeslaDiner-1.JPG", alt: "Aerial photo of the Tesla Diner, Hollywood" },
-  { src: "/photography/GSG_CollegeView-12.jpg", alt: "Aerial photo — College View" },
-  { src: "/photography/GSG_EastEndStudios-08.jpg", alt: "Aerial photo — East End Studios" },
-  { src: "/photography/GSG_ONTfield-17.jpg", alt: "Aerial photo — ONT Field" },
+  {
+    src: "/photography/DJI_20251018171550_0108_D.JPG",
+    alt: "Aerial photography sample",
+    width: 1600,
+    height: 900,
+  },
+  {
+    src: "/photography/TeslaDiner-1.JPG",
+    alt: "Aerial photo of the Tesla Diner, Hollywood",
+    width: 1600,
+    height: 900,
+  },
+  {
+    src: "/photography/GSG_CollegeView-12.jpg",
+    alt: "Aerial photo — College View",
+    width: 1600,
+    height: 1066,
+  },
+  {
+    src: "/photography/GSG_EastEndStudios-08.jpg",
+    alt: "Aerial photo — East End Studios",
+    width: 1600,
+    height: 899,
+  },
+  {
+    src: "/photography/GSG_ONTfield-17.jpg",
+    alt: "Aerial photo — ONT Field",
+    width: 1600,
+    height: 899,
+  },
 ];
 
 export const designCategories: { title: string; items: Photo[] }[] = [
