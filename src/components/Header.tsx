@@ -10,19 +10,33 @@ export default function Header() {
 
   return (
     <header className="fixed inset-x-0 top-0 z-50 bg-black/35">
-      <div className="mx-auto flex max-w-6xl items-center justify-between px-6 py-4 [filter:drop-shadow(0_1px_4px_rgba(0,0,0,0.8))]">
-        <Link href="/" className="flex items-center gap-2" onClick={() => setOpen(false)}>
-          <Image
-            src="/brand/wilky-logo.png"
-            alt="Wilky Productions"
-            width={240}
-            height={48}
-            priority
-            className="h-11 w-auto sm:h-12"
-          />
-        </Link>
+      <div className="mx-auto flex max-w-6xl flex-col px-6 pt-3 pb-2 [filter:drop-shadow(0_1px_4px_rgba(0,0,0,0.8))] md:items-center">
+        <div className="flex items-center justify-between md:justify-center">
+          <Link href="/" className="flex items-center gap-2" onClick={() => setOpen(false)}>
+            <Image
+              src="/brand/wilky-logo.png"
+              alt="Wilky Productions"
+              width={320}
+              height={64}
+              priority
+              className="h-12 w-auto sm:h-16"
+            />
+          </Link>
 
-        <nav className="hidden gap-8 md:flex">
+          <button
+            type="button"
+            className="flex h-9 w-9 flex-col items-center justify-center gap-1.5 md:hidden"
+            aria-label="Toggle menu"
+            aria-expanded={open}
+            onClick={() => setOpen((v) => !v)}
+          >
+            <span className={`h-0.5 w-6 bg-foreground transition-transform ${open ? "translate-y-2 rotate-45" : ""}`} />
+            <span className={`h-0.5 w-6 bg-foreground transition-opacity ${open ? "opacity-0" : ""}`} />
+            <span className={`h-0.5 w-6 bg-foreground transition-transform ${open ? "-translate-y-2 -rotate-45" : ""}`} />
+          </button>
+        </div>
+
+        <nav className="hidden gap-8 md:-mt-[18px] md:flex">
           {nav.map((item) => (
             <Link
               key={item.href}
@@ -33,18 +47,6 @@ export default function Header() {
             </Link>
           ))}
         </nav>
-
-        <button
-          type="button"
-          className="flex h-9 w-9 flex-col items-center justify-center gap-1.5 md:hidden"
-          aria-label="Toggle menu"
-          aria-expanded={open}
-          onClick={() => setOpen((v) => !v)}
-        >
-          <span className={`h-0.5 w-6 bg-foreground transition-transform ${open ? "translate-y-2 rotate-45" : ""}`} />
-          <span className={`h-0.5 w-6 bg-foreground transition-opacity ${open ? "opacity-0" : ""}`} />
-          <span className={`h-0.5 w-6 bg-foreground transition-transform ${open ? "-translate-y-2 -rotate-45" : ""}`} />
-        </button>
       </div>
 
       {open && (
