@@ -46,14 +46,20 @@ export default function Home() {
         />
 
         <div className="relative mx-auto flex max-w-6xl flex-col items-center gap-10 px-6 pt-28 pb-16 text-center sm:pt-32">
-          <Image
-            src="/brand/wilky-logo.png"
-            alt="Wilky Productions"
-            width={640}
-            height={128}
-            priority
-            className="h-auto w-full max-w-xl drop-shadow-[0_4px_24px_rgba(0,0,0,0.8)]"
-          />
+          <div className="relative flex w-full max-w-xl items-center justify-center">
+            <div
+              className="absolute h-48 w-[90%] rounded-full bg-accent/70 blur-3xl"
+              aria-hidden="true"
+            />
+            <Image
+              src="/brand/wilky-logo.png"
+              alt="Wilky Productions"
+              width={640}
+              height={128}
+              priority
+              className="relative h-auto w-full drop-shadow-[0_4px_24px_rgba(0,0,0,0.8)]"
+            />
+          </div>
           <p className="max-w-2xl text-lg text-text-secondary sm:text-xl">
             {site.tagline} <span className="text-foreground">{site.taglineEmphasis}</span>
           </p>

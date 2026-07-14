@@ -15,10 +15,10 @@ export default function Header() {
           <Image
             src="/brand/wilky-logo.png"
             alt="Wilky Productions"
-            width={200}
-            height={40}
+            width={240}
+            height={48}
             priority
-            className="h-8 w-auto sm:h-9"
+            className="h-11 w-auto sm:h-12"
           />
         </Link>
 
@@ -27,7 +27,7 @@ export default function Header() {
             <Link
               key={item.href}
               href={item.href}
-              className="text-sm font-medium text-foreground/90 transition-colors hover:text-accent"
+              className="font-display text-sm uppercase tracking-wider text-foreground/90 transition-colors hover:text-accent"
             >
               {item.label}
             </Link>
@@ -53,7 +53,7 @@ export default function Header() {
             <Link
               key={item.href}
               href={item.href}
-              className="py-2 text-sm font-medium text-foreground/80 hover:text-accent"
+              className="py-2 font-display text-sm uppercase tracking-wider text-foreground/80 hover:text-accent"
               onClick={() => setOpen(false)}
             >
               {item.label}
@@ -61,6 +61,15 @@ export default function Header() {
           ))}
         </nav>
       )}
+
+      {/* Thin cyan line, brightest at center, fading to transparent at both edges */}
+      <div
+        className="absolute inset-x-0 bottom-0 h-px"
+        style={{
+          background:
+            "linear-gradient(to right, transparent, var(--accent) 50%, transparent)",
+        }}
+      />
     </header>
   );
 }
