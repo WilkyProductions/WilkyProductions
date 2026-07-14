@@ -59,10 +59,13 @@ export const videoCategories: {
   },
 ];
 
-export const photographyGallery: Photo[] = Array.from({ length: 12 }, (_, i) => ({
-  src: null,
-  alt: `Photo ${i + 1}`,
-}));
+export const photographyGallery: Photo[] = [
+  { src: "/photography/DJI_20251018171550_0108_D.JPG", alt: "Aerial photography sample" },
+  { src: "/photography/TeslaDiner-1.JPG", alt: "Aerial photo of the Tesla Diner, Hollywood" },
+  { src: "/photography/GSG_CollegeView-12.jpg", alt: "Aerial photo — College View" },
+  { src: "/photography/GSG_EastEndStudios-08.jpg", alt: "Aerial photo — East End Studios" },
+  { src: "/photography/GSG_ONTfield-17.jpg", alt: "Aerial photo — ONT Field" },
+];
 
 export const designCategories: { title: string; items: Photo[] }[] = [
   {
