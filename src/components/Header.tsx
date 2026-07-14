@@ -36,7 +36,7 @@ export default function Header() {
           </button>
         </div>
 
-        <nav className="hidden gap-8 md:-mt-[18px] md:flex">
+        <nav className="hidden gap-8 md:-mt-2 md:flex">
           {nav.map((item) => (
             <Link
               key={item.href}
