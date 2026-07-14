@@ -9,8 +9,8 @@ export default function Header() {
   const [open, setOpen] = useState(false);
 
   return (
-    <header className="sticky top-0 z-50 border-b border-border bg-background/90 backdrop-blur">
-      <div className="mx-auto flex max-w-6xl items-center justify-between px-6 py-3">
+    <header className="fixed inset-x-0 top-0 z-50 bg-black/35">
+      <div className="mx-auto flex max-w-6xl items-center justify-between px-6 py-4 [filter:drop-shadow(0_1px_4px_rgba(0,0,0,0.8))]">
         <Link href="/" className="flex items-center gap-2" onClick={() => setOpen(false)}>
           <Image
             src="/brand/wilky-logo.png"
@@ -27,7 +27,7 @@ export default function Header() {
             <Link
               key={item.href}
               href={item.href}
-              className="text-sm font-medium text-foreground/80 transition-colors hover:text-accent"
+              className="text-sm font-medium text-foreground/90 transition-colors hover:text-accent"
             >
               {item.label}
             </Link>
@@ -48,7 +48,7 @@ export default function Header() {
       </div>
 
       {open && (
-        <nav className="flex flex-col border-t border-border px-6 py-4 md:hidden">
+        <nav className="flex flex-col border-t border-border bg-background px-6 py-4 md:hidden">
           {nav.map((item) => (
             <Link
               key={item.href}

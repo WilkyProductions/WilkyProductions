@@ -1,7 +1,7 @@
 export const site = {
   name: "Wilky Productions",
-  tagline: "Southern California based company that specializes in design and media.",
-  taglineEmphasis: "Filmmaking is our specialty.",
+  tagline: "Southern California based design company that specializes in website design and media.",
+  taglineEmphasis: "Ensuring customer satisfaction is our priority!",
   location: "Menifee, CA 92584",
   phone: "909-659-4231",
   phoneHref: "tel:+19096594231",

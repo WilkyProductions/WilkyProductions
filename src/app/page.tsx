@@ -28,15 +28,31 @@ const whyChooseUs = [
 export default function Home() {
   return (
     <div>
-      <section className="relative overflow-hidden border-b border-border">
-        <div className="mx-auto flex max-w-6xl flex-col items-center gap-10 px-6 py-20 text-center sm:py-28">
+      <section className="relative flex min-h-[90vh] items-center overflow-hidden">
+        <Image
+          src="/hero-stadium.jpg"
+          alt=""
+          fill
+          priority
+          className="object-cover opacity-40"
+        />
+        {/* Vignette: darkens edges and top/bottom so nav and text stay legible over the photo */}
+        <div
+          className="absolute inset-0"
+          style={{
+            background:
+              "radial-gradient(ellipse at center, transparent 35%, rgba(0,0,0,0.75) 100%), linear-gradient(to bottom, rgba(0,0,0,0.75) 0%, rgba(0,0,0,0.2) 25%, rgba(0,0,0,0.35) 65%, var(--background) 100%)",
+          }}
+        />
+
+        <div className="relative mx-auto flex max-w-6xl flex-col items-center gap-10 px-6 pt-28 pb-16 text-center sm:pt-32">
           <Image
             src="/brand/wilky-logo.png"
             alt="Wilky Productions"
             width={640}
             height={128}
             priority
-            className="h-auto w-full max-w-xl"
+            className="h-auto w-full max-w-xl drop-shadow-[0_4px_24px_rgba(0,0,0,0.8)]"
           />
           <p className="max-w-2xl text-lg text-text-secondary sm:text-xl">
             {site.tagline} <span className="text-foreground">{site.taglineEmphasis}</span>
