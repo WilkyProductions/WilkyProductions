@@ -1,14 +1,13 @@
 import type { Metadata } from "next";
 import PageHero from "@/components/PageHero";
-import PlaceholderGrid from "@/components/PlaceholderGrid";
+import PhotoGrid from "@/components/PhotoGrid";
 import ContactCta from "@/components/ContactCta";
+import { photographyGallery } from "@/lib/media";
 
 export const metadata: Metadata = {
   title: "Photography | Wilky Productions",
   description: "Family photos, events, and racing/motorsports photography. Email for pricing.",
 };
-
-const gallery = Array.from({ length: 12 }, (_, i) => `Photo ${i + 1}`);
 
 export default function PhotographyPage() {
   return (
@@ -20,7 +19,7 @@ export default function PhotographyPage() {
       />
 
       <section className="mx-auto max-w-6xl px-6 py-16">
-        <PlaceholderGrid items={gallery} columns={4} />
+        <PhotoGrid items={photographyGallery} columns={4} />
       </section>
 
       <ContactCta />

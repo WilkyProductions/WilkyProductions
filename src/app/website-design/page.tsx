@@ -1,7 +1,8 @@
 import type { Metadata } from "next";
 import PageHero from "@/components/PageHero";
-import PlaceholderGrid from "@/components/PlaceholderGrid";
+import PhotoGrid from "@/components/PhotoGrid";
 import ContactCta from "@/components/ContactCta";
+import { websiteDesignExamples } from "@/lib/media";
 
 export const metadata: Metadata = {
   title: "Website Design | Wilky Productions",
@@ -59,7 +60,7 @@ export default function WebsiteDesignPage() {
       <section className="mx-auto max-w-6xl px-6 py-16">
         <h2 className="font-display text-2xl uppercase tracking-wide">Recent work</h2>
         <div className="mt-6">
-          <PlaceholderGrid items={["Site example 1", "Site example 2", "Site example 3"]} />
+          <PhotoGrid items={websiteDesignExamples} />
         </div>
       </section>
 

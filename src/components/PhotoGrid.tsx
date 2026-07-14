@@ -1,0 +1,36 @@
+import Image from "next/image";
+import type { Photo } from "@/lib/media";
+
+export default function PhotoGrid({
+  items,
+  columns = 3,
+}: {
+  items: Photo[];
+  columns?: 2 | 3 | 4;
+}) {
+  const colClass =
+    columns === 4
+      ? "sm:grid-cols-2 lg:grid-cols-4"
+      : columns === 2
+      ? "sm:grid-cols-2"
+      : "sm:grid-cols-2 lg:grid-cols-3";
+
+  return (
+    <div className={`grid gap-4 ${colClass}`}>
+      {items.map((photo, i) => (
+        <div
+          key={`${photo.alt}-${i}`}
+          className="relative aspect-[4/3] overflow-hidden rounded-sm border border-border bg-surface-2"
+        >
+          {photo.src ? (
+            <Image src={photo.src} alt={photo.alt} fill className="object-cover" />
+          ) : (
+            <div className="flex h-full items-center justify-center px-4 text-center text-sm text-text-secondary">
+              {photo.alt}
+            </div>
+          )}
+        </div>
+      ))}
+    </div>
+  );
+}
