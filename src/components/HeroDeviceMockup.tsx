@@ -34,7 +34,7 @@ export default function HeroDeviceMockup({ className = "" }: { className?: strin
             src="/mockups/m81-mobile.jpg"
             alt="M81 Designs website preview on mobile"
             fill
-            className="object-contain object-top"
+            className="object-cover object-top"
           />
         </div>
       </div>
