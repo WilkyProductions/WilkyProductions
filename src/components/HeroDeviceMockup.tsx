@@ -30,12 +30,11 @@ export default function HeroDeviceMockup({ className = "" }: { className?: strin
       {/* Phone, overlapping bottom-right */}
       <div className="absolute -bottom-8 -right-6 w-[26%] min-w-[84px] max-w-[130px]">
         <div className="relative aspect-[9/19.5] overflow-hidden rounded-[18px] border-[5px] border-neutral-800 bg-black shadow-2xl">
-          <div className="absolute left-1/2 top-1.5 z-10 h-3 w-1/3 -translate-x-1/2 rounded-full bg-neutral-900" />
           <Image
             src="/mockups/m81-mobile.jpg"
             alt="M81 Designs website preview on mobile"
             fill
-            className="object-cover object-top"
+            className="object-contain object-top"
           />
         </div>
       </div>

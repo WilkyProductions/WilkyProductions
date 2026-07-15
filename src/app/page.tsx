@@ -30,7 +30,7 @@ const whyChooseUs = [
 export default function Home() {
   return (
     <div>
-      <section className="relative flex min-h-[90vh] items-center overflow-hidden">
+      <section className="relative flex min-h-[70vh] items-center overflow-hidden sm:min-h-[80vh] lg:min-h-[90vh]">
         <Image
           src="/hero-stadium.jpg"
           alt=""
@@ -56,7 +56,7 @@ export default function Home() {
 
         <div className="relative mx-auto flex max-w-6xl flex-col items-center gap-10 px-6 pt-28 pb-16 text-center sm:pt-32 lg:flex-row lg:items-center lg:justify-between lg:gap-12 lg:text-left">
           <div className="flex flex-col items-center gap-10 lg:items-start">
-            <p className="relative z-10 max-w-2xl text-xl text-text-secondary sm:text-2xl">
+            <p className="relative z-10 max-w-2xl text-lg text-text-secondary sm:text-xl lg:text-2xl">
               {site.tagline} <span className="text-foreground">{site.taglineEmphasis}</span>
             </p>
             <div className="flex flex-wrap items-center justify-center gap-4 lg:justify-start">
