@@ -12,7 +12,7 @@ export const metadata: Metadata = {
 
 export default function DesignPage() {
   return (
-    <div>
+    <div className="relative">
       <CategoryBackdrop variant="design" />
 
       <PageHero

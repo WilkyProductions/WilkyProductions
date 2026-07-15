@@ -13,7 +13,7 @@ export const metadata: Metadata = {
 
 export default function VideosPage() {
   return (
-    <div>
+    <div className="relative">
       <CategoryBackdrop variant="video" />
 
       <PageHero

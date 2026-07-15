@@ -12,7 +12,7 @@ export const metadata: Metadata = {
 
 export default function PhotographyPage() {
   return (
-    <div>
+    <div className="relative">
       <CategoryBackdrop variant="photo" />
 
       <PageHero

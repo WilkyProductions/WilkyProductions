@@ -26,7 +26,7 @@ const process = [
 
 export default function WebsiteDesignPage() {
   return (
-    <div>
+    <div className="relative">
       <CategoryBackdrop variant="web" />
 
       <PageHero
