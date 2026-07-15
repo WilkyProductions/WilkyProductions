@@ -3,7 +3,7 @@ import type { Photo } from "@/lib/media";
 
 export default function PhotoFeed({ items }: { items: Photo[] }) {
   return (
-    <div className="columns-2 gap-4 sm:columns-3 lg:columns-4">
+    <div className="columns-1 gap-4 sm:columns-2 lg:columns-3">
       {items.map((photo, i) =>
         photo.src ? (
           <Image

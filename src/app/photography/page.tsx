@@ -18,7 +18,7 @@ export default function PhotographyPage() {
         description="Family photos, events, and racing/motorsports coverage. Email for a quote."
       />
 
-      <section className="mx-auto max-w-6xl px-6 py-16">
+      <section className="px-4 py-16">
         <PhotoFeed items={photographyGallery} />
       </section>
 
