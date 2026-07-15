@@ -2,55 +2,103 @@
 
 import { useState } from "react";
 
+function VideoSelector({
+  videos,
+  index,
+  playing,
+  onSelect,
+}: {
+  videos: string[];
+  index: number;
+  playing: boolean;
+  onSelect: (i: number) => void;
+}) {
+  if (videos.length < 2) return null;
+  return (
+    <div className="absolute bottom-3 right-3 z-10 flex gap-2">
+      {videos.map((id, i) => (
+        <button
+          key={id}
+          type="button"
+          onClick={(e) => {
+            e.stopPropagation();
+            onSelect(i);
+          }}
+          className={`flex h-8 w-8 items-center justify-center rounded-full border text-xs font-semibold transition-colors ${
+            playing && i === index
+              ? "border-accent bg-accent text-black"
+              : "border-border bg-black/60 text-foreground hover:border-accent"
+          }`}
+        >
+          {i + 1}
+        </button>
+      ))}
+    </div>
+  );
+}
+
 export default function VideoBanner({
   title,
   description,
-  youtubeId,
+  videos,
 }: {
   title: string;
   description?: string;
-  youtubeId: string | null;
+  videos: string[];
 }) {
+  const [index, setIndex] = useState(0);
   const [playing, setPlaying] = useState(false);
+  const hasVideo = videos.length > 0;
+  const currentId = hasVideo ? videos[index] : null;
 
-  if (playing && youtubeId) {
+  function selectAndPlay(i: number) {
+    setIndex(i);
+    setPlaying(true);
+  }
+
+  if (playing && currentId) {
     return (
       <div className="relative aspect-video w-full overflow-hidden rounded-sm border border-border bg-surface-2">
         <iframe
-          src={`https://www.youtube-nocookie.com/embed/${youtubeId}?autoplay=1`}
+          key={currentId}
+          src={`https://www.youtube-nocookie.com/embed/${currentId}?autoplay=1`}
           title={title}
           className="absolute inset-0 h-full w-full"
           allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
           allowFullScreen
         />
+        <VideoSelector videos={videos} index={index} playing={playing} onSelect={selectAndPlay} />
       </div>
     );
   }
 
   return (
-    <button
-      type="button"
-      onClick={() => youtubeId && setPlaying(true)}
-      className={`group relative flex aspect-video w-full flex-col items-center justify-center gap-4 overflow-hidden rounded-sm border border-border bg-surface-2 px-6 text-center ${
-        youtubeId ? "cursor-pointer" : "cursor-default"
-      }`}
-    >
-      <span className="font-display text-3xl uppercase tracking-wide sm:text-5xl">{title}</span>
-      {description && (
-        <span className="max-w-xl text-sm text-text-secondary sm:text-base">{description}</span>
-      )}
-      <span
-        className={`mt-2 flex h-16 w-16 items-center justify-center rounded-full border-2 border-accent text-accent transition-transform ${
-          youtubeId ? "group-hover:scale-110" : "opacity-50"
+    <div className="relative aspect-video w-full overflow-hidden rounded-sm border border-border bg-surface-2">
+      <button
+        type="button"
+        onClick={() => hasVideo && setPlaying(true)}
+        className={`group absolute inset-0 flex flex-col items-center justify-center gap-4 px-6 text-center ${
+          hasVideo ? "cursor-pointer" : "cursor-default"
         }`}
       >
-        <svg viewBox="0 0 24 24" className="ml-1 h-6 w-6 fill-current">
-          <path d="M8 5v14l11-7z" />
-        </svg>
-      </span>
-      {!youtubeId && (
-        <span className="text-xs uppercase tracking-wider text-text-secondary">Coming soon</span>
-      )}
-    </button>
+        <span className="font-display text-3xl uppercase tracking-wide sm:text-5xl">{title}</span>
+        {description && (
+          <span className="max-w-xl text-sm text-text-secondary sm:text-base">{description}</span>
+        )}
+        <span
+          className={`mt-2 flex h-16 w-16 items-center justify-center rounded-full border-2 border-accent text-accent transition-transform ${
+            hasVideo ? "group-hover:scale-110" : "opacity-50"
+          }`}
+        >
+          <svg viewBox="0 0 24 24" className="ml-1 h-6 w-6 fill-current">
+            <path d="M8 5v14l11-7z" />
+          </svg>
+        </span>
+        {!hasVideo && (
+          <span className="text-xs uppercase tracking-wider text-text-secondary">Coming soon</span>
+        )}
+      </button>
+      <VideoSelector videos={videos} index={index} playing={playing} onSelect={selectAndPlay} />
+    </div>
   );
 }

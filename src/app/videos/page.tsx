@@ -26,7 +26,7 @@ export default function VideosPage() {
               key={category.title}
               title={category.title}
               description={category.description}
-              youtubeId={category.youtubeId}
+              videos={category.videos}
             />
           ))}
         </div>

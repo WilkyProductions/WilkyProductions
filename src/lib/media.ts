@@ -8,32 +8,32 @@ export type Photo = {
 export const videoCategories: {
   title: string;
   description: string;
-  youtubeId: string | null;
+  videos: string[];
 }[] = [
   {
     title: "Wedding Videos",
     description: "Full-day coverage, highlight reels, and ceremony films.",
-    youtubeId: null,
+    videos: ["mI2ytwHNcH4"],
   },
   {
     title: "Business Spotlight",
     description: "Short-form videos that introduce your business and what makes it work.",
-    youtubeId: null,
+    videos: ["_Y9qjnYuurk"],
   },
   {
     title: "Real Estate & Home Remodels",
     description: "Walkthroughs and before/after coverage for listings and remodel projects.",
-    youtubeId: null,
+    videos: ["QSNFvokV_fs"],
   },
   {
     title: "Offroad & Cars",
     description: "Race day, trail runs, and build features for the offroad and automotive scene.",
-    youtubeId: null,
+    videos: ["Oes4ARRu6iM"],
   },
   {
     title: "Aerial Videography",
     description: "Licensed drone coverage (FAA Part 107) for any of the above.",
-    youtubeId: null,
+    videos: ["drGea9PT6LQ", "kCYyjTaBkOU"],
   },
 ];
 
@@ -67,6 +67,18 @@ export const photographyGallery: Photo[] = [
     alt: "Aerial photo — ONT Field",
     width: 1600,
     height: 899,
+  },
+  {
+    src: "/photography/IMG_0423.jpg",
+    alt: "Family portrait, 6 month milestone photo",
+    width: 1600,
+    height: 1066,
+  },
+  {
+    src: "/photography/IMG_1414.jpg",
+    alt: "Mother and child portrait",
+    width: 1600,
+    height: 1066,
   },
 ];
 
