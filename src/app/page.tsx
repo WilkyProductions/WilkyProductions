@@ -121,7 +121,10 @@ export default function Home() {
       </section>
 
       <section className="bg-accent py-8">
-        <div className="mx-auto flex max-w-6xl flex-wrap items-center justify-center gap-x-12 gap-y-4 px-6">
+        <h2 className="text-center font-display text-2xl uppercase tracking-wide text-black sm:text-3xl">
+          See what our customers think of our work!
+        </h2>
+        <div className="mx-auto mt-6 flex max-w-6xl flex-wrap items-center justify-center gap-x-12 gap-y-4 px-6">
           {clients.map((name) => (
             <span
               key={name}

@@ -4,7 +4,14 @@ import { nav, site } from "@/lib/site";
 
 export default function Footer() {
   return (
-    <footer className="border-t border-border">
+    <footer className="relative">
+      {/* Thin cyan line, brightest at center, fading to transparent at both edges — matches the header */}
+      <div
+        className="absolute inset-x-0 top-0 h-px"
+        style={{
+          background: "linear-gradient(to right, transparent, var(--accent) 50%, transparent)",
+        }}
+      />
       <div className="mx-auto grid max-w-6xl gap-10 px-6 py-14 sm:grid-cols-2 md:grid-cols-4">
         <div>
           <Image
