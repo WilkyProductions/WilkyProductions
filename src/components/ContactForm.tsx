@@ -95,7 +95,7 @@ export default function ContactForm() {
 
       {status === "sent" && (
         <p className="text-sm text-text-secondary">
-          Message sent. I&apos;ll get back to you soon.
+          Message received. I will get back to you shortly to discuss your project!
         </p>
       )}
       {status === "error" && (
