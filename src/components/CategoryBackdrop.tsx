@@ -64,21 +64,29 @@ const glyphs: Record<Variant, () => React.JSX.Element> = {
   web: WebGlyph,
 };
 
-export default function CategoryBackdrop({
-  variant,
-  className = "",
-}: {
-  variant: Variant;
-  className?: string;
-}) {
+export default function CategoryBackdrop({ variant }: { variant: Variant }) {
   const Glyph = glyphs[variant];
+  const gridId = `blueprint-grid-${variant}`;
+
   return (
-    <svg
-      viewBox="0 0 400 400"
-      className={`pointer-events-none absolute text-accent opacity-20 ${className}`}
-      aria-hidden="true"
-    >
-      <Glyph />
-    </svg>
+    <div className="pointer-events-none fixed inset-0 overflow-hidden text-accent" aria-hidden="true">
+      {/* Blueprint grid, tiled across the full viewport */}
+      <svg className="absolute inset-0 h-full w-full opacity-[0.12]">
+        <defs>
+          <pattern id={gridId} width="48" height="48" patternUnits="userSpaceOnUse">
+            <path d="M48 0 L0 0 0 48" fill="none" stroke="currentColor" strokeWidth="0.5" />
+          </pattern>
+        </defs>
+        <rect width="100%" height="100%" fill={`url(#${gridId})`} />
+      </svg>
+
+      {/* Large centered technical illustration */}
+      <svg
+        viewBox="0 0 400 400"
+        className="absolute left-1/2 top-1/2 h-[75vmin] w-[75vmin] -translate-x-1/2 -translate-y-1/2 opacity-[0.16]"
+      >
+        <Glyph />
+      </svg>
+    </div>
   );
 }

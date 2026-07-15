@@ -14,29 +14,24 @@ export const metadata: Metadata = {
 export default function VideosPage() {
   return (
     <div>
+      <CategoryBackdrop variant="video" />
+
       <PageHero
         eyebrow="Videography"
         title="Videos"
         description="Packages starting at just $500. Email for a quote on your specific project."
-        backdrop="video"
       />
 
-      <section className="relative overflow-hidden">
-        <CategoryBackdrop
-          variant="video"
-          className="left-1/2 top-20 h-[500px] w-[500px] -translate-x-1/2 sm:h-[650px] sm:w-[650px]"
-        />
-        <div className="relative z-10 mx-auto max-w-6xl px-6 py-16">
-          <div className="flex flex-col gap-14">
-            {videoCategories.map((category) => (
-              <VideoBanner
-                key={category.title}
-                title={category.title}
-                description={category.description}
-                videos={category.videos}
-              />
-            ))}
-          </div>
+      <section className="relative mx-auto max-w-6xl px-6 py-16">
+        <div className="flex flex-col gap-14">
+          {videoCategories.map((category) => (
+            <VideoBanner
+              key={category.title}
+              title={category.title}
+              description={category.description}
+              videos={category.videos}
+            />
+          ))}
         </div>
       </section>
 

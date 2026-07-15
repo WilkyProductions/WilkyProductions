@@ -27,32 +27,27 @@ const process = [
 export default function WebsiteDesignPage() {
   return (
     <div>
+      <CategoryBackdrop variant="web" />
+
       <PageHero
         eyebrow="Website Design"
         title="Website Design"
         description="New sites or redesigns, built and maintained by one person from start to finish. Email for pricing."
-        backdrop="web"
       />
 
-      <section className="relative overflow-hidden">
-        <CategoryBackdrop
-          variant="web"
-          className="left-1/2 top-10 h-[500px] w-[500px] -translate-x-1/2 sm:h-[650px] sm:w-[650px]"
-        />
-        <div className="relative z-10 mx-auto max-w-6xl px-6 py-16">
-          <h2 className="font-display text-2xl uppercase tracking-wide">What&apos;s included</h2>
-          <ul className="mt-6 grid gap-3 sm:grid-cols-2">
-            {included.map((item) => (
-              <li key={item} className="border-l-2 border-accent pl-4 text-sm text-text-secondary">
-                {item}
-              </li>
-            ))}
-          </ul>
-        </div>
+      <section className="relative mx-auto max-w-6xl px-6 py-16">
+        <h2 className="font-display text-2xl uppercase tracking-wide">What&apos;s included</h2>
+        <ul className="mt-6 grid gap-3 sm:grid-cols-2">
+          {included.map((item) => (
+            <li key={item} className="border-l-2 border-accent pl-4 text-sm text-text-secondary">
+              {item}
+            </li>
+          ))}
+        </ul>
       </section>
 
-      <section className="border-t border-border bg-surface">
-        <div className="mx-auto max-w-6xl px-6 py-16">
+      <section className="relative border-t border-border bg-surface/70">
+        <div className="relative z-10 mx-auto max-w-6xl px-6 py-16">
           <h2 className="font-display text-2xl uppercase tracking-wide">How it works</h2>
           <div className="mt-8 grid gap-6 sm:grid-cols-2 lg:grid-cols-4">
             {process.map((item) => (
@@ -65,7 +60,7 @@ export default function WebsiteDesignPage() {
         </div>
       </section>
 
-      <section className="mx-auto max-w-6xl px-6 py-16">
+      <section className="relative mx-auto max-w-6xl px-6 py-16">
         <h2 className="font-display text-2xl uppercase tracking-wide">Recent work</h2>
         <div className="mt-6">
           <PhotoGrid items={websiteDesignExamples} />
