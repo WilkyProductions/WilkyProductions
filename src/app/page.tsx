@@ -50,30 +50,34 @@ export default function Home() {
         <div
           className="absolute inset-0"
           style={{
-            background: "linear-gradient(to top left, rgba(34, 182, 242, 0.35), transparent 60%)",
+            background: "linear-gradient(to top left, rgba(34, 182, 242, 0.6), transparent 70%)",
           }}
         />
 
-        <HeroDrone className="absolute left-6 top-24 hidden w-36 lg:left-16 lg:top-28 lg:block lg:w-44" />
-        <HeroDeviceMockup className="absolute right-6 top-1/2 hidden w-[300px] -translate-y-1/2 lg:right-16 lg:block lg:w-[360px]" />
+        <div className="relative mx-auto flex max-w-6xl flex-col items-center gap-10 px-6 pt-28 pb-16 text-center sm:pt-32 lg:flex-row lg:items-center lg:justify-between lg:gap-12 lg:text-left">
+          <div className="flex flex-col items-center gap-10 lg:items-start">
+            <p className="relative z-10 max-w-2xl text-xl text-text-secondary sm:text-2xl">
+              {site.tagline} <span className="text-foreground">{site.taglineEmphasis}</span>
+            </p>
+            <div className="flex flex-wrap items-center justify-center gap-4 lg:justify-start">
+              <Link
+                href="/videos"
+                className="rounded-sm bg-accent px-6 py-3 text-sm font-semibold uppercase tracking-wide text-black transition-colors hover:bg-accent-dark"
+              >
+                See our work
+              </Link>
+              <Link
+                href="/contact"
+                className="rounded-sm border-2 border-accent px-6 py-3 text-sm font-semibold uppercase tracking-wide text-accent transition-colors hover:bg-accent hover:text-black"
+              >
+                Get a quote
+              </Link>
+            </div>
+          </div>
 
-        <div className="relative mx-auto flex max-w-6xl flex-col items-center gap-10 px-6 pt-28 pb-16 text-center sm:pt-32">
-          <p className="relative z-10 max-w-2xl text-xl text-text-secondary sm:text-2xl">
-            {site.tagline} <span className="text-foreground">{site.taglineEmphasis}</span>
-          </p>
-          <div className="flex flex-wrap items-center justify-center gap-4">
-            <Link
-              href="/videos"
-              className="rounded-sm bg-accent px-6 py-3 text-sm font-semibold uppercase tracking-wide text-black transition-colors hover:bg-accent-dark"
-            >
-              See our work
-            </Link>
-            <Link
-              href="/contact"
-              className="rounded-sm border-2 border-accent px-6 py-3 text-sm font-semibold uppercase tracking-wide text-accent transition-colors hover:bg-accent hover:text-black"
-            >
-              Get a quote
-            </Link>
+          <div className="hidden shrink-0 flex-col items-center gap-10 lg:flex lg:w-[380px]">
+            <HeroDrone className="w-40" />
+            <HeroDeviceMockup className="w-full" />
           </div>
         </div>
       </section>
