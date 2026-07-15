@@ -2,7 +2,6 @@ import type { Metadata } from "next";
 import PageHero from "@/components/PageHero";
 import PhotoGrid from "@/components/PhotoGrid";
 import ContactCta from "@/components/ContactCta";
-import CategoryBackdrop from "@/components/CategoryBackdrop";
 import { designCategories } from "@/lib/media";
 
 export const metadata: Metadata = {
@@ -12,16 +11,14 @@ export const metadata: Metadata = {
 
 export default function DesignPage() {
   return (
-    <div className="relative">
-      <CategoryBackdrop variant="design" />
-
+    <div>
       <PageHero
         eyebrow="Graphic & Logo Design"
         title="Design"
         description="Logos, apparel, and motorsports graphics. Email for a quote on any project."
       />
 
-      <section className="relative mx-auto max-w-6xl px-6 py-16">
+      <section className="mx-auto max-w-6xl px-6 py-16">
         <div className="grid gap-10">
           {designCategories.map((category) => (
             <div key={category.title}>

@@ -63,7 +63,7 @@ export default function VideoBanner({
 
   if (playing && currentId) {
     return (
-      <div className="relative aspect-video w-full overflow-hidden rounded-sm border border-border bg-surface-2">
+      <div className="relative aspect-video w-full overflow-hidden rounded-sm border border-accent/40 bg-surface-2 shadow-[0_0_18px_rgba(34,182,242,0.3)]">
         <iframe
           key={currentId}
           src={`https://www.youtube-nocookie.com/embed/${currentId}?autoplay=1`}
@@ -78,7 +78,7 @@ export default function VideoBanner({
   }
 
   return (
-    <div className="relative aspect-video w-full overflow-hidden rounded-sm border border-border bg-surface-2">
+    <div className="relative aspect-video w-full overflow-hidden rounded-sm border border-accent/40 bg-surface-2 shadow-[0_0_18px_rgba(34,182,242,0.3)]">
       {currentId && (
         <Image
           key={currentId}

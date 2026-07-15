@@ -12,12 +12,12 @@ export default function PhotoFeed({ items }: { items: Photo[] }) {
             alt={photo.alt}
             width={photo.width ?? 1600}
             height={photo.height ?? 900}
-            className="h-auto w-full rounded-sm border border-border"
+            className="h-auto w-full rounded-sm border border-accent/40 shadow-[0_0_18px_rgba(34,182,242,0.3)]"
           />
         ) : (
           <div
             key={`${photo.alt}-${i}`}
-            className="flex aspect-video w-full items-center justify-center rounded-sm border border-border bg-surface-2 text-sm text-text-secondary"
+            className="flex aspect-video w-full items-center justify-center rounded-sm border border-accent/40 bg-surface-2 text-sm text-text-secondary shadow-[0_0_18px_rgba(34,182,242,0.3)]"
           >
             {photo.alt}
           </div>

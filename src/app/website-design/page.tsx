@@ -2,7 +2,6 @@ import type { Metadata } from "next";
 import PageHero from "@/components/PageHero";
 import PhotoGrid from "@/components/PhotoGrid";
 import ContactCta from "@/components/ContactCta";
-import CategoryBackdrop from "@/components/CategoryBackdrop";
 import { websiteDesignExamples } from "@/lib/media";
 
 export const metadata: Metadata = {
@@ -26,16 +25,14 @@ const process = [
 
 export default function WebsiteDesignPage() {
   return (
-    <div className="relative">
-      <CategoryBackdrop variant="web" />
-
+    <div>
       <PageHero
         eyebrow="Website Design"
         title="Website Design"
         description="New sites or redesigns, built and maintained by one person from start to finish. Email for pricing."
       />
 
-      <section className="relative mx-auto max-w-6xl px-6 py-16">
+      <section className="mx-auto max-w-6xl px-6 py-16">
         <h2 className="font-display text-2xl uppercase tracking-wide">What&apos;s included</h2>
         <ul className="mt-6 grid gap-3 sm:grid-cols-2">
           {included.map((item) => (
@@ -46,8 +43,8 @@ export default function WebsiteDesignPage() {
         </ul>
       </section>
 
-      <section className="relative border-t border-border bg-surface/70">
-        <div className="relative z-10 mx-auto max-w-6xl px-6 py-16">
+      <section className="border-t border-border bg-surface">
+        <div className="mx-auto max-w-6xl px-6 py-16">
           <h2 className="font-display text-2xl uppercase tracking-wide">How it works</h2>
           <div className="mt-8 grid gap-6 sm:grid-cols-2 lg:grid-cols-4">
             {process.map((item) => (
@@ -60,7 +57,7 @@ export default function WebsiteDesignPage() {
         </div>
       </section>
 
-      <section className="relative mx-auto max-w-6xl px-6 py-16">
+      <section className="mx-auto max-w-6xl px-6 py-16">
         <h2 className="font-display text-2xl uppercase tracking-wide">Recent work</h2>
         <div className="mt-6">
           <PhotoGrid items={websiteDesignExamples} />

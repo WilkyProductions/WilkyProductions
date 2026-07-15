@@ -20,7 +20,7 @@ export default function PhotoGrid({
       {items.map((photo, i) => (
         <div
           key={`${photo.alt}-${i}`}
-          className="relative aspect-[4/3] overflow-hidden rounded-sm border border-border bg-surface-2"
+          className="relative aspect-[4/3] overflow-hidden rounded-sm border border-accent/40 bg-surface-2 shadow-[0_0_18px_rgba(34,182,242,0.3)]"
         >
           {photo.src ? (
             <Image src={photo.src} alt={photo.alt} fill className="object-cover" />
