@@ -27,7 +27,7 @@ export const services = [
   {
     slug: "videos",
     name: "Videography",
-    blurb: "Weddings, business spotlights, real estate, offroad, and aerial video. Packages start at $1,500.",
+    blurb: "Weddings, business spotlights, real estate, offroad, and aerial video. Packages starting at just $500.",
     href: "/videos",
   },
   {

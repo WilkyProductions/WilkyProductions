@@ -2,6 +2,8 @@ import Image from "next/image";
 import Link from "next/link";
 import { services, site } from "@/lib/site";
 import ContactCta from "@/components/ContactCta";
+import HeroDrone from "@/components/HeroDrone";
+import HeroDeviceMockup from "@/components/HeroDeviceMockup";
 
 const whyChooseUs = [
   {
@@ -44,6 +46,16 @@ export default function Home() {
               "radial-gradient(ellipse at center, transparent 35%, rgba(0,0,0,0.75) 100%), linear-gradient(to bottom, rgba(0,0,0,0.75) 0%, rgba(0,0,0,0.2) 25%, rgba(0,0,0,0.35) 65%, var(--background) 100%)",
           }}
         />
+        {/* Cyan wash from bottom-right toward top-left */}
+        <div
+          className="absolute inset-0"
+          style={{
+            background: "linear-gradient(to top left, rgba(34, 182, 242, 0.35), transparent 60%)",
+          }}
+        />
+
+        <HeroDrone className="absolute left-6 top-24 hidden w-36 lg:left-16 lg:top-28 lg:block lg:w-44" />
+        <HeroDeviceMockup className="absolute right-6 top-1/2 hidden w-[300px] -translate-y-1/2 lg:right-16 lg:block lg:w-[360px]" />
 
         <div className="relative mx-auto flex max-w-6xl flex-col items-center gap-10 px-6 pt-28 pb-16 text-center sm:pt-32">
           <p className="relative z-10 max-w-2xl text-xl text-text-secondary sm:text-2xl">

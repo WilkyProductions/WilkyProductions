@@ -16,7 +16,7 @@ export default function VideosPage() {
       <PageHero
         eyebrow="Videography"
         title="Videos"
-        description="Packages start at $1,500. Email for a quote on your specific project."
+        description="Packages starting at just $500. Email for a quote on your specific project."
       />
 
       <section className="mx-auto max-w-6xl px-6 py-16">
