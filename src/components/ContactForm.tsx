@@ -3,25 +3,38 @@
 import { useState, type FormEvent } from "react";
 import { site } from "@/lib/site";
 
-export default function ContactForm() {
-  const [submitted, setSubmitted] = useState(false);
+type Status = "idle" | "sending" | "sent" | "error";
 
-  function handleSubmit(e: FormEvent<HTMLFormElement>) {
+export default function ContactForm() {
+  const [status, setStatus] = useState<Status>("idle");
+
+  async function handleSubmit(e: FormEvent<HTMLFormElement>) {
     e.preventDefault();
     const form = e.currentTarget;
     const data = new FormData(form);
-    const name = data.get("name")?.toString() ?? "";
-    const email = data.get("email")?.toString() ?? "";
-    const projectType = data.get("projectType")?.toString() ?? "";
-    const message = data.get("message")?.toString() ?? "";
+    const payload = {
+      name: data.get("name")?.toString() ?? "",
+      email: data.get("email")?.toString() ?? "",
+      projectType: data.get("projectType")?.toString() ?? "",
+      message: data.get("message")?.toString() ?? "",
+    };
 
-    const subject = encodeURIComponent(`Quote request: ${projectType || "General inquiry"}`);
-    const body = encodeURIComponent(
-      `Name: ${name}\nEmail: ${email}\nProject type: ${projectType}\n\n${message}`
-    );
+    setStatus("sending");
 
-    window.location.href = `${site.emailHref}?subject=${subject}&body=${body}`;
-    setSubmitted(true);
+    try {
+      const res = await fetch("/api/contact", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(payload),
+      });
+
+      if (!res.ok) throw new Error("Request failed");
+
+      setStatus("sent");
+      form.reset();
+    } catch {
+      setStatus("error");
+    }
   }
 
   return (
@@ -74,14 +87,20 @@ export default function ContactForm() {
 
       <button
         type="submit"
-        className="rounded-sm bg-accent px-6 py-3 text-sm font-semibold uppercase tracking-wide text-black transition-colors hover:bg-accent-dark"
+        disabled={status === "sending"}
+        className="rounded-sm bg-accent px-6 py-3 text-sm font-semibold uppercase tracking-wide text-black transition-colors hover:bg-accent-dark disabled:opacity-60"
       >
-        Send
+        {status === "sending" ? "Sending…" : "Send"}
       </button>
 
-      {submitted && (
+      {status === "sent" && (
         <p className="text-sm text-text-secondary">
-          Opening your email app now. If nothing happens, email {site.email} directly.
+          Message sent. I&apos;ll get back to you soon.
+        </p>
+      )}
+      {status === "error" && (
+        <p className="text-sm text-text-secondary">
+          Something went wrong sending that. Email {site.email} directly instead.
         </p>
       )}
     </form>
