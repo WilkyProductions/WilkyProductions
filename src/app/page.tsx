@@ -54,8 +54,8 @@ export default function Home() {
           }}
         />
 
-        <div className="relative mx-auto flex max-w-6xl flex-col items-center gap-10 px-6 pt-28 pb-16 text-center sm:pt-32 lg:flex-row lg:items-center lg:justify-between lg:gap-12 lg:text-left">
-          <div className="flex flex-col items-center gap-10 lg:items-start">
+        <div className="relative mx-auto flex max-w-6xl flex-col items-center gap-10 px-6 pt-28 pb-8 text-center sm:pt-32 lg:flex-row lg:items-center lg:justify-between lg:gap-12 lg:pb-16 lg:text-left">
+          <div className="order-2 flex flex-col items-center gap-10 lg:order-none lg:items-start">
             <p className="relative z-10 max-w-2xl text-lg text-text-secondary sm:text-xl lg:text-2xl">
               {site.tagline} <span className="text-foreground">{site.taglineEmphasis}</span>
             </p>
@@ -75,14 +75,14 @@ export default function Home() {
             </div>
           </div>
 
-          <div className="hidden shrink-0 flex-col items-center gap-10 lg:flex lg:w-[380px]">
-            <HeroDrone className="w-40" />
+          <div className="order-1 flex w-full max-w-[280px] shrink-0 flex-col items-center gap-6 lg:order-none lg:w-[380px] lg:max-w-none lg:gap-10">
+            <HeroDrone className="w-32 lg:w-40" />
             <HeroDeviceMockup className="w-full" />
           </div>
         </div>
       </section>
 
-      <section className="mx-auto max-w-6xl px-6 py-20">
+      <section className="mx-auto max-w-6xl px-6 pb-20 pt-10">
         <h2 className="font-display text-3xl uppercase tracking-wide sm:text-4xl">What we do</h2>
         <div className="mt-10 grid gap-6 sm:grid-cols-2 lg:grid-cols-4">
           {services.map((service) => (

@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import PageHero from "@/components/PageHero";
 import PhotoGrid from "@/components/PhotoGrid";
 import ContactCta from "@/components/ContactCta";
+import CategoryBackdrop from "@/components/CategoryBackdrop";
 import { websiteDesignExamples } from "@/lib/media";
 
 export const metadata: Metadata = {
@@ -30,17 +31,24 @@ export default function WebsiteDesignPage() {
         eyebrow="Website Design"
         title="Website Design"
         description="New sites or redesigns, built and maintained by one person from start to finish. Email for pricing."
+        backdrop="web"
       />
 
-      <section className="mx-auto max-w-6xl px-6 py-16">
-        <h2 className="font-display text-2xl uppercase tracking-wide">What&apos;s included</h2>
-        <ul className="mt-6 grid gap-3 sm:grid-cols-2">
-          {included.map((item) => (
-            <li key={item} className="border-l-2 border-accent pl-4 text-sm text-text-secondary">
-              {item}
-            </li>
-          ))}
-        </ul>
+      <section className="relative overflow-hidden">
+        <CategoryBackdrop
+          variant="web"
+          className="left-1/2 top-10 h-[500px] w-[500px] -translate-x-1/2 sm:h-[650px] sm:w-[650px]"
+        />
+        <div className="relative z-10 mx-auto max-w-6xl px-6 py-16">
+          <h2 className="font-display text-2xl uppercase tracking-wide">What&apos;s included</h2>
+          <ul className="mt-6 grid gap-3 sm:grid-cols-2">
+            {included.map((item) => (
+              <li key={item} className="border-l-2 border-accent pl-4 text-sm text-text-secondary">
+                {item}
+              </li>
+            ))}
+          </ul>
+        </div>
       </section>
 
       <section className="border-t border-border bg-surface">
