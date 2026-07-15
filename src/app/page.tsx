@@ -4,6 +4,9 @@ import { services, site } from "@/lib/site";
 import ContactCta from "@/components/ContactCta";
 import HeroDrone from "@/components/HeroDrone";
 import HeroDeviceMockup from "@/components/HeroDeviceMockup";
+import ReviewsCarousel from "@/components/ReviewsCarousel";
+
+const clients = ["Client One", "Client Two", "Client Three", "Client Four", "Client Five"];
 
 const whyChooseUs = [
   {
@@ -116,6 +119,21 @@ export default function Home() {
           </div>
         </div>
       </section>
+
+      <section className="bg-accent py-8">
+        <div className="mx-auto flex max-w-6xl flex-wrap items-center justify-center gap-x-12 gap-y-4 px-6">
+          {clients.map((name) => (
+            <span
+              key={name}
+              className="font-display text-lg uppercase tracking-wide text-black sm:text-xl"
+            >
+              {name}
+            </span>
+          ))}
+        </div>
+      </section>
+
+      <ReviewsCarousel />
 
       <ContactCta />
     </div>
