@@ -2,11 +2,11 @@ type Variant = "video" | "photo" | "design" | "web";
 
 function VideoGlyph() {
   return (
-    <g stroke="var(--accent)" strokeWidth="1.5" fill="none">
+    <g stroke="currentColor" strokeWidth="1.5" fill="none">
       <rect x="60" y="120" width="200" height="140" rx="12" />
       <path d="M260 160 L340 120 L340 260 L260 220 Z" />
       <circle cx="160" cy="190" r="34" />
-      <path d="M150 175 L182 190 L150 205 Z" fill="var(--accent)" stroke="none" />
+      <path d="M150 175 L182 190 L150 205 Z" fill="currentColor" stroke="none" />
       {[90, 130, 170, 210].map((x) => (
         <rect key={`t${x}`} x={x} y="104" width="10" height="10" />
       ))}
@@ -19,7 +19,7 @@ function VideoGlyph() {
 
 function PhotoGlyph() {
   return (
-    <g stroke="var(--accent)" strokeWidth="1.5" fill="none">
+    <g stroke="currentColor" strokeWidth="1.5" fill="none">
       <rect x="70" y="140" width="240" height="160" rx="14" />
       <rect x="140" y="108" width="60" height="32" rx="6" />
       <circle cx="190" cy="222" r="55" />
@@ -31,10 +31,10 @@ function PhotoGlyph() {
 
 function DesignGlyph() {
   return (
-    <g stroke="var(--accent)" strokeWidth="1.5" fill="none">
+    <g stroke="currentColor" strokeWidth="1.5" fill="none">
       <path d="M90 310 C140 230 220 220 310 130" strokeDasharray="5 7" />
       <circle cx="90" cy="310" r="8" />
-      <circle cx="200" cy="223" r="6" fill="var(--accent)" stroke="none" />
+      <circle cx="200" cy="223" r="6" fill="currentColor" stroke="none" />
       <circle cx="310" cy="130" r="8" />
       <path d="M310 130 L338 100 L360 122 L332 152 Z" />
       <path d="M310 130 L322 142" />
@@ -44,7 +44,7 @@ function DesignGlyph() {
 
 function WebGlyph() {
   return (
-    <g stroke="var(--accent)" strokeWidth="1.5" fill="none">
+    <g stroke="currentColor" strokeWidth="1.5" fill="none">
       <rect x="55" y="95" width="290" height="210" rx="10" />
       <line x1="55" y1="138" x2="345" y2="138" />
       <circle cx="78" cy="116" r="5" />
@@ -75,7 +75,7 @@ export default function CategoryBackdrop({
   return (
     <svg
       viewBox="0 0 400 400"
-      className={`pointer-events-none absolute opacity-[0.08] ${className}`}
+      className={`pointer-events-none absolute text-accent opacity-20 ${className}`}
       aria-hidden="true"
     >
       <Glyph />
