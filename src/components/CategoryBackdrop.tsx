@@ -176,29 +176,61 @@ const iconSets: Record<Variant, Array<() => React.JSX.Element>> = {
 };
 
 const positions = [
-  { topPct: 8, side: "left" as const, size: 100, rotate: -8 },
-  { topPct: 30, side: "right" as const, size: 120, rotate: 6 },
-  { topPct: 56, side: "left" as const, size: 110, rotate: 5 },
-  { topPct: 80, side: "right" as const, size: 100, rotate: -6 },
+  { topPct: 8, side: "left" as const, size: 150, rotate: -8 },
+  { topPct: 30, side: "right" as const, size: 175, rotate: 6 },
+  { topPct: 56, side: "left" as const, size: 165, rotate: 5 },
+  { topPct: 80, side: "right" as const, size: 150, rotate: -6 },
 ];
+
+/** Renders an icon twice (offset+dim "depth" layer behind a crisp bright layer) for a 3D-ish extruded look. */
+function DimensionalIcon({ Comp }: { Comp: () => React.JSX.Element }) {
+  return (
+    <>
+      <g
+        stroke="currentColor"
+        strokeWidth="3"
+        fill="none"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+        opacity="0.45"
+        transform="translate(9,9)"
+      >
+        <Comp />
+      </g>
+      <g stroke="currentColor" strokeWidth="3" fill="none" strokeLinecap="round" strokeLinejoin="round">
+        <Comp />
+      </g>
+    </>
+  );
+}
 
 export default function CategoryBackdrop({ variant }: { variant: Variant }) {
   const icons = iconSets[variant];
   const gridId = `blueprint-grid-${variant}`;
+  const fadeId = `blueprint-fade-${variant}`;
+  const maskId = `blueprint-mask-${variant}`;
 
   return (
     <div className="pointer-events-none absolute inset-0 overflow-hidden text-accent" aria-hidden="true">
-      {/* Blueprint grid, tiled across the full page */}
-      <svg className="absolute inset-0 h-full w-full opacity-[0.12]">
+      {/* Diagonal mesh, faded from bright (top) to transparent (edges/bottom) */}
+      <svg className="absolute inset-0 h-full w-full">
         <defs>
-          <pattern id={gridId} width="48" height="48" patternUnits="userSpaceOnUse">
-            <path d="M48 0 L0 0 0 48" fill="none" stroke="currentColor" strokeWidth="0.5" />
+          <pattern id={gridId} width="60" height="60" patternUnits="userSpaceOnUse">
+            <path d="M0 0 L60 60 M60 0 L0 60" stroke="currentColor" strokeWidth="1" fill="none" />
           </pattern>
+          <radialGradient id={fadeId} cx="50%" cy="15%" r="85%">
+            <stop offset="0%" stopColor="white" stopOpacity="0.9" />
+            <stop offset="45%" stopColor="white" stopOpacity="0.4" />
+            <stop offset="100%" stopColor="white" stopOpacity="0" />
+          </radialGradient>
+          <mask id={maskId}>
+            <rect width="100%" height="100%" fill={`url(#${fadeId})`} />
+          </mask>
         </defs>
-        <rect width="100%" height="100%" fill={`url(#${gridId})`} />
+        <rect width="100%" height="100%" fill={`url(#${gridId})`} mask={`url(#${maskId})`} />
       </svg>
 
-      {/* Themed technical illustrations, scattered top to bottom */}
+      {/* Themed technical illustrations, scattered top to bottom, each with a layered "3D" depth pass */}
       {icons.map((IconComp, i) => {
         const pos = positions[i];
         const sideClass = pos.side === "left" ? "left-[4%] sm:left-[8%]" : "right-[4%] sm:right-[8%]";
@@ -206,7 +238,7 @@ export default function CategoryBackdrop({ variant }: { variant: Variant }) {
           <svg
             key={i}
             viewBox="0 0 120 120"
-            className={`absolute opacity-[0.18] ${sideClass}`}
+            className={`absolute opacity-40 ${sideClass}`}
             style={{
               top: `${pos.topPct}%`,
               width: pos.size,
@@ -214,9 +246,7 @@ export default function CategoryBackdrop({ variant }: { variant: Variant }) {
               transform: `rotate(${pos.rotate}deg)`,
             }}
           >
-            <g stroke="currentColor" strokeWidth="2.5" fill="none" strokeLinecap="round" strokeLinejoin="round">
-              <IconComp />
-            </g>
+            <DimensionalIcon Comp={IconComp} />
           </svg>
         );
       })}
