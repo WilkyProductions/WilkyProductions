@@ -1,6 +1,11 @@
 "use client";
 
+import Image from "next/image";
 import { useState } from "react";
+
+function thumbnailUrl(youtubeId: string) {
+  return `https://img.youtube.com/vi/${youtubeId}/hqdefault.jpg`;
+}
 
 function VideoSelector({
   videos,
@@ -74,6 +79,16 @@ export default function VideoBanner({
 
   return (
     <div className="relative aspect-video w-full overflow-hidden rounded-sm border border-border bg-surface-2">
+      {currentId && (
+        <Image
+          key={currentId}
+          src={thumbnailUrl(currentId)}
+          alt=""
+          fill
+          className="object-cover opacity-35"
+        />
+      )}
+      <div className="absolute inset-0 bg-black/30" />
       <button
         type="button"
         onClick={() => hasVideo && setPlaying(true)}
