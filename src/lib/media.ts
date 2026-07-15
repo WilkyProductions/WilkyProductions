@@ -110,7 +110,7 @@ export const designCategories: { title: string; items: Photo[] }[] = [
 ];
 
 export const websiteDesignExamples: Photo[] = [
-  { src: null, alt: "Site example 1" },
+  { src: "/mockups/m81-desktop.jpg", alt: "M81 Designs website preview" },
   { src: null, alt: "Site example 2" },
   { src: null, alt: "Site example 3" },
 ];
