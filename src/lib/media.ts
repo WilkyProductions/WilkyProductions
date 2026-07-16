@@ -86,25 +86,36 @@ export const designCategories: { title: string; items: Photo[] }[] = [
   {
     title: "Logo Design",
     items: [
-      { src: null, alt: "Logo sample 1" },
-      { src: null, alt: "Logo sample 2" },
-      { src: null, alt: "Logo sample 3" },
+      { src: "/logos/Complete View Logo for COLOR BG.png", alt: "Complete View Construction logo" },
+      { src: "/logos/KJHawkins Racing Logo2-01.jpg", alt: "KJ Hawkins Racing logo, color variations" },
+      { src: "/logos/PrecisionPerformanceLogo-27.png", alt: "Precision Performance logo" },
     ],
   },
   {
     title: "Apparel & Tee Graphics",
     items: [
-      { src: null, alt: "Tee design 1" },
-      { src: null, alt: "Tee design 2" },
-      { src: null, alt: "Tee design 3" },
+      { src: "/apparel/American Works Logo Tee copy.jpg", alt: "American Works Excavation & Grading tee design" },
+      { src: "/apparel/Black Tee.jpg", alt: "Complete View Construction tee design" },
+      { src: "/apparel/McLaren.jpg", alt: "Showtime Collision Repair tee design" },
     ],
   },
   {
-    title: "Motorsports Imagery",
+    title: "Motocross Graphics",
     items: [
-      { src: null, alt: "Motorsports sample 1" },
-      { src: null, alt: "Motorsports sample 2" },
-      { src: null, alt: "Motorsports sample 3" },
+      { src: "/motographics/BurnsCRF110.jpg", alt: "P. Burns #258 Husqvarna graphics kit" },
+      { src: "/motographics/Cole2022KTM500.jpg", alt: "Cole Smith #67 KTM graphics kit" },
+      {
+        src: "/motographics/Marshall Tomei 2018 RMZ 450 MP Graphics Kit 1-01.jpg",
+        alt: "Marshall Tomei #11 Suzuki graphics kit",
+      },
+      { src: "/motographics/Tomei 2021CRF450-01.jpg", alt: "Tomei #11 Honda CRF450R graphics kit" },
+    ],
+  },
+  {
+    title: "Design",
+    items: [
+      { src: "/design/Axis Plus Business Card Preview.jpg", alt: "Axis Plus Machining business card design" },
+      { src: "/design/BeaumontKnightsCanopy.jpg", alt: "Beaumont Knights Baseball canopy design" },
     ],
   },
 ];
