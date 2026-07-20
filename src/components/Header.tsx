@@ -16,10 +16,10 @@ export default function Header() {
             <Image
               src="/brand/wilky-logo.png"
               alt="Wilky Productions"
-              width={320}
-              height={64}
+              width={640}
+              height={128}
               priority
-              className="h-12 w-auto sm:h-16"
+              className="h-24 w-auto sm:h-32"
             />
           </Link>
 

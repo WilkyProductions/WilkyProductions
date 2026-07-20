@@ -9,6 +9,8 @@ export const metadata: Metadata = {
   description: "Logo design, apparel graphics, and motorsports imagery. Email for pricing.",
 };
 
+const designGallery = designCategories.flatMap((category) => category.items);
+
 export default function DesignPage() {
   return (
     <div>
@@ -19,16 +21,7 @@ export default function DesignPage() {
       />
 
       <section className="px-4 py-16">
-        <div className="grid gap-10">
-          {designCategories.map((category) => (
-            <div key={category.title}>
-              <h2 className="px-2 font-display text-2xl uppercase tracking-wide">{category.title}</h2>
-              <div className="mt-5">
-                <PhotoFeed items={category.items} />
-              </div>
-            </div>
-          ))}
-        </div>
+        <PhotoFeed items={designGallery} />
       </section>
 
       <ContactCta />
