@@ -1,12 +1,11 @@
 import Image from "next/image";
 import Link from "next/link";
 import { services, site } from "@/lib/site";
+import { clientLogos } from "@/lib/media";
 import ContactCta from "@/components/ContactCta";
 import HeroDrone from "@/components/HeroDrone";
 import HeroDeviceMockup from "@/components/HeroDeviceMockup";
 import ReviewsCarousel from "@/components/ReviewsCarousel";
-
-const clients = ["Client One", "Client Two", "Client Three", "Client Four", "Client Five"];
 
 const whyChooseUs = [
   {
@@ -124,14 +123,16 @@ export default function Home() {
         <h2 className="text-center font-display text-2xl uppercase tracking-wide text-black sm:text-3xl">
           Recent Clients
         </h2>
-        <div className="mx-auto mt-6 flex max-w-6xl flex-wrap items-center justify-center gap-x-12 gap-y-4 px-6">
-          {clients.map((name) => (
-            <span
-              key={name}
-              className="font-display text-lg uppercase tracking-wide text-black sm:text-xl"
-            >
-              {name}
-            </span>
+        <div className="mx-auto mt-6 flex max-w-6xl flex-wrap items-center justify-center gap-x-12 gap-y-6 px-6">
+          {clientLogos.map((logo) => (
+            <Image
+              key={logo.alt}
+              src={logo.src}
+              alt={logo.alt}
+              width={logo.width}
+              height={logo.height}
+              className="h-12 w-auto sm:h-14"
+            />
           ))}
         </div>
       </section>

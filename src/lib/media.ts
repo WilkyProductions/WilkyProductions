@@ -167,3 +167,12 @@ export const websiteDesignExamples: Photo[] = [
   { src: null, alt: "Site example 2" },
   { src: null, alt: "Site example 3" },
 ];
+
+export type Logo = { src: string; alt: string; width: number; height: number };
+
+export const clientLogos: Logo[] = [
+  { src: "/clients/M81logo-Square.png", alt: "M81 Designs logo", width: 1220, height: 1220 },
+  { src: "/clients/Cook Coatings Logo.png", alt: "Cook Coatings logo", width: 1600, height: 517 },
+  { src: "/clients/ShowtimeLogo-STYLED.png", alt: "Showtime Collision Repair logo", width: 1300, height: 470 },
+  { src: "/clients/GSG-Logo-11w.png", alt: "GSG logo", width: 867, height: 376 },
+];
