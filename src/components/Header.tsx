@@ -36,12 +36,12 @@ export default function Header() {
           </button>
         </div>
 
-        <nav className="hidden gap-8 md:-mt-2 md:flex">
+        <nav className="hidden gap-12 md:-mt-2 md:flex">
           {nav.map((item) => (
             <Link
               key={item.href}
               href={item.href}
-              className="font-display text-sm uppercase tracking-wider text-foreground/90 transition-colors hover:text-accent"
+              className="font-display text-base uppercase tracking-widest text-foreground/90 transition-colors hover:text-accent"
             >
               {item.label}
             </Link>
