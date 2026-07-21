@@ -1,5 +1,6 @@
 import Image from "next/image";
 import Link from "next/link";
+import { Fragment } from "react";
 import { services, site } from "@/lib/site";
 import { clientLogos } from "@/lib/media";
 import ContactCta from "@/components/ContactCta";
@@ -86,19 +87,28 @@ export default function Home() {
 
       <section className="mx-auto max-w-6xl px-6 pb-20 pt-10">
         <h2 className="font-display text-3xl uppercase tracking-wide sm:text-4xl">What we do</h2>
-        <div className="mt-10 grid gap-6 sm:grid-cols-2 lg:grid-cols-4">
-          {services.map((service) => (
-            <Link
-              key={service.slug}
-              href={service.href}
-              className="group flex flex-col rounded-sm border border-border bg-surface p-6 transition-colors hover:border-accent"
-            >
-              <h3 className="font-display text-xl uppercase tracking-wide">{service.name}</h3>
-              <p className="mt-3 flex-1 text-sm text-text-secondary">{service.blurb}</p>
-              <span className="mt-4 text-sm font-semibold text-accent">
-                Learn more <span aria-hidden="true">&rarr;</span>
-              </span>
-            </Link>
+        <div className="mt-10 grid gap-0 sm:gap-6 sm:grid-cols-2 lg:grid-cols-4">
+          {services.map((service, i) => (
+            <Fragment key={service.slug}>
+              <Link
+                href={service.href}
+                className="group flex flex-col p-6 transition-colors sm:rounded-sm sm:border sm:border-border sm:bg-surface sm:hover:border-accent"
+              >
+                <h3 className="font-display text-xl uppercase tracking-wide">{service.name}</h3>
+                <p className="mt-3 flex-1 text-sm text-text-secondary">{service.blurb}</p>
+                <span className="mt-4 text-sm font-semibold text-accent">
+                  Learn more <span aria-hidden="true">&rarr;</span>
+                </span>
+              </Link>
+              {i < services.length - 1 && (
+                <div
+                  className="h-px sm:hidden"
+                  style={{
+                    background: "linear-gradient(to right, transparent, var(--accent) 50%, transparent)",
+                  }}
+                />
+              )}
+            </Fragment>
           ))}
         </div>
       </section>

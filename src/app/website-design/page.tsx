@@ -1,7 +1,8 @@
 import type { Metadata } from "next";
 import PageHero from "@/components/PageHero";
-import PhotoGrid from "@/components/PhotoGrid";
+import PhotoFeed from "@/components/PhotoFeed";
 import ContactCta from "@/components/ContactCta";
+import OtherServices from "@/components/OtherServices";
 import { websiteDesignExamples } from "@/lib/media";
 
 export const metadata: Metadata = {
@@ -63,9 +64,11 @@ export default function WebsiteDesignPage() {
           <span className="text-sm text-text-secondary">(click to view full site)</span>
         </div>
         <div className="mt-6">
-          <PhotoGrid items={websiteDesignExamples} />
+          <PhotoFeed items={websiteDesignExamples} />
         </div>
       </section>
+
+      <OtherServices current="website-design" />
 
       <ContactCta />
     </div>

@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import PageHero from "@/components/PageHero";
 import PhotoFeed from "@/components/PhotoFeed";
 import ContactCta from "@/components/ContactCta";
+import OtherServices from "@/components/OtherServices";
 import { designCategories } from "@/lib/media";
 
 export const metadata: Metadata = {
@@ -23,6 +24,8 @@ export default function DesignPage() {
       <section className="px-4 py-16">
         <PhotoFeed items={designGallery} />
       </section>
+
+      <OtherServices current="design" />
 
       <ContactCta />
     </div>

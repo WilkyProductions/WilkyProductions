@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import PageHero from "@/components/PageHero";
 import VideoBanner from "@/components/VideoBanner";
 import ContactCta from "@/components/ContactCta";
+import OtherServices from "@/components/OtherServices";
 import { videoCategories } from "@/lib/media";
 
 export const metadata: Metadata = {
@@ -31,6 +32,8 @@ export default function VideosPage() {
           ))}
         </div>
       </section>
+
+      <OtherServices current="videos" />
 
       <ContactCta />
     </div>

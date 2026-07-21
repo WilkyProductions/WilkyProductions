@@ -28,10 +28,10 @@ export default function Footer() {
 
         <div>
           <h3 className="text-sm font-semibold uppercase tracking-wide text-foreground">Navigate</h3>
-          <ul className="mt-4 space-y-2">
+          <ul className="mt-4 space-y-2 text-sm text-text-secondary">
             {nav.map((item) => (
               <li key={item.href}>
-                <Link href={item.href} className="text-sm text-text-secondary hover:text-accent">
+                <Link href={item.href} className="hover:text-accent">
                   {item.label}
                 </Link>
               </li>
