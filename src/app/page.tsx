@@ -119,21 +119,25 @@ export default function Home() {
         </div>
       </section>
 
-      <section className="bg-accent py-8">
-        <h2 className="text-center font-display text-2xl uppercase tracking-wide text-black sm:text-3xl">
-          Recent Clients
-        </h2>
-        <div className="mx-auto mt-6 flex max-w-6xl flex-wrap items-center justify-center gap-x-12 gap-y-6 px-6">
-          {clientLogos.map((logo) => (
-            <Image
-              key={logo.alt}
-              src={logo.src}
-              alt={logo.alt}
-              width={logo.width}
-              height={logo.height}
-              className="h-12 w-auto sm:h-14"
-            />
-          ))}
+      <section>
+        <div className="bg-white py-6">
+          <h2 className="text-center font-display text-2xl uppercase tracking-wide text-black sm:text-3xl">
+            Recent Clients
+          </h2>
+        </div>
+        <div className="bg-accent py-10">
+          <div className="mx-auto flex max-w-6xl flex-wrap items-center justify-center gap-x-12 gap-y-6 px-6">
+            {clientLogos.map((logo) => (
+              <Image
+                key={logo.alt}
+                src={logo.src}
+                alt={logo.alt}
+                width={logo.width}
+                height={logo.height}
+                className="h-14 w-auto sm:h-16"
+              />
+            ))}
+          </div>
         </div>
       </section>
 

@@ -3,6 +3,7 @@ export type Photo = {
   alt: string;
   width?: number;
   height?: number;
+  href?: string;
 };
 
 export const videoCategories: {
@@ -178,16 +179,28 @@ export const designCategories: { title: string; items: Photo[] }[] = [
 ];
 
 export const websiteDesignExamples: Photo[] = [
-  { src: "/mockups/m81-desktop.jpg", alt: "M81 Designs website preview" },
-  { src: "/design/Webdesign1.jpg", alt: "Cook Coatings website preview", width: 1600, height: 886 },
-  { src: "/design/Webdesign2.jpg", alt: "CageWRX website preview", width: 1600, height: 885 },
+  { src: "/mockups/m81-desktop.jpg", alt: "M81 Designs website preview", href: "https://m81designs.com" },
+  {
+    src: "/design/Webdesign1.jpg",
+    alt: "Cook Coatings website preview",
+    width: 1600,
+    height: 886,
+    href: "https://cookcoatingsinc.com",
+  },
+  {
+    src: "/design/Webdesign2.jpg",
+    alt: "CageWRX website preview",
+    width: 1600,
+    height: 885,
+    href: "https://cagewrx.com",
+  },
 ];
 
 export type Logo = { src: string; alt: string; width: number; height: number };
 
 export const clientLogos: Logo[] = [
-  { src: "/clients/M81logo-Square.png", alt: "M81 Designs logo", width: 1220, height: 1220 },
-  { src: "/clients/Cook Coatings Logo.png", alt: "Cook Coatings logo", width: 1600, height: 517 },
-  { src: "/clients/ShowtimeLogo-STYLED.png", alt: "Showtime Collision Repair logo", width: 1300, height: 470 },
-  { src: "/clients/GSG-Logo-11w.png", alt: "GSG logo", width: 867, height: 376 },
+  { src: "/clients/M81Logo-BLK.png", alt: "M81 Designs logo", width: 1280, height: 472 },
+  { src: "/clients/CookCoatingsLogo-BLK.png", alt: "Cook Coatings logo", width: 1280, height: 472 },
+  { src: "/clients/ShowtimeLogo-BLK.png", alt: "Showtime Collision Repair logo", width: 1280, height: 472 },
+  { src: "/clients/GSGLogo-BLK.png", alt: "Golden State Glazing logo", width: 1280, height: 472 },
 ];

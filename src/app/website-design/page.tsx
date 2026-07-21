@@ -58,7 +58,10 @@ export default function WebsiteDesignPage() {
       </section>
 
       <section className="mx-auto max-w-6xl px-6 py-16">
-        <h2 className="font-display text-2xl uppercase tracking-wide">Recent work</h2>
+        <div className="flex flex-wrap items-baseline gap-x-3 gap-y-1">
+          <h2 className="font-display text-2xl uppercase tracking-wide">Recent work</h2>
+          <span className="text-sm text-text-secondary">(click to view full site)</span>
+        </div>
         <div className="mt-6">
           <PhotoGrid items={websiteDesignExamples} />
         </div>

@@ -12,7 +12,9 @@ export default function PhotoFeed({ items }: { items: Photo[] }) {
             alt={photo.alt}
             width={photo.width ?? 1600}
             height={photo.height ?? 900}
-            className="mb-4 w-full break-inside-avoid rounded-sm border border-accent/40 shadow-[0_0_18px_rgba(34,182,242,0.3)]"
+            className={`mb-4 w-full break-inside-avoid rounded-sm border border-accent/40 shadow-[0_0_18px_rgba(34,182,242,0.3)] ${
+              photo.src.toLowerCase().endsWith(".png") ? "bg-gray-200" : ""
+            }`}
           />
         ) : (
           <div
