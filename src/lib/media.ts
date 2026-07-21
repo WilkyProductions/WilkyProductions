@@ -87,19 +87,19 @@ export const designCategories: { title: string; items: Photo[] }[] = [
     title: "Logo Design",
     items: [
       {
-        src: "/logos/Complete View Logo for COLOR BG.png",
+        src: "/design/logos/Complete View Logo for COLOR BG.png",
         alt: "Complete View Construction logo",
         width: 1600,
         height: 1578,
       },
       {
-        src: "/logos/KJHawkins Racing Logo2-01.jpg",
+        src: "/design/logos/KJHawkins Racing Logo2-01.jpg",
         alt: "KJ Hawkins Racing logo, color variations",
         width: 1600,
         height: 603,
       },
       {
-        src: "/logos/PrecisionPerformanceLogo-27.png",
+        src: "/design/logos/PrecisionPerformanceLogo-27.png",
         alt: "Precision Performance logo",
         width: 1600,
         height: 800,
@@ -110,33 +110,48 @@ export const designCategories: { title: string; items: Photo[] }[] = [
     title: "Apparel & Tee Graphics",
     items: [
       {
-        src: "/apparel/American Works Logo Tee copy.jpg",
+        src: "/design/apparel/American Works Logo Tee copy.jpg",
         alt: "American Works Excavation & Grading tee design",
         width: 1080,
         height: 571,
       },
-      { src: "/apparel/Black Tee.jpg", alt: "Complete View Construction tee design", width: 1600, height: 880 },
-      { src: "/apparel/McLaren.jpg", alt: "Showtime Collision Repair tee design", width: 1600, height: 1250 },
+      {
+        src: "/design/apparel/Black Tee.jpg",
+        alt: "Complete View Construction tee design",
+        width: 1600,
+        height: 880,
+      },
+      {
+        src: "/design/apparel/McLaren.jpg",
+        alt: "Showtime Collision Repair tee design",
+        width: 1600,
+        height: 1250,
+      },
     ],
   },
   {
     title: "Motocross Graphics",
     items: [
-      { src: "/motographics/BurnsCRF110.jpg", alt: "P. Burns #258 Husqvarna graphics kit", width: 1600, height: 739 },
       {
-        src: "/motographics/Cole2022KTM500.jpg",
+        src: "/design/motographics/BurnsCRF110.jpg",
+        alt: "P. Burns #258 Husqvarna graphics kit",
+        width: 1600,
+        height: 739,
+      },
+      {
+        src: "/design/motographics/Cole2022KTM500.jpg",
         alt: "Cole Smith #67 KTM graphics kit",
         width: 1600,
         height: 796,
       },
       {
-        src: "/motographics/Marshall Tomei 2018 RMZ 450 MP Graphics Kit 1-01.jpg",
+        src: "/design/motographics/Marshall Tomei 2018 RMZ 450 MP Graphics Kit 1-01.jpg",
         alt: "Marshall Tomei #11 Suzuki graphics kit",
         width: 1600,
         height: 796,
       },
       {
-        src: "/motographics/Tomei 2021CRF450-01.jpg",
+        src: "/design/motographics/Tomei 2021CRF450-01.jpg",
         alt: "Tomei #11 Honda CRF450R graphics kit",
         width: 1599,
         height: 1190,
@@ -164,8 +179,8 @@ export const designCategories: { title: string; items: Photo[] }[] = [
 
 export const websiteDesignExamples: Photo[] = [
   { src: "/mockups/m81-desktop.jpg", alt: "M81 Designs website preview" },
-  { src: null, alt: "Site example 2" },
-  { src: null, alt: "Site example 3" },
+  { src: "/design/Webdesign1.jpg", alt: "Cook Coatings website preview", width: 1600, height: 886 },
+  { src: "/design/Webdesign2.jpg", alt: "CageWRX website preview", width: 1600, height: 885 },
 ];
 
 export type Logo = { src: string; alt: string; width: number; height: number };

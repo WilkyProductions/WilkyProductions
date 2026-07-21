@@ -9,7 +9,7 @@ export default function PageHero({
 }) {
   return (
     <section className="border-b border-border bg-surface">
-      <div className="mx-auto max-w-6xl px-6 pt-40 pb-16 sm:pt-48 sm:pb-20">
+      <div className="mx-auto max-w-6xl px-6 pt-28 pb-16 sm:pt-48 sm:pb-20">
         {eyebrow && (
           <p className="text-sm font-semibold uppercase tracking-widest text-accent">{eyebrow}</p>
         )}
