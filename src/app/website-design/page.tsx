@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { Fragment } from "react";
 import PageHero from "@/components/PageHero";
 import PhotoFeed from "@/components/PhotoFeed";
 import ContactCta from "@/components/ContactCta";
@@ -47,12 +48,22 @@ export default function WebsiteDesignPage() {
       <section className="border-t border-border bg-surface">
         <div className="mx-auto max-w-6xl px-6 py-16">
           <h2 className="font-display text-2xl uppercase tracking-wide">How it works</h2>
-          <div className="mt-8 grid gap-6 sm:grid-cols-2 lg:grid-cols-4">
-            {process.map((item) => (
-              <div key={item.step} className="rounded-sm border border-border bg-surface-2 p-5">
-                <p className="font-semibold text-accent">{item.step}</p>
-                <p className="mt-2 text-sm text-text-secondary">{item.detail}</p>
-              </div>
+          <div className="mt-8 grid gap-0 sm:gap-6 sm:grid-cols-2 lg:grid-cols-4">
+            {process.map((item, i) => (
+              <Fragment key={item.step}>
+                <div className="p-5 sm:rounded-sm sm:border sm:border-border sm:bg-surface-2">
+                  <p className="font-semibold text-accent">{item.step}</p>
+                  <p className="mt-2 text-sm text-text-secondary">{item.detail}</p>
+                </div>
+                {i < process.length - 1 && (
+                  <div
+                    className="h-px sm:hidden"
+                    style={{
+                      background: "linear-gradient(to right, transparent, var(--accent) 50%, transparent)",
+                    }}
+                  />
+                )}
+              </Fragment>
             ))}
           </div>
         </div>

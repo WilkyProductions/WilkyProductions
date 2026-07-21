@@ -180,24 +180,24 @@ export const designCategories: { title: string; items: Photo[] }[] = [
 
 export const websiteDesignExamples: Photo[] = [
   {
-    src: "/mockups/m81-desktop.jpg",
+    src: "/design/Webdesign3.jpg",
     alt: "M81 Designs website preview",
     width: 1600,
-    height: 829,
+    height: 1347,
     href: "https://m81designs.com",
   },
   {
     src: "/design/Webdesign1.jpg",
     alt: "Cook Coatings website preview",
     width: 1600,
-    height: 1623,
+    height: 1347,
     href: "https://cookcoatingsinc.com",
   },
   {
     src: "/design/Webdesign2.jpg",
     alt: "CageWRX website preview",
     width: 1600,
-    height: 1436,
+    height: 1347,
     href: "https://cagewrx.com",
   },
 ];
