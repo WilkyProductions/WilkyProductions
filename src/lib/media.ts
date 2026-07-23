@@ -4,6 +4,7 @@ export type Photo = {
   width?: number;
   height?: number;
   href?: string;
+  comingSoon?: boolean;
 };
 
 export const videoCategories: {
@@ -185,6 +186,7 @@ export const websiteDesignExamples: Photo[] = [
     width: 1600,
     height: 1347,
     href: "https://m81designs.com",
+    comingSoon: true,
   },
   {
     src: "/design/Webdesign1.jpg",

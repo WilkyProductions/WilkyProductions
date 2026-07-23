@@ -17,15 +17,24 @@ export default function PhotoFeed({ items }: { items: Photo[] }) {
         }
 
         const image = (
-          <Image
-            src={photo.src}
-            alt={photo.alt}
-            width={photo.width ?? 1600}
-            height={photo.height ?? 900}
-            className={`w-full rounded-sm border border-accent/40 shadow-[0_0_18px_rgba(34,182,242,0.3)] transition-opacity ${
-              photo.href ? "group-hover:opacity-90" : ""
-            } ${photo.src.toLowerCase().endsWith(".png") ? "bg-gray-200" : ""}`}
-          />
+          <div className="relative overflow-hidden rounded-sm">
+            <Image
+              src={photo.src}
+              alt={photo.alt}
+              width={photo.width ?? 1600}
+              height={photo.height ?? 900}
+              className={`w-full rounded-sm border border-accent/40 shadow-[0_0_18px_rgba(34,182,242,0.3)] transition-opacity ${
+                photo.href ? "group-hover:opacity-90" : ""
+              } ${photo.src.toLowerCase().endsWith(".png") ? "bg-gray-200" : ""}`}
+            />
+            {photo.comingSoon && (
+              <div className="pointer-events-none absolute inset-0 flex items-center justify-center bg-black/55">
+                <span className="rounded-sm border-2 border-accent bg-black/40 px-6 py-3 font-display text-xl uppercase tracking-[0.2em] text-white sm:text-2xl">
+                  Coming Soon
+                </span>
+              </div>
+            )}
+          </div>
         );
 
         return photo.href ? (
