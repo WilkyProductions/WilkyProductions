@@ -10,7 +10,7 @@ function Stars({ count }: { count: number }) {
         <svg
           key={i}
           viewBox="0 0 20 20"
-          className={`h-5 w-5 ${i < count ? "fill-current" : "fill-none stroke-current"}`}
+          className={`h-8 w-8 sm:h-9 sm:w-9 ${i < count ? "fill-current" : "fill-none stroke-current"}`}
         >
           <path
             d="M10 1.5 12.4 7 18.5 7.6 13.9 11.6 15.3 17.5 10 14.3 4.7 17.5 6.1 11.6 1.5 7.6 7.6 7 Z"
@@ -35,7 +35,7 @@ export default function ReviewsCarousel() {
   return (
     <section className="border-t border-border bg-surface py-20">
       <div className="mx-auto max-w-3xl px-6 text-center">
-        <h2 className="font-display text-3xl uppercase tracking-wide sm:text-4xl">
+        <h2 className="font-display text-xl uppercase tracking-wide sm:text-4xl">
           See what past clients have to say!
         </h2>
 
@@ -49,7 +49,7 @@ export default function ReviewsCarousel() {
                 <Stars count={review.rating} />
                 <p className="mt-4 text-lg italic text-text-secondary">&ldquo;{review.quote}&rdquo;</p>
                 <p className="mt-4 font-semibold text-foreground">{review.name}</p>
-                {review.company && <p className="text-sm text-text-secondary">{review.company}</p>}
+                {review.company && <p className="text-sm italic text-text-secondary">{review.company}</p>}
               </div>
             ))}
           </div>
