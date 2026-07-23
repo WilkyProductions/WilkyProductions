@@ -251,4 +251,11 @@ export const reviews: Review[] = [
     quote: "Dude, I just looked at the website. It looks fu**ing bad*ss!",
     rating: 5,
   },
+  {
+    name: "Levi Jackson",
+    company: "Golden State Glazing",
+    quote:
+      "Amazing drone footage with clean and clear videos to showcase finished projects in the construction industry from a higher view!",
+    rating: 5,
+  },
 ];
