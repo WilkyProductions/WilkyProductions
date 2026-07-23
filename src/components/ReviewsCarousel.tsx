@@ -49,6 +49,7 @@ export default function ReviewsCarousel() {
                 <Stars count={review.rating} />
                 <p className="mt-4 text-lg italic text-text-secondary">&ldquo;{review.quote}&rdquo;</p>
                 <p className="mt-4 font-semibold text-foreground">{review.name}</p>
+                {review.company && <p className="text-sm text-text-secondary">{review.company}</p>}
               </div>
             ))}
           </div>

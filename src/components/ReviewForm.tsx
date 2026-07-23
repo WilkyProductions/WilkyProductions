@@ -14,6 +14,7 @@ export default function ReviewForm() {
     const data = new FormData(form);
     const payload = {
       name: data.get("name")?.toString() ?? "",
+      company: data.get("company")?.toString() ?? "",
       rating: data.get("rating")?.toString() ?? "",
       service: data.get("service")?.toString() ?? "",
       quote: data.get("quote")?.toString() ?? "",
@@ -61,6 +62,17 @@ export default function ReviewForm() {
           />
         </label>
         <label className="flex flex-col gap-2 text-sm">
+          Company name (optional)
+          <input
+            name="company"
+            type="text"
+            className="rounded-sm border border-border bg-surface-2 px-3 py-2 text-foreground outline-none focus:border-accent"
+          />
+        </label>
+      </div>
+
+      <div className="grid gap-5 sm:grid-cols-2">
+        <label className="flex flex-col gap-2 text-sm">
           Rating
           <select
             name="rating"
@@ -78,22 +90,21 @@ export default function ReviewForm() {
             <option value="1">★☆☆☆☆ (1)</option>
           </select>
         </label>
+        <label className="flex flex-col gap-2 text-sm">
+          Service you used
+          <select
+            name="service"
+            defaultValue="Videography"
+            className="rounded-sm border border-border bg-surface-2 px-3 py-2 text-foreground outline-none focus:border-accent"
+          >
+            <option>Videography</option>
+            <option>Photography</option>
+            <option>Website Design</option>
+            <option>Graphic / Logo Design</option>
+            <option>Other</option>
+          </select>
+        </label>
       </div>
-
-      <label className="flex flex-col gap-2 text-sm">
-        Service you used
-        <select
-          name="service"
-          defaultValue="Videography"
-          className="rounded-sm border border-border bg-surface-2 px-3 py-2 text-foreground outline-none focus:border-accent"
-        >
-          <option>Videography</option>
-          <option>Photography</option>
-          <option>Website Design</option>
-          <option>Graphic / Logo Design</option>
-          <option>Other</option>
-        </select>
-      </label>
 
       <label className="flex flex-col gap-2 text-sm">
         Your review

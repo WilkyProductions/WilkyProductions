@@ -239,6 +239,7 @@ export const clientLogos: Logo[] = [
 
 export type Review = {
   name: string;
+  company?: string;
   quote: string;
   rating: number;
 };
