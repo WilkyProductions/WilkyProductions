@@ -235,6 +235,13 @@ export const clientLogos: Logo[] = [
     height: 472,
     href: "https://goldenstateglazing.info",
   },
+  {
+    src: "/clients/CagewrxLogo-BLK.png",
+    alt: "CageWRX logo",
+    width: 1220,
+    height: 308,
+    href: "https://cagewrx.com",
+  },
 ];
 
 export type Review = {

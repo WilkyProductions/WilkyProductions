@@ -10,7 +10,7 @@ function Stars({ count }: { count: number }) {
         <svg
           key={i}
           viewBox="0 0 20 20"
-          className={`h-8 w-8 sm:h-9 sm:w-9 ${i < count ? "fill-current" : "fill-none stroke-current"}`}
+          className={`h-12 w-12 sm:h-14 sm:w-14 ${i < count ? "fill-current" : "fill-none stroke-current"}`}
         >
           <path
             d="M10 1.5 12.4 7 18.5 7.6 13.9 11.6 15.3 17.5 10 14.3 4.7 17.5 6.1 11.6 1.5 7.6 7.6 7 Z"
