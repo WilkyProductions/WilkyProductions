@@ -236,3 +236,27 @@ export const clientLogos: Logo[] = [
     href: "https://goldenstateglazing.info",
   },
 ];
+
+export type Review = {
+  name: string;
+  quote: string;
+  rating: number;
+};
+
+export const reviews: Review[] = [
+  {
+    name: "Client Name",
+    quote: "Placeholder review — swap in a real client testimonial here.",
+    rating: 5,
+  },
+  {
+    name: "Client Name",
+    quote: "Placeholder review — swap in a real client testimonial here.",
+    rating: 5,
+  },
+  {
+    name: "Client Name",
+    quote: "Placeholder review — swap in a real client testimonial here.",
+    rating: 5,
+  },
+];

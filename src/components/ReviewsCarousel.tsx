@@ -1,30 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-
-type Review = {
-  name: string;
-  quote: string;
-  rating: number;
-};
-
-const reviews: Review[] = [
-  {
-    name: "Client Name",
-    quote: "Placeholder review — swap in a real client testimonial here.",
-    rating: 5,
-  },
-  {
-    name: "Client Name",
-    quote: "Placeholder review — swap in a real client testimonial here.",
-    rating: 5,
-  },
-  {
-    name: "Client Name",
-    quote: "Placeholder review — swap in a real client testimonial here.",
-    rating: 5,
-  },
-];
+import { reviews } from "@/lib/media";
 
 function Stars({ count }: { count: number }) {
   return (
