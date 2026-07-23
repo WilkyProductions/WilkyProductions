@@ -246,18 +246,9 @@ export type Review = {
 
 export const reviews: Review[] = [
   {
-    name: "Client Name",
-    quote: "Placeholder review — swap in a real client testimonial here.",
-    rating: 5,
-  },
-  {
-    name: "Client Name",
-    quote: "Placeholder review — swap in a real client testimonial here.",
-    rating: 5,
-  },
-  {
-    name: "Client Name",
-    quote: "Placeholder review — swap in a real client testimonial here.",
+    name: "Doug Mittag",
+    company: "M81 Designs",
+    quote: "Dude, I just looked at the website. It looks fu**ing bad*ss!",
     rating: 5,
   },
 ];
