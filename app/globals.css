@@ -1,0 +1,103 @@
+@import "tailwindcss";
+
+:root {
+  --ink: #0d1115;
+  --paper: #ffffff;
+  --mist: #f4f7f8;
+  --signal: #22d3ee;
+  --signal-deep: #0e8fa3;
+  --steel: #5b6572;
+  --line: #e4e9ec;
+  --line-dark: #232a30;
+
+  --font-display: var(--font-anton);
+  --font-script: var(--font-script);
+  --font-body: var(--font-work-sans);
+}
+
+@theme inline {
+  --color-ink: var(--ink);
+  --color-paper: var(--paper);
+  --color-mist: var(--mist);
+  --color-signal: var(--signal);
+  --color-signal-deep: var(--signal-deep);
+  --color-steel: var(--steel);
+  --color-line: var(--line);
+  --color-line-dark: var(--line-dark);
+  --font-display: var(--font-display);
+  --font-script: var(--font-script);
+  --font-body: var(--font-body);
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html {
+  scroll-behavior: smooth;
+}
+
+body {
+  background: var(--paper);
+  color: var(--ink);
+  font-family: var(--font-body), ui-sans-serif, system-ui, sans-serif;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  html {
+    scroll-behavior: auto;
+  }
+  * {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}
+
+/* Sprocket / film-leader divider */
+.sprocket-row {
+  display: flex;
+  gap: 22px;
+  overflow: hidden;
+}
+.sprocket-hole {
+  flex: none;
+  width: 12px;
+  height: 12px;
+  border-radius: 3px;
+}
+
+/* Marquee ticker */
+.marquee-track {
+  display: flex;
+  width: max-content;
+  animation: marquee 30s linear infinite;
+}
+@keyframes marquee {
+  from {
+    transform: translateX(0);
+  }
+  to {
+    transform: translateX(-50%);
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .marquee-track {
+    animation: none;
+  }
+}
+
+/* Soft glow used behind hero / CTA headlines */
+.glow-cyan {
+  background: radial-gradient(
+    60% 60% at 50% 40%,
+    color-mix(in srgb, var(--signal) 35%, transparent) 0%,
+    transparent 70%
+  );
+}
+
+:focus-visible {
+  outline: 3px solid var(--signal);
+  outline-offset: 3px;
+}
