@@ -242,6 +242,12 @@ export const clientLogos: Logo[] = [
     height: 308,
     href: "https://cagewrx.com",
   },
+  {
+    src: "/clients/IDdesignsLogo-BLK.png",
+    alt: "ID Designs logo",
+    width: 1220,
+    height: 347,
+  },
 ];
 
 export type Review = {

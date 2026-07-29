@@ -129,29 +129,43 @@ export default function Home() {
         </div>
       </section>
 
-      <section className="bg-accent py-8">
-        <div className="mx-auto max-w-6xl px-6">
-          <p className="text-center text-xs font-semibold uppercase tracking-[0.25em] text-black/60">
-            Recent Clients
+      <section className="overflow-hidden bg-accent py-8">
+        <div className="mx-auto flex max-w-6xl items-center gap-8 px-6">
+          <p className="shrink-0 text-xs font-semibold uppercase tracking-[0.25em] text-black/60">
+            Clients:
           </p>
-          <div className="mt-5 flex flex-wrap items-center justify-center gap-x-12 gap-y-6">
-            {clientLogos.map((logo) => (
-              <a
-                key={logo.alt}
-                href={logo.href}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="transition-opacity hover:opacity-70"
-              >
-                <Image
-                  src={logo.src}
-                  alt={logo.alt}
-                  width={logo.width}
-                  height={logo.height}
-                  className="h-14 w-auto sm:h-16"
-                />
-              </a>
-            ))}
+          <div className="marquee-mask relative flex-1 overflow-hidden">
+            <div className="marquee-track flex w-max items-center gap-16">
+              {[...clientLogos, ...clientLogos].map((logo, i) =>
+                logo.href ? (
+                  <a
+                    key={`${logo.alt}-${i}`}
+                    href={logo.href}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="shrink-0 transition-opacity hover:opacity-70"
+                  >
+                    <Image
+                      src={logo.src}
+                      alt={logo.alt}
+                      width={logo.width}
+                      height={logo.height}
+                      className="h-14 w-auto sm:h-16"
+                    />
+                  </a>
+                ) : (
+                  <span key={`${logo.alt}-${i}`} className="shrink-0">
+                    <Image
+                      src={logo.src}
+                      alt={logo.alt}
+                      width={logo.width}
+                      height={logo.height}
+                      className="h-14 w-auto sm:h-16"
+                    />
+                  </span>
+                ),
+              )}
+            </div>
           </div>
         </div>
       </section>

@@ -2,8 +2,7 @@ import type { Metadata } from "next";
 import { Inter, Anton } from "next/font/google";
 import { Analytics } from "@vercel/analytics/next";
 import "./globals.css";
-import Header from "@/components/Header";
-import Footer from "@/components/Footer";
+import SiteChrome from "@/components/SiteChrome";
 
 const inter = Inter({
   variable: "--font-inter",
@@ -30,9 +29,7 @@ export default function RootLayout({
   return (
     <html lang="en" className={`${inter.variable} ${anton.variable} h-full antialiased`}>
       <body className="flex min-h-full flex-col bg-background text-foreground">
-        <Header />
-        <main className="flex-1">{children}</main>
-        <Footer />
+        <SiteChrome>{children}</SiteChrome>
         <Analytics />
       </body>
     </html>
