@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import Image from "next/image";
 import Link from "next/link";
+import ZoomableShot from "./ZoomableShot";
 import "../portfolio.css";
 
 export const metadata: Metadata = {
@@ -315,22 +316,18 @@ export default function PortfolioPage() {
           <div className="aiGrid">
             <div className="aiCard">
               <div className="aiShots">
-                <div className="aiShot">
-                  <Image
-                    src="/portfolio/CagewrxProductOptions-app.png"
-                    alt="Shopify Product Options Platform, screen 1"
-                    width={1400}
-                    height={1430}
-                  />
-                </div>
-                <div className="aiShot">
-                  <Image
-                    src="/portfolio/CagewrxProductOptions-app-2.png"
-                    alt="Shopify Product Options Platform, screen 2"
-                    width={1400}
-                    height={1446}
-                  />
-                </div>
+                <ZoomableShot
+                  src="/portfolio/CagewrxProductOptions-app.png"
+                  alt="Shopify Product Options Platform, screen 1"
+                  width={1400}
+                  height={1430}
+                />
+                <ZoomableShot
+                  src="/portfolio/CagewrxProductOptions-app-2.png"
+                  alt="Shopify Product Options Platform, screen 2"
+                  width={1400}
+                  height={1446}
+                />
               </div>
               <div className="aiIcon">
                 <svg width="22" height="22" viewBox="0 0 24 24" fill="none">
@@ -368,22 +365,18 @@ export default function PortfolioPage() {
 
             <div className="aiCard">
               <div className="aiShots">
-                <div className="aiShot">
-                  <Image
-                    src="/portfolio/CagewrxOPS-app.png"
-                    alt="Order Management Platform, screen 1"
-                    width={1400}
-                    height={1441}
-                  />
-                </div>
-                <div className="aiShot">
-                  <Image
-                    src="/portfolio/CagewrxOPS-app-2.png"
-                    alt="Order Management Platform, screen 2"
-                    width={1400}
-                    height={1441}
-                  />
-                </div>
+                <ZoomableShot
+                  src="/portfolio/CagewrxOPS-app.png"
+                  alt="Order Management Platform, screen 1"
+                  width={1400}
+                  height={1441}
+                />
+                <ZoomableShot
+                  src="/portfolio/CagewrxOPS-app-2.png"
+                  alt="Order Management Platform, screen 2"
+                  width={1400}
+                  height={1441}
+                />
               </div>
               <div className="aiIcon">
                 <svg width="22" height="22" viewBox="0 0 24 24" fill="none">
