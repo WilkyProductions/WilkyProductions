@@ -18,9 +18,9 @@ export default function PortfolioPage() {
             <Image
               src="/brand/wilky-logo.png"
               alt="Wilky Productions"
-              width={140}
-              height={28}
-              style={{ height: 28, width: "auto" }}
+              width={280}
+              height={56}
+              style={{ height: 56, width: "auto" }}
             />
             <span>wilkyproductions.com</span>
           </Link>
@@ -98,9 +98,9 @@ export default function PortfolioPage() {
               <div className="sub">Approximate — 2018 baseline vs. today</div>
               <div className="chartWrap">
                 <div
-                  className="barChart barChartVertical"
+                  className="lineChart"
                   role="img"
-                  aria-label="Approximate annual online revenue grew from $1.2M in 2018 to $2.5M today"
+                  aria-label="Line chart showing approximate annual online revenue climbing from $1.2M in 2018 to $2.5M today, trending upward"
                 >
                   <div className="barChartGrid" aria-hidden="true">
                     <span />
@@ -108,23 +108,42 @@ export default function PortfolioPage() {
                     <span />
                     <span />
                   </div>
-                  <div className="barChartCol">
-                    <div className="barChartValue">$1.2M</div>
-                    <div
-                      className="barChartBar"
-                      style={{ height: "48%" }}
+                  <svg
+                    className="lineChartSvg"
+                    viewBox="0 0 500 220"
+                    preserveAspectRatio="none"
+                    style={{ overflow: "visible" }}
+                  >
+                    <path
+                      d="M50,175 C150,163 230,128 300,98 C355,74 383,35 398,6"
+                      fill="none"
+                      stroke="var(--accent)"
+                      strokeWidth="3"
+                      strokeLinecap="round"
+                      vectorEffect="non-scaling-stroke"
                     />
-                    <div className="barChartLabel">2018 Baseline</div>
-                  </div>
-                  <div className="barChartCol">
-                    <div className="barChartValue barChartValueAccent">
+                    <path
+                      className="lineChartArrowhead"
+                      d="M388,6 L400,-18 L412,6 Z"
+                      fill="var(--accent)"
+                    />
+                    <circle cx="50" cy="175" r="5" fill="var(--surface-2)" stroke="var(--accent)" strokeWidth="2" vectorEffect="non-scaling-stroke" />
+                    <circle cx="300" cy="98" r="5" fill="var(--accent)" />
+                    <text x="50" y="150" className="lineChartValue" textAnchor="start">
+                      $1.2M
+                    </text>
+                    <text
+                      x="300"
+                      y="75"
+                      className="lineChartValue lineChartValueAccent"
+                      textAnchor="middle"
+                    >
                       $2.5M
-                    </div>
-                    <div
-                      className="barChartBar barChartBarAccent"
-                      style={{ height: "100%" }}
-                    />
-                    <div className="barChartLabel">Today</div>
+                    </text>
+                  </svg>
+                  <div className="lineChartLabels">
+                    <span className="barChartLabel">2018 Baseline</span>
+                    <span className="barChartLabel">Today</span>
                   </div>
                 </div>
               </div>
@@ -184,8 +203,8 @@ export default function PortfolioPage() {
                 <Image
                   src="/portfolio/cagewrx.jpg"
                   alt="CageWRX ecommerce site"
-                  width={900}
-                  height={523}
+                  width={1600}
+                  height={886}
                 />
               </div>
               <div className="projectBody">
@@ -251,8 +270,8 @@ export default function PortfolioPage() {
                 <Image
                   src="/portfolio/cook-coatings.jpg"
                   alt="Cook Coatings website"
-                  width={900}
-                  height={523}
+                  width={1600}
+                  height={877}
                 />
               </div>
               <div className="projectBody">
@@ -295,6 +314,24 @@ export default function PortfolioPage() {
 
           <div className="aiGrid">
             <div className="aiCard">
+              <div className="aiShots">
+                <div className="aiShot">
+                  <Image
+                    src="/portfolio/CagewrxProductOptions-app.png"
+                    alt="Shopify Product Options Platform, screen 1"
+                    width={1400}
+                    height={1430}
+                  />
+                </div>
+                <div className="aiShot">
+                  <Image
+                    src="/portfolio/CagewrxProductOptions-app-2.png"
+                    alt="Shopify Product Options Platform, screen 2"
+                    width={1400}
+                    height={1446}
+                  />
+                </div>
+              </div>
               <div className="aiIcon">
                 <svg width="22" height="22" viewBox="0 0 24 24" fill="none">
                   <path
@@ -330,6 +367,24 @@ export default function PortfolioPage() {
             </div>
 
             <div className="aiCard">
+              <div className="aiShots">
+                <div className="aiShot">
+                  <Image
+                    src="/portfolio/CagewrxOPS-app.png"
+                    alt="Order Management Platform, screen 1"
+                    width={1400}
+                    height={1441}
+                  />
+                </div>
+                <div className="aiShot">
+                  <Image
+                    src="/portfolio/CagewrxOPS-app-2.png"
+                    alt="Order Management Platform, screen 2"
+                    width={1400}
+                    height={1441}
+                  />
+                </div>
+              </div>
               <div className="aiIcon">
                 <svg width="22" height="22" viewBox="0 0 24 24" fill="none">
                   <path
