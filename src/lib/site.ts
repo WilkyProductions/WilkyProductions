@@ -8,11 +8,13 @@ export const site = {
   email: "jwilky108@gmail.com",
   emailHref: "mailto:jwilky108@gmail.com",
   social: {
-    facebook: "#",
-    instagram: "#",
+    facebook: "https://www.facebook.com/wilkyproductions",
+    instagram: "https://www.instagram.com/wilkyproductions",
     youtube: "https://www.youtube.com/channel/UCpNGpdql_XJiYtU66YK5nRw",
   },
 };
+
+export const siteUrl = "https://www.wilkyproductions.com";
 
 export const nav = [
   { href: "/", label: "Home" },
