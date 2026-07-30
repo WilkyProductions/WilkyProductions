@@ -59,9 +59,9 @@ export default function Home() {
 
         <div className="relative mx-auto flex max-w-6xl flex-col items-center gap-10 px-6 pt-28 pb-8 text-center sm:pt-48 lg:flex-row lg:items-center lg:justify-between lg:gap-12 lg:pb-16 lg:text-left">
           <div className="order-2 flex flex-col items-center gap-10 lg:order-none lg:items-start">
-            <p className="relative z-10 max-w-2xl text-lg text-text-secondary sm:text-xl lg:text-2xl">
+            <h1 className="relative z-10 max-w-2xl text-lg font-normal text-text-secondary sm:text-xl lg:text-2xl">
               {site.tagline} <span className="text-foreground">{site.taglineEmphasis}</span>
-            </p>
+            </h1>
             <div className="flex flex-wrap items-center justify-center gap-4 lg:justify-start">
               <Link
                 href="/videos"

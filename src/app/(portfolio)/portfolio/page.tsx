@@ -8,6 +8,10 @@ export const metadata: Metadata = {
   title: "Johnny Wilkinson | Portfolio",
   description:
     "Portfolio of Johnny Wilkinson — Marketing Manager specializing in digital growth, ecommerce, and business systems.",
+  robots: {
+    index: false,
+    follow: false,
+  },
 };
 
 export default function PortfolioPage() {
