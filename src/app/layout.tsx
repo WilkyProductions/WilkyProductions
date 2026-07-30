@@ -3,6 +3,7 @@ import { Inter, Anton } from "next/font/google";
 import { Analytics } from "@vercel/analytics/next";
 import "./globals.css";
 import SiteChrome from "@/components/SiteChrome";
+import GoogleAnalytics from "@/components/GoogleAnalytics";
 
 const inter = Inter({
   variable: "--font-inter",
@@ -31,6 +32,7 @@ export default function RootLayout({
       <body className="flex min-h-full flex-col bg-background text-foreground">
         <SiteChrome>{children}</SiteChrome>
         <Analytics />
+        <GoogleAnalytics />
       </body>
     </html>
   );
