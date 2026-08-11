@@ -35,7 +35,7 @@ const packages = [
   },
   {
     name: "Multi-Page",
-    price: "$2,000",
+    price: "$2,500",
     features: [
       "Up to 3 pages included (e.g. Home, About, Services, Contact)",
       "Custom nav menu connecting every page",
@@ -48,7 +48,7 @@ const packages = [
   },
   {
     name: "Ecommerce",
-    price: "$3,000",
+    price: "$3,500",
     features: [
       "Full online store build with product catalog and product pages",
       "Shopping cart and secure checkout",
