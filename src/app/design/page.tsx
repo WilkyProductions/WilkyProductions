@@ -6,7 +6,7 @@ import OtherServices from "@/components/OtherServices";
 import { designCategories } from "@/lib/media";
 
 export const metadata: Metadata = {
-  title: "Design | Wilky Productions",
+  title: "Design",
   description: "Logo design, apparel graphics, and motorsports imagery. Email for pricing.",
 };
 

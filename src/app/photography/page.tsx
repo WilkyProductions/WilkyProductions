@@ -6,7 +6,7 @@ import OtherServices from "@/components/OtherServices";
 import { photographyGallery } from "@/lib/media";
 
 export const metadata: Metadata = {
-  title: "Photography | Wilky Productions",
+  title: "Photography",
   description: "Family photos, events, and racing/motorsports photography. Email for pricing.",
 };
 

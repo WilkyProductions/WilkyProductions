@@ -6,7 +6,7 @@ import OtherServices from "@/components/OtherServices";
 import { videoCategories } from "@/lib/media";
 
 export const metadata: Metadata = {
-  title: "Videos | Wilky Productions",
+  title: "Videos",
   description:
     "Wedding videos, business spotlights, real estate walkthroughs, offroad and car videos, and aerial videography.",
 };

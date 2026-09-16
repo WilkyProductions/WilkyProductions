@@ -8,7 +8,7 @@ import OtherServices from "@/components/OtherServices";
 import { websiteDesignExamples } from "@/lib/media";
 
 export const metadata: Metadata = {
-  title: "Website Design | Wilky Productions",
+  title: "Website Design",
   description: "New websites or redesigns, built to fit your business. Email for pricing.",
 };
 
@@ -65,6 +65,25 @@ const process = [
   { step: "2. Design", detail: "A layout and style direction built around your brand." },
   { step: "3. Build", detail: "The site gets built, tested, and reviewed with you." },
   { step: "4. Launch", detail: "Site goes live, with a walkthrough of anything you'll manage yourself." },
+];
+
+const proposals = [
+  {
+    title: "Full proposal, in detail",
+    description:
+      "Download the full breakdown of every package, what's included, how the process works, and answers to common questions — handy if you want to review it later or share it with someone else on your team.",
+    href: "/website-design-proposal.pdf",
+    previewSrc: "/website-design-proposal-preview.jpg",
+    previewAlt: "Website Design Proposal PDF preview",
+  },
+  {
+    title: "Hosting & maintenance plans",
+    description:
+      "After launch, keep your site secure, updated, and running smoothly with an ongoing care plan — hosting, backups, security updates, and content edits, all handled for you. See the three plans and monthly vs. annual pricing.",
+    href: "/hosting-maintenance-proposal.pdf",
+    previewSrc: "/hosting-maintenance-proposal-preview.jpg",
+    previewAlt: "Hosting & Maintenance Plans PDF preview",
+  },
 ];
 
 export default function WebsiteDesignPage() {
@@ -126,58 +145,53 @@ export default function WebsiteDesignPage() {
             ))}
           </div>
 
-          <div className="mt-12 rounded-sm border border-border bg-surface-2 p-6 sm:p-8">
-            <div className="flex flex-col gap-6 md:flex-row md:items-center">
-              <a
-                href="/website-design-proposal.pdf"
-                target="_blank"
-                rel="noopener noreferrer"
-                className="mx-auto block w-full max-w-[220px] shrink-0 overflow-hidden rounded-sm border border-border md:mx-0"
+          <div className="mt-12 grid gap-6">
+            {proposals.map((proposal) => (
+              <div
+                key={proposal.title}
+                className="rounded-sm border border-border bg-surface-2 p-6 sm:p-8"
               >
-                <Image
-                  src="/website-design-proposal-preview.jpg"
-                  alt="Website Design Proposal PDF preview"
-                  width={900}
-                  height={1165}
-                  className="w-full"
-                />
-              </a>
-              <div className="flex-1">
-                <h3 className="font-display text-xl uppercase tracking-wide">
-                  Full proposal, in detail
-                </h3>
-                <p className="mt-3 text-sm text-text-secondary">
-                  Download the full breakdown of every package, what&apos;s included, how the
-                  process works, and answers to common questions — handy if you want to
-                  review it later or share it with someone else on your team.
-                </p>
-                <div className="mt-5 flex flex-wrap gap-4">
+                <div className="flex flex-col gap-6 md:flex-row md:items-center">
                   <a
-                    href="/website-design-proposal.pdf"
+                    href={proposal.href}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="rounded-sm bg-accent px-6 py-3 text-sm font-semibold uppercase tracking-wide text-black transition-colors hover:bg-accent-dark"
+                    className="mx-auto block w-full max-w-[220px] shrink-0 overflow-hidden rounded-sm border border-border md:mx-0"
                   >
-                    View proposal
+                    <Image
+                      src={proposal.previewSrc}
+                      alt={proposal.previewAlt}
+                      width={900}
+                      height={1165}
+                      className="w-full"
+                    />
                   </a>
-                  <a
-                    href="/website-design-proposal.pdf"
-                    download
-                    className="rounded-sm border-2 border-accent px-6 py-3 text-sm font-semibold uppercase tracking-wide text-accent transition-colors hover:bg-accent hover:text-black"
-                  >
-                    Download PDF
-                  </a>
+                  <div className="flex-1">
+                    <h3 className="font-display text-xl uppercase tracking-wide">
+                      {proposal.title}
+                    </h3>
+                    <p className="mt-3 text-sm text-text-secondary">{proposal.description}</p>
+                    <div className="mt-5 flex flex-wrap gap-4">
+                      <a
+                        href={proposal.href}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="rounded-sm bg-accent px-6 py-3 text-sm font-semibold uppercase tracking-wide text-black transition-colors hover:bg-accent-dark"
+                      >
+                        View proposal
+                      </a>
+                      <a
+                        href={proposal.href}
+                        download
+                        className="rounded-sm border-2 border-accent px-6 py-3 text-sm font-semibold uppercase tracking-wide text-accent transition-colors hover:bg-accent hover:text-black"
+                      >
+                        Download PDF
+                      </a>
+                    </div>
+                  </div>
                 </div>
               </div>
-            </div>
-
-            <div className="mt-8 hidden overflow-hidden rounded-sm border border-border md:block">
-              <iframe
-                src="/website-design-proposal.pdf"
-                title="Website Design Proposal"
-                className="h-[700px] w-full"
-              />
-            </div>
+            ))}
           </div>
         </div>
       </section>

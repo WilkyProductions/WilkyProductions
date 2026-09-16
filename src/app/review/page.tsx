@@ -3,7 +3,7 @@ import PageHero from "@/components/PageHero";
 import ReviewForm from "@/components/ReviewForm";
 
 export const metadata: Metadata = {
-  title: "Leave a Review | Wilky Productions",
+  title: "Leave a Review",
   description: "Share your experience working with Wilky Productions.",
 };
 

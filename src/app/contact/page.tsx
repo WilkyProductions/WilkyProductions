@@ -4,7 +4,7 @@ import ContactForm from "@/components/ContactForm";
 import { site } from "@/lib/site";
 
 export const metadata: Metadata = {
-  title: "Contact | Wilky Productions",
+  title: "Contact",
   description: "Get a quote on videography, photography, website design, or graphic design.",
 };
 
