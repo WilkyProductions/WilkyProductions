@@ -21,7 +21,7 @@ export async function POST(request: Request) {
   const resend = new Resend(apiKey);
 
   const { error } = await resend.emails.send({
-    from: "Wilky Productions Website <onboarding@resend.dev>",
+    from: "Wilky Productions Website <reviews@wilkyproductions.com>",
     to: site.email,
     subject: `New review submission — ${name} (${rating}★)`,
     text: `A new review was submitted on the website.\n\nName: ${name}\nCompany: ${company || "N/A"}\nRating: ${rating} / 5\nService: ${service || "N/A"}\n\nReview:\n${quote}\n\nAdd this to the Reviews section on the site if it looks good to publish.`,
