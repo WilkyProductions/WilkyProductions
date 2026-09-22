@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import Link from "next/link";
 import { reviews } from "@/lib/media";
 
 function Stars({ count }: { count: number }) {
@@ -68,6 +69,13 @@ export default function ReviewsCarousel() {
             />
           ))}
         </div>
+
+        <Link
+          href="/review"
+          className="mt-10 inline-block rounded-sm border-2 border-accent px-6 py-3 text-sm font-semibold uppercase tracking-wide text-accent transition-colors hover:bg-accent hover:text-black"
+        >
+          Add a review
+        </Link>
       </div>
     </section>
   );
