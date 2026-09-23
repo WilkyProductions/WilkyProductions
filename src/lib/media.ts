@@ -259,6 +259,13 @@ export type Review = {
 
 export const reviews: Review[] = [
   {
+    name: "Erica Makeig",
+    company: "Showtime Collision",
+    quote:
+      "Johnny is THE person to go to for web design. Our website was outdated and \"clunky,\" from the last company. Johnny came in, saw our vision, and brought it to life. He worked quickly, was extremely responsive to our input, and was so determined to make it the best product possible. ADA compliant, visually engaging, and very functional. Cannot recommend him enough, 5 stars isn't a high enough rating!",
+    rating: 5,
+  },
+  {
     name: "Doug Mittag",
     company: "M81 Designs",
     quote: "Dude, I just looked at the website. It looks fu**ing bad*ss!",
@@ -269,13 +276,6 @@ export const reviews: Review[] = [
     company: "Golden State Glazing",
     quote:
       "Amazing drone footage with clean and clear videos to showcase finished projects in the construction industry from a higher view!",
-    rating: 5,
-  },
-  {
-    name: "Erica Makeig",
-    company: "Showtime Collision",
-    quote:
-      "Johnny is THE person to go to for web design. Our website was outdated and \"clunky,\" from the last company. Johnny came in, saw our vision, and brought it to life. He worked quickly, was extremely responsive to our input, and was so determined to make it the best product possible. ADA compliant, visually engaging, and very functional. Cannot recommend him enough, 5 stars isn't a high enough rating!",
     rating: 5,
   },
 ];
