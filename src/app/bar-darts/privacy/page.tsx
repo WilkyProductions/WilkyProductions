@@ -52,8 +52,8 @@ export default function BarDartsPrivacyPage() {
             <h2 className="font-display text-lg uppercase tracking-wide">Contact</h2>
             <p className="mt-2 text-text-secondary">
               Questions? Email{" "}
-              <a href="mailto:bardarts@wilkyproductions.com" className="text-accent hover:underline">
-                bardarts@wilkyproductions.com
+              <a href="mailto:jwilky108@gmail.com" className="text-accent hover:underline">
+                jwilky108@gmail.com
               </a>
               .
             </p>
