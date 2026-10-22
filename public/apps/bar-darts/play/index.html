@@ -1,0 +1,1467 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<base href="/apps/bar-darts/play/">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="apple-touch-icon" href="apple-touch-icon.png">
+<link rel="icon" type="image/png" sizes="192x192" href="icon-192.png">
+<meta name="theme-color" content="#111814">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Bar Darts">
+<meta name="description" content="Bar Darts: Turf War, Bounty, Dart Bingo and classic darts games. Tap the board to score.">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, user-scalable=no">
+<meta name="format-detection" content="telephone=no">
+<meta name="color-scheme" content="dark">
+<title>Bar Darts</title>
+<style>
+@font-face{font-family:'Teko';font-weight:500;font-display:swap;src:url(fonts/teko-latin-500-normal.woff2) format('woff2')}
+@font-face{font-family:'Teko';font-weight:600;font-display:swap;src:url(fonts/teko-latin-600-normal.woff2) format('woff2')}
+@font-face{font-family:'Teko';font-weight:700;font-display:swap;src:url(fonts/teko-latin-700-normal.woff2) format('woff2')}
+@font-face{font-family:'Barlow';font-weight:400;font-display:swap;src:url(fonts/barlow-latin-400-normal.woff2) format('woff2')}
+@font-face{font-family:'Barlow';font-weight:500;font-display:swap;src:url(fonts/barlow-latin-500-normal.woff2) format('woff2')}
+@font-face{font-family:'Barlow';font-weight:600;font-display:swap;src:url(fonts/barlow-latin-600-normal.woff2) format('woff2')}
+@font-face{font-family:'Barlow';font-weight:700;font-display:swap;src:url(fonts/barlow-latin-700-normal.woff2) format('woff2')}
+:root{color-scheme:dark;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+html,body{margin:0;-webkit-tap-highlight-color:transparent;-webkit-user-select:none;user-select:none;-webkit-touch-callout:none;overscroll-behavior:none}
+input{-webkit-user-select:text;user-select:text}
+img{max-width:100%}
+[hidden]{display:none!important}
+</style>
+</head>
+<body>
+<div id="bds" aria-hidden="true"><div id="bdsc"><div id="bdsr"></div><div id="bdsd"><div id="bdsq"><svg viewBox="-20 -60 520 120" width="520" height="120">
+<defs><linearGradient id="bdsb" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#E9EEF0"/><stop offset=".5" stop-color="#8E979B"/><stop offset="1" stop-color="#3A4144"/></linearGradient></defs>
+<path d="M0 0 L70 -7 L70 7 Z" fill="#C9CFD2"/>
+<rect x="68" y="-17" width="150" height="34" rx="8" fill="url(#bdsb)"/>
+<g stroke="#2A3033" stroke-width="5" opacity=".55"><line x1="92" y1="-16" x2="92" y2="16"/><line x1="112" y1="-16" x2="112" y2="16"/><line x1="132" y1="-16" x2="132" y2="16"/><line x1="152" y1="-16" x2="152" y2="16"/><line x1="172" y1="-16" x2="172" y2="16"/><line x1="192" y1="-16" x2="192" y2="16"/></g>
+<rect x="214" y="-8" width="130" height="16" rx="5" fill="#1C2124"/>
+<path d="M330 -4 L470 -52 L480 -50 L440 -4 Z" fill="#FF8A3D"/>
+<path d="M330 4 L470 52 L480 50 L440 4 Z" fill="#3FB4E6"/>
+<path d="M330 -3 L480 -3 L480 3 L330 3 Z" fill="#F2EEE3" opacity=".9"/>
+</svg></div></div></div></div>
+<style>
+#bds{position:fixed;inset:0;z-index:99999;background:#111814 url(splash.png) center/contain no-repeat;transition:opacity .45s ease;pointer-events:none}
+#bds.out{opacity:0}
+#bdsc{position:absolute;left:0;top:0;width:0;height:0}
+#bdsd{position:absolute;left:0;top:0;transform-origin:0 0;opacity:0}
+#bdsd svg{position:absolute;left:-22px;top:-60px;overflow:visible}
+#bdsq{transform-origin:0 0}
+#bdsd.go{animation:bdsfly .48s cubic-bezier(.55,0,.9,.55) forwards}
+#bdsq.hit{animation:bdsquiver .5s ease-out}
+@keyframes bdsfly{0%{opacity:0;transform:translate(1500px,870px) rotate(30deg) scale(3.4)}12%{opacity:1}100%{opacity:1;transform:translate(0,0) rotate(30deg) scale(1.16)}}
+@keyframes bdsquiver{0%{transform:rotate(0)}20%{transform:rotate(-4deg)}40%{transform:rotate(3deg)}60%{transform:rotate(-2deg)}80%{transform:rotate(1deg)}100%{transform:rotate(0)}}
+#bdsr{position:absolute;left:0;top:0;width:100px;height:100px;margin:-50px 0 0 -50px;border-radius:50%;border:16px solid #FF8A3D;opacity:0;box-sizing:border-box}
+#bdsr.go{animation:bdsring .6s ease-out forwards}
+@keyframes bdsring{0%{opacity:.95;transform:scale(.4)}100%{opacity:0;transform:scale(7)}}
+</style>
+<script>
+(function(){
+  var el=document.getElementById('bds'),c=document.getElementById('bdsc'),d=document.getElementById('bdsd'),q=document.getElementById('bdsq'),r=document.getElementById('bdsr'),started=false;
+  function plug(n){try{return window.Capacitor&&window.Capacitor.Plugins&&window.Capacitor.Plugins[n]}catch(e){return null}}
+  function hideNative(){var S=plug('SplashScreen');try{if(S)S.hide({fadeOutDuration:0})}catch(e){}}
+  function place(){var W=window.innerWidth,H=window.innerHeight,s=Math.min(W/1260,H/2049);c.style.transform='translate('+(W/2)+'px,'+(H/2-35.5*s)+'px) scale('+s+')'}
+  function done(){el.classList.add('out');setTimeout(function(){if(el.parentNode)el.parentNode.removeChild(el)},500)}
+  function start(){if(started)return;started=true;place();hideNative();
+    setTimeout(function(){d.classList.add('go')},250);
+    setTimeout(function(){r.classList.add('go');q.classList.add('hit');var H=plug('Haptics');try{if(H)H.impact({style:'MEDIUM'})}catch(e){}},730);
+    setTimeout(done,1750)}
+  window.addEventListener('resize',place);
+  var img=new Image();img.onload=start;img.onerror=start;img.src='splash.png';
+  setTimeout(start,1200);setTimeout(function(){hideNative();if(el.parentNode)done()},4000);
+})();
+</script>
+<style>
+/* Layout: pub-scoreboard. Big tappable board on the left, chalk scoreboard + feed on the right; stacks on phones. Single dark theme by choice. */
+:root{
+  --bg:#111814; --panel:#19221e; --panel-2:#202b26; --line:#2d3b35;
+  --chalk:#ece6d6; --muted:#8e9a92;
+  --t0:#ff8a3d; --t1:#3fb4e6; --t2:#c08cff;
+  --t0-ink:#2a1606; --t1-ink:#06202b; --t2-ink:#1f0d38;
+  --seg-dark:#1d2420; --seg-light:#3d3a31; --ring-red:#5b2924; --ring-green:#1f3e2c; --wire:#0b0f0d;
+  --font-display:"Teko","Barlow Condensed","Arial Narrow",Impact,sans-serif;
+  --font-body:"Barlow","Segoe UI",system-ui,-apple-system,sans-serif;
+  color-scheme:dark;
+}
+html,body{height:100%}
+body{background:var(--bg);color:var(--chalk);font-family:var(--font-body);font-size:15px;line-height:1.45;
+  padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));padding-block:12px;box-sizing:border-box}
+*{box-sizing:border-box}
+button{font:inherit;color:inherit;cursor:pointer;border:0;background:none}
+button:focus-visible,input:focus-visible{outline:2px solid var(--chalk);outline-offset:2px}
+.wrap{max-width:1280px;margin:0 auto;display:flex;flex-direction:column;gap:8px;min-height:100%}
+
+/* header */
+.top{display:flex;align-items:center;gap:12px;flex-wrap:wrap}
+.tbbar{display:flex;gap:16px;align-items:center;flex-wrap:wrap;border:2px solid var(--chalk);border-radius:14px;padding:10px 16px;background:var(--panel)}
+.tbtarget{text-align:center;min-width:110px}
+.tbtarget .l{font-size:11px;letter-spacing:.12em;text-transform:uppercase;color:var(--muted);font-weight:600}
+.tbtarget .v{font-family:var(--font-display);font-size:64px;line-height:.85;font-weight:700}
+.tbinfo{flex:1;min-width:220px;display:flex;flex-direction:column;gap:6px}
+.tbside{display:inline-flex;gap:6px;align-items:baseline;font-family:var(--font-display);font-size:24px;text-transform:uppercase;color:var(--tc);margin-right:16px}
+.tbside .ok{color:#8fe07a;font-size:18px}.tbside .no{color:#ff8f8f;font-size:18px}
+.tbmsg{color:var(--chalk)}
+.tbmeta{font-size:13px;color:var(--muted);display:flex;gap:10px;align-items:center}
+#board .seg.tbt{stroke:var(--chalk);stroke-width:3;animation:tbpulse 1.2s ease-in-out infinite}
+@keyframes tbpulse{50%{filter:brightness(1.8)}}
+@media (prefers-reduced-motion:reduce){#board .seg.tbt{animation:none;filter:brightness(1.5)}}
+.timer{font-family:var(--font-display);font-size:18px;letter-spacing:.04em;color:var(--muted);text-transform:uppercase;font-variant-numeric:tabular-nums;line-height:1}
+.timer b{color:var(--chalk);font-weight:600}
+.titleblock{display:flex;flex-direction:column;gap:4px}
+.brand{font-family:var(--font-display);font-weight:700;font-size:clamp(52px,7vw,80px);line-height:.8;letter-spacing:.02em;text-transform:uppercase;margin:0;display:flex;align-items:baseline;gap:8px}
+.brand span{color:var(--t0)} .brand em{font-style:normal;color:var(--t1)} .brand i{font-style:normal;color:var(--t2)}
+.round{font-family:var(--font-display);font-size:24px;letter-spacing:.04em;color:var(--muted);text-transform:uppercase;line-height:1}
+.round b{color:var(--chalk);font-weight:600}
+.top .spacer{flex:1}
+.btn{border:1px solid var(--line);background:var(--panel);padding:8px 14px;border-radius:8px;font-weight:600;font-size:14px;display:inline-flex;align-items:center;gap:6px}
+.btn:hover{background:var(--panel-2)}
+.btn:disabled{opacity:.4;cursor:default}
+.btn.primary{background:var(--chalk);color:var(--bg);border-color:var(--chalk)}
+.btn.big{padding:14px 22px;font-size:17px;border-radius:10px}
+
+/* game layout */
+.game{display:grid;grid-template-columns:minmax(0,1fr);gap:16px}
+@media (min-width:900px){.game{grid-template-columns:minmax(0,1fr) 320px;align-items:start}}
+.boardcol{display:flex;flex-direction:column;gap:8px;min-width:0;container-type:inline-size}
+.boardrow{display:grid;grid-template-columns:minmax(0,1fr) auto minmax(0,1fr);grid-template-areas:"th bd od";align-items:end;gap:12px}
+.boardbox{grid-area:bd;position:relative;width:min(calc(100vh - 165px),calc(100dvh - 165px),78cqw);min-width:240px;aspect-ratio:1}
+@container (max-width:620px){
+  .boardrow{grid-template-columns:minmax(0,1fr) minmax(0,1fr);grid-template-areas:"th od" "bd bd"}
+  .boardbox{width:min(100cqw,calc(100dvh - 240px));justify-self:center}
+}
+.brand{font-size:clamp(38px,4vw,54px)!important}
+.round{font-size:20px!important}
+#board{width:100%;height:100%;display:block;touch-action:manipulation;user-select:none;-webkit-user-select:none}
+#board .seg{stroke:var(--wire);stroke-width:1.2;cursor:pointer;transition:filter .12s}
+#board .seg:hover{filter:brightness(1.45)}
+#board.locked .seg{cursor:default}
+#board.locked .seg:hover{filter:none}
+#board .ov{pointer-events:none;transition:fill-opacity .25s,fill .25s}
+#board .flash{animation:flash .45s ease-out}
+@keyframes flash{0%{filter:brightness(3)}100%{filter:brightness(1)}}
+.badge circle{transition:fill .25s,stroke .25s}
+.badge{pointer-events:none}
+#missring{cursor:pointer;transition:fill .15s}
+#board:not(.locked) #missring:hover{fill:var(--panel-2)}
+#board.locked #missring{cursor:default}
+#missring.flashmiss{animation:flashmiss .4s ease-out}
+@keyframes flashmiss{0%{fill:#4a4f4b}100%{fill:var(--panel)}}
+.badge text{font-family:var(--font-display);font-weight:600;font-size:19px;text-anchor:middle;dominant-baseline:central;pointer-events:none}
+
+.pending{position:fixed;inset:0;z-index:15;display:flex;align-items:center;justify-content:center;
+  background:color-mix(in srgb,var(--bg) 82%,transparent);backdrop-filter:blur(3px);
+  padding:max(16px,env(safe-area-inset-top,0px)) max(16px,env(safe-area-inset-right,0px)) max(16px,env(safe-area-inset-bottom,0px)) max(16px,env(safe-area-inset-left,0px))}
+.pending-card{display:flex;flex-direction:column;gap:14px;padding:22px;width:100%;max-width:480px;max-height:100%;overflow:auto;
+  background:var(--panel);border:1px solid var(--line);border-top:5px solid var(--tc);border-radius:16px;animation:pop .22s ease-out}
+@keyframes pop{from{transform:scale(.96);opacity:.4}to{transform:none;opacity:1}}
+.pending-card .headline{font-family:var(--font-display);font-size:30px;line-height:1;text-transform:uppercase;letter-spacing:.02em;text-wrap:balance}
+.chips{display:flex;flex-wrap:wrap;gap:6px}
+.chip{border-radius:999px;padding:4px 12px;font-weight:600;font-size:13.5px;border:1px solid var(--line);background:var(--panel-2)}
+.chip.lock{background:var(--tc);color:var(--tink);border-color:var(--tc)}
+.chip.steal,.chip.break{border-color:var(--tc);color:var(--tc)}
+.recaplist{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:6px}
+.turngain{flex:none;text-align:center;border-radius:12px;padding:8px 14px;background:var(--bg);border:1px solid var(--line);min-width:96px}
+.turngain .v{font-family:var(--font-display);font-size:52px;line-height:.85;font-weight:600;font-variant-numeric:tabular-nums}
+.turngain .l{font-size:11px;letter-spacing:.12em;text-transform:uppercase;color:var(--muted);font-weight:600;margin-top:4px}
+.turngain.pos .v{color:#8fe07a}.turngain.neg .v{color:#ff8f8f}.turngain.zero .v{color:var(--muted)}
+.turnhead{display:flex;gap:14px;align-items:flex-start;justify-content:space-between}
+.recaplist .dd{font-family:var(--font-display);font-size:20px;text-align:right;font-variant-numeric:tabular-nums}
+.recaplist .dd.pos{color:#8fe07a}.recaplist .dd.neg{color:#ff8f8f}.recaplist .dd.zero{color:var(--line)}
+.recaplist li{display:grid;grid-template-columns:62px 1fr auto;gap:10px;align-items:center;padding:8px 10px;border-radius:8px;background:var(--bg)}
+.recaplist .lbl{font-family:var(--font-display);font-size:24px;line-height:1}
+.recaplist .txt{color:var(--muted)}
+.recaplist li.hot .txt{color:var(--chalk);font-weight:600}
+.nextrow{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;border-top:1px solid var(--line);padding-top:14px}
+.minis{display:flex;gap:12px;font-variant-numeric:tabular-nums;font-size:13px;color:var(--muted);flex-wrap:wrap}
+.minis b{font-family:var(--font-display);font-size:22px;font-weight:600;margin-right:3px}
+#board .mk{pointer-events:none}
+#board .mk *{fill:none;stroke-linecap:round;transition:opacity .2s}
+#board .mk .h{stroke:var(--wire);stroke-width:9}
+#board .mk .c{stroke-width:4.5}
+.pending-card .eyebrow{font-size:12px;letter-spacing:.14em;text-transform:uppercase;color:var(--muted);font-weight:600}
+.pending-card .who{font-family:var(--font-display);font-size:34px;line-height:.9;text-transform:uppercase}
+.pending-card .recap{color:var(--muted);font-size:14px}
+
+.dartbar{display:flex;align-items:center;gap:10px;flex-wrap:wrap;justify-content:center}
+.thrower{grid-area:th;min-width:0;display:flex;flex-direction:column;align-items:stretch;gap:4px;text-align:left}
+.thrower .tname{font-family:var(--font-display);font-weight:600;font-size:clamp(28px,4.6vw,56px);line-height:.9;text-transform:uppercase;letter-spacing:.02em;color:var(--tc);display:block;overflow-wrap:normal;word-break:normal}
+.ondeck{grid-area:od;min-width:0;display:flex;flex-direction:column;align-items:stretch;gap:4px;text-align:right}
+.ondeck .dname{font-family:var(--font-display);font-weight:600;font-size:clamp(22px,3.2vw,38px);line-height:.9;text-transform:uppercase;letter-spacing:.02em;color:var(--tc);display:block;overflow-wrap:normal;word-break:normal}
+.ondeck .lbl,.ondeck .tm{font-family:var(--font-display);font-size:clamp(15px,2vw,20px);letter-spacing:.06em;text-transform:uppercase;color:var(--muted);line-height:1}
+.thrower .dartn{white-space:nowrap;font-family:var(--font-display);font-size:clamp(13px,1.6vw,22px);letter-spacing:.06em;text-transform:uppercase;color:var(--muted)}
+.thrower .dot{width:12px;height:12px;border-radius:50%}
+.slots{display:flex;gap:6px}
+.slot{min-width:64px;height:40px;border-radius:8px;border:1px dashed var(--line);display:flex;align-items:center;justify-content:center;font-family:var(--font-display);font-size:22px;color:var(--muted);padding:0 8px}
+.slot.filled{border-style:solid;color:var(--chalk);background:var(--panel)}
+.missbtn{font-family:var(--font-display);font-size:22px;letter-spacing:.06em;text-transform:uppercase;padding:6px 20px}
+.offbtn{border-color:#7a2f2f;color:#ff8f8f}
+.offbtn:hover{background:#3a1c1c}
+.offtoast{position:fixed;inset:0;z-index:25;display:flex;align-items:center;justify-content:center;pointer-events:none;padding:16px}
+.offtoast .inner{text-align:center;transform:rotate(-4deg);animation:offpop 1.9s ease-out forwards}
+.offtoast .big{font-family:var(--font-display);font-weight:700;font-size:clamp(64px,12vw,150px);line-height:.8;text-transform:uppercase;color:#ff5a5f;text-shadow:0 4px 0 #3a0d0f,0 0 40px rgba(255,90,95,.45)}
+.offtoast .quip{font-family:var(--font-display);font-size:clamp(24px,3.5vw,40px);color:var(--chalk);margin-top:10px;text-transform:uppercase;letter-spacing:.03em}
+.offtoast .pen{display:inline-block;margin-top:10px;font-family:var(--font-display);font-size:30px;background:#ff5a5f;color:#2e0709;border-radius:999px;padding:2px 16px}
+@keyframes offpop{0%{transform:rotate(-4deg) scale(2.4);opacity:0}12%{transform:rotate(-4deg) scale(.95);opacity:1}18%{transform:rotate(-4deg) scale(1.03)}80%{opacity:1}100%{transform:rotate(-4deg) scale(1);opacity:0}}
+.boardbox.shake{animation:shake .5s}
+@keyframes shake{0%,100%{transform:none}20%{transform:translate(-10px,3px) rotate(-1deg)}40%{transform:translate(9px,-4px) rotate(1deg)}60%{transform:translate(-6px,2px)}80%{transform:translate(4px,-1px)}}
+.offtoast.bonus .big{color:var(--tc);text-shadow:0 4px 0 rgba(0,0,0,.55),0 0 44px var(--tc)}
+.offtoast.bonus .inner{transform:rotate(-3deg)}
+.chip.off{border-color:#ff5a5f;color:#ff8f8f}
+.shame{font-size:14px;color:var(--muted)}
+.shame b{color:#ff8f8f;font-weight:600}
+@media (prefers-reduced-motion:reduce){.offtoast .inner{animation:offfade 1.9s forwards}.boardbox.shake{animation:none}}
+@keyframes offfade{0%,80%{opacity:1}100%{opacity:0}}
+
+/* side */
+.side{display:flex;flex-direction:column;gap:12px;min-width:0}
+.teams{display:flex;flex-direction:column;gap:6px}
+.team{display:grid;grid-template-columns:30px minmax(0,1fr) auto;align-items:center;gap:10px;border:1px solid var(--line);background:var(--panel);border-radius:10px;padding:8px 12px 8px 0;position:relative;overflow:hidden}
+.team::before{content:"";position:absolute;inset:0 auto 0 0;width:5px;background:var(--tc)}
+.team.active{border-color:var(--tc);box-shadow:0 0 0 1px var(--tc) inset;background:color-mix(in srgb,var(--tc) 10%,var(--panel))}
+.team .rank{font-family:var(--font-display);font-size:26px;line-height:1;text-align:right;color:var(--muted);font-variant-numeric:tabular-nums}
+.team.first .rank{color:var(--chalk)}
+.team .mid{min-width:0;display:flex;flex-direction:column;gap:2px}
+.team .name{font-family:var(--font-display);font-size:24px;line-height:.95;text-transform:uppercase;letter-spacing:.03em;color:var(--tc);overflow-wrap:anywhere}
+.team .stats{font-size:12px;color:var(--muted);font-variant-numeric:tabular-nums;line-height:1.3}
+.team .players{font-size:13px;display:flex;flex-wrap:wrap;gap:2px 10px;color:var(--muted)}
+.team .players span{display:inline-flex;align-items:center;gap:5px}
+.team .players span.up{color:var(--chalk);font-weight:700}
+.team .players span.up::before{content:"";width:6px;height:6px;border-radius:50%;background:var(--tc)}
+.team .right{text-align:right;display:flex;flex-direction:column;align-items:flex-end}
+.team .score{font-family:var(--font-display);font-size:46px;line-height:.85;font-weight:600;font-variant-numeric:tabular-nums}
+.team .gap{font-size:12px;color:var(--muted);font-variant-numeric:tabular-nums;white-space:nowrap}
+.team.first .gap{color:var(--tc);font-weight:600}
+.left{display:inline-block;font-size:11px;font-weight:600;letter-spacing:.04em;padding:1px 7px;border-radius:999px;border:1px solid var(--line);color:var(--chalk);margin-left:2px;font-variant-numeric:tabular-nums}
+.left.done{color:var(--muted);border-style:dashed;text-decoration:line-through}
+.team .players span.isdone{opacity:.6}
+.team.done{opacity:.62}
+.team .right .left{margin-top:4px}
+
+.card{border:1px solid var(--line);background:var(--panel);border-radius:12px;padding:12px 14px}
+.card h2{margin:0 0 8px;font-family:var(--font-display);font-weight:600;font-size:20px;letter-spacing:.06em;text-transform:uppercase;color:var(--muted);line-height:1}
+.feed{list-style:none;margin:0;padding:0 4px 0 0;display:flex;flex-direction:column;gap:6px;max-height:340px;overflow-y:auto;font-size:14px;overscroll-behavior:contain}
+.feed li{display:grid;grid-template-columns:minmax(0,auto) 50px minmax(0,1fr) auto;gap:8px;align-items:baseline}
+.feed li.sep{display:block;font-family:var(--font-display);font-size:16px;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);border-top:1px solid var(--line);padding-top:6px;margin-top:2px}
+.feed .delta{font-family:var(--font-display);font-size:20px;line-height:1;text-align:right;font-variant-numeric:tabular-nums;white-space:nowrap}
+.feed .delta.pos{color:#8fe07a}.feed .delta.neg{color:#ff8f8f}.feed .delta.zero{color:var(--line)}
+.feed .opp{display:block;font-size:12px}
+.result.wide{max-width:820px}
+.result h3{margin:0;font-family:var(--font-display);font-weight:600;font-size:22px;letter-spacing:.06em;text-transform:uppercase;color:var(--muted)}
+.result details summary{cursor:pointer;font-weight:600}
+.pstats td:first-child{color:var(--chalk)!important;font-weight:600!important}
+.pstats td,.pstats th{white-space:nowrap}
+.pstats thead th{font-family:var(--font-body)!important;font-size:12px!important;letter-spacing:.06em;color:var(--muted);font-weight:600!important}
+.feed .who{font-weight:600}
+.feed .hit{font-family:var(--font-display);font-size:19px;line-height:1;color:var(--chalk)}
+.feed .what{color:var(--muted);min-width:0}
+.feed .empty{display:block;color:var(--muted)}
+.legend{display:grid;grid-template-columns:auto 1fr;gap:6px 10px;align-items:center;font-size:13px;color:var(--muted)}
+.legend svg{display:block}
+
+/* setup */
+.setup{display:grid;grid-template-columns:minmax(0,1fr);gap:16px;max-width:980px;width:100%;margin:0 auto}
+@media (min-width:820px){.setup{grid-template-columns:minmax(0,1.1fr) minmax(0,1fr)}}
+.hero{display:flex;flex-direction:column;gap:6px;padding-block:8px}
+.hero h1{font-family:var(--font-display);font-size:clamp(56px,11vw,104px);line-height:.82;margin:0;text-transform:uppercase;letter-spacing:.01em;text-wrap:balance}
+.hero h1 span{color:var(--t0)} .hero h1 em{font-style:normal;color:var(--t1)}
+.hero p{margin:0;color:var(--muted);max-width:52ch}
+.form{display:flex;flex-direction:column;gap:14px}
+.teamform{border:1px solid var(--line);border-radius:12px;padding:12px;display:flex;flex-direction:column;gap:8px;background:var(--panel);border-top:4px solid var(--tc)}
+.teamform label{font-size:11.5px;text-transform:uppercase;letter-spacing:.12em;color:var(--muted);font-weight:600}
+.teamform input{width:100%;background:var(--bg);border:1px solid var(--line);border-radius:8px;padding:9px 10px;color:var(--chalk);font:inherit}
+.teamform input.tname{font-family:var(--font-display);font-size:24px;padding:4px 10px;color:var(--tc);text-transform:uppercase}
+.swatches{display:flex;flex-wrap:wrap;gap:8px}
+.sw{width:34px;height:34px;border-radius:50%;background:var(--c);border:2px solid transparent;box-shadow:0 0 0 2px var(--panel) inset;position:relative}
+.sw[aria-pressed="true"]{border-color:var(--chalk)}
+.sw:disabled{opacity:.18;cursor:not-allowed}
+.shufflebar{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+.order{font-size:14px;color:var(--muted);display:flex;flex-wrap:wrap;gap:4px 6px;align-items:baseline}
+.order b{font-weight:600}
+.pair{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.seg-ctl{display:flex;border:1px solid var(--line);border-radius:10px;overflow:hidden}
+.seg-ctl button{flex:1;padding:10px 0;font-family:var(--font-display);font-size:22px;color:var(--muted);border-left:1px solid var(--line)}
+.seg-ctl button:first-child{border-left:0}
+.seg-ctl button[aria-pressed="true"]{background:var(--chalk);color:var(--bg)}
+.fieldlabel{font-size:11.5px;text-transform:uppercase;letter-spacing:.12em;color:var(--muted);font-weight:600;margin-bottom:6px;display:block}
+.rules ol{margin:0;padding-left:20px;display:flex;flex-direction:column;gap:8px}
+.rules li{max-width:60ch}
+.rules li b{color:var(--chalk)}
+.rules{color:#c9c4b6}
+.k{font-family:var(--font-display);font-size:19px;line-height:1;color:var(--chalk);letter-spacing:.02em}
+
+/* confirm + results */
+.confirm{display:flex;gap:10px;align-items:center;flex-wrap:wrap;border:1px solid var(--line);background:var(--panel-2);border-radius:10px;padding:10px 12px}
+.confirm span{flex:1;min-width:160px}
+.overlay{position:fixed;inset:0;background:color-mix(in srgb,var(--bg) 88%,transparent);display:flex;align-items:center;justify-content:center;z-index:20;
+  padding:max(16px,env(safe-area-inset-top,0px)) max(16px,env(safe-area-inset-right,0px)) max(16px,env(safe-area-inset-bottom,0px)) max(16px,env(safe-area-inset-left,0px))}
+.result{background:var(--panel);border:1px solid var(--line);border-radius:16px;padding:22px;max-width:560px;width:100%;display:flex;flex-direction:column;gap:16px;max-height:100%;overflow:auto}
+.result .winner{font-family:var(--font-display);font-size:clamp(44px,9vw,64px);line-height:.85;text-transform:uppercase;margin:0;text-wrap:balance}
+.result table{width:100%;border-collapse:collapse;font-variant-numeric:tabular-nums}
+.result th,.result td{padding:7px 6px;text-align:right;border-bottom:1px solid var(--line)}
+.result th:first-child,.result td:first-child{text-align:left;color:var(--muted);font-weight:500}
+.result thead th{font-family:var(--font-display);font-size:22px;font-weight:600;text-transform:uppercase}
+.result tfoot td{font-family:var(--font-display);font-size:30px;border:0;color:var(--chalk)}
+.stepper{display:flex;align-items:center;gap:12px}
+.stepper .val{font-family:var(--font-display);font-size:40px;line-height:1;min-width:2ch;text-align:center;font-variant-numeric:tabular-nums}
+.stepper .btn{font-size:22px;width:44px;height:44px;justify-content:center;padding:0}
+.settings-teams{display:flex;flex-direction:column;gap:10px}
+.result .actions{display:flex;gap:10px;flex-wrap:wrap}
+@media (prefers-reduced-motion:reduce){#board .flash{animation:none}*{transition:none!important}}
+
+[hidden]{display:none!important}
+/* ---- game menu ---- */
+.menu{display:flex;flex-direction:column;gap:18px;max-width:1180px;width:100%;margin:0 auto;padding-block:8px}
+.menutitle{font-family:var(--font-display);font-size:clamp(56px,8vw,96px);line-height:.85;margin:4px 0 0;text-transform:uppercase;letter-spacing:.01em}
+.menu .eyebrow{font-size:12px;letter-spacing:.14em;text-transform:uppercase;color:var(--muted);font-weight:600}
+.resume{display:flex;gap:10px;flex-wrap:wrap}
+.menugrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(min(100%,300px),1fr));gap:14px}
+.gcard{display:flex;flex-direction:column;gap:8px;text-align:left;border:1px solid var(--line);background:var(--panel);border-radius:14px;padding:20px;min-height:180px;transition:border-color .15s,transform .15s,background .15s}
+.gcard:hover{border-color:var(--chalk);background:var(--panel-2)}
+.gcard:active{transform:scale(.985)}
+.gcard .gname{font-family:var(--font-display);font-size:44px;line-height:.9;text-transform:uppercase;letter-spacing:.02em}
+.gcard .gtag{color:var(--chalk);opacity:.85;max-width:40ch}
+.gcard .gmeta{margin-top:auto;font-size:13px;color:var(--muted);font-weight:600;letter-spacing:.04em}
+.gcard.feature{border-color:var(--t0);background:color-mix(in srgb,var(--t0) 8%,var(--panel))}
+.gcard.feature .gname{font-size:56px}
+/* ---- classic games ---- */
+.thrower .aim{color:var(--chalk);opacity:.85}
+.bar{height:8px;border-radius:99px;background:var(--bg);overflow:hidden;margin:3px 0}
+.bar span{display:block;height:100%;background:var(--tc);border-radius:99px}
+.kchip{display:inline-block;font-size:10.5px;font-weight:700;letter-spacing:.08em;padding:1px 6px;border-radius:4px;background:var(--tc);color:var(--bg)}
+.hearts{letter-spacing:2px;font-size:15px}
+.knum{font-size:40px!important}
+.ctable{width:100%;border-collapse:collapse;font-variant-numeric:tabular-nums}
+.ctable th{font-family:var(--font-display);font-size:18px;font-weight:600;color:var(--chalk);padding:2px 2px;text-align:center}
+.ctable td{text-align:center;padding:6px 2px;border-top:1px solid var(--line);font-family:var(--font-display);font-size:18px;line-height:1}
+.ctable td.pn{text-align:left;font-family:var(--font-body);font-size:14px;font-weight:600;color:var(--tc);max-width:84px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.ctable tr.act td{background:color-mix(in srgb,var(--tc) 12%,transparent)}
+.ctable .dead{opacity:.3}
+.ctable td.pts{color:var(--chalk);font-size:22px;text-align:right;padding-right:4px}
+.ctable td.pts.lead{color:var(--tc)}
+.cmk{display:inline-flex;align-items:center;justify-content:center;width:1.25em;height:1.25em}
+.cmk.c3{border:2px solid currentColor;border-radius:50%;font-size:.8em}
+.bcard{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:4px}
+.bcell{position:relative;aspect-ratio:1;border-radius:6px;background:var(--bg);border:1px solid var(--line);display:flex;align-items:center;justify-content:center;overflow:hidden}
+.bcell .bl{font-family:var(--font-display);font-size:26px;line-height:1;padding-top:3px;color:var(--chalk)}
+.bcell.spec .bl{font-size:13px;letter-spacing:.02em;color:var(--muted);text-align:center;line-height:1.05;padding:3px 2px 0}
+.bcell .bg{position:absolute;top:2px;right:5px;font-family:var(--font-display);font-size:16px;line-height:1;color:var(--tc)}
+.bcell .bo{position:absolute;left:3px;bottom:3px;display:flex;gap:2px}
+.bcell .bo i{font-style:normal;font-size:9px;font-weight:700;line-height:1;color:#111;border-radius:3px;padding:1px 3px}
+.bcell.own{background:var(--tc);border-color:var(--tc)}
+.bcell.own .bl{color:#111312}
+.bcell.win{box-shadow:0 0 0 3px var(--chalk) inset}
+.bchoices{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:10px}
+.bchoice{flex-direction:column;justify-content:center;gap:4px;padding:16px 8px;border-width:2px;border-color:var(--tc)}
+.bchoice .bcl{font-family:var(--font-display);font-size:30px;line-height:.9;text-transform:uppercase;white-space:nowrap}
+.bchoice .bcs{font-size:12px;letter-spacing:.06em;text-transform:uppercase;color:var(--muted);font-weight:700}
+.bchoice.closes{background:var(--tc);color:#111312}
+.bchoice.closes .bcs{color:#111312}
+.arows{display:flex;flex-direction:column;gap:10px}
+.arow{display:grid;grid-template-columns:70px minmax(0,1fr);gap:12px;align-items:center;padding:10px;border-radius:10px;background:var(--bg)}
+.arow .alab{font-family:var(--font-display);font-size:36px;line-height:1;text-align:center}
+.aopts{display:flex;flex-wrap:wrap;gap:8px}
+.aopt{flex-direction:column;align-items:flex-start;gap:2px;padding:8px 12px;min-width:96px;border-width:2px}
+.aopt .bcl{font-family:var(--font-display);font-size:24px;line-height:.9;text-transform:uppercase;white-space:nowrap}
+.aopt .bcs{font-size:11px;letter-spacing:.05em;text-transform:uppercase;color:var(--muted);font-weight:700}
+.aopt.on{border-color:var(--tc);box-shadow:0 0 0 1px var(--tc) inset}
+.aopt.closes{background:var(--tc);color:#111312}.aopt.closes .bcs{color:#111312}
+.acombo{display:grid;grid-template-columns:110px minmax(0,1fr);gap:12px;align-items:center;padding:10px;border-radius:10px;border:2px dashed var(--line)}
+.acombo .aclab{font-family:var(--font-display);font-size:22px;line-height:1;text-transform:uppercase}
+.acombo .aclab small{display:block;font-family:var(--font-body);font-size:12px;text-transform:none;color:var(--muted);margin-top:4px}
+.arows.off{opacity:.35;pointer-events:none}
+.anone{color:var(--muted);font-size:14px}
+.bposter{position:relative;text-align:center;border:3px double var(--chalk);border-radius:10px;background:var(--panel);padding:10px 12px}
+.bposter .w{font-family:var(--font-display);font-size:22px;letter-spacing:.2em;text-transform:uppercase;color:var(--muted)}
+.bposter .tgt{font-family:var(--font-display);font-size:72px;line-height:.85;font-weight:700;color:var(--t0)}
+.bposter .pay{font-size:14px;color:var(--chalk)}
+.bposter .r,.bposter .noon{position:absolute;top:8px;font-size:11px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--muted)}
+.bposter .r{left:12px}.bposter .noon{right:12px;color:#ff8f8f}
+
+/* ---- phone ---- */
+.mini{display:none;gap:6px;overflow-x:auto;padding-bottom:2px;scrollbar-width:none}
+.mchip{flex:none;display:inline-flex;align-items:center;gap:7px;border:1px solid var(--line);border-radius:999px;padding:3px 11px;background:var(--panel);font-weight:600;font-size:13px;white-space:nowrap}
+.mchip b{font-family:var(--font-display);font-size:21px;line-height:1;color:var(--tc);font-weight:600;padding-top:2px}
+.mchip.on{border-color:var(--tc);box-shadow:0 0 0 1px var(--tc) inset}
+.picksheet{position:fixed;left:0;right:0;bottom:0;z-index:40;background:var(--panel);border-top:2px solid var(--line);border-radius:18px 18px 0 0;
+  padding:14px max(16px,env(safe-area-inset-right,0px)) calc(16px + env(safe-area-inset-bottom,0px)) max(16px,env(safe-area-inset-left,0px));
+  display:flex;flex-direction:column;gap:12px;box-shadow:0 -20px 50px rgba(0,0,0,.5);animation:sheetup .16s ease-out}
+@keyframes sheetup{from{transform:translateY(40px);opacity:.3}}
+.picksheet .ph{display:flex;align-items:baseline;justify-content:space-between;gap:10px}
+.picksheet .pn{font-family:var(--font-display);font-size:54px;line-height:.8;font-weight:700}
+.picksheet .pw{color:var(--muted);font-size:13px}
+.pickrow{display:grid;grid-template-columns:repeat(var(--k,3),minmax(0,1fr));gap:10px}
+.pickrow .btn{justify-content:center;flex-direction:column;gap:2px;padding:14px 6px;font-family:var(--font-display);font-size:30px;line-height:1;border-width:2px}
+.pickrow .btn small{font-family:var(--font-body);font-size:11px;letter-spacing:.1em;text-transform:uppercase;color:var(--muted)}
+.pickrow .btn.d{border-color:#1F7A42}.pickrow .btn.t{border-color:#C8352B}
+.pickback{position:fixed;inset:0;z-index:39;background:rgba(0,0,0,.35)}
+/* tablet portrait (iPad): board on top, scoreboard + feed side by side below */
+@media (min-width:701px) and (min-aspect-ratio:5/8) and (max-aspect-ratio:1/1){
+  .game{grid-template-columns:minmax(0,1fr)!important}
+  .boardrow{grid-template-columns:minmax(0,1fr) minmax(0,1fr);grid-template-areas:"th od" "bd bd";align-items:end}
+  .boardbox{width:min(100cqw,calc(100dvh - 600px))!important;justify-self:center}
+  .dartbar{justify-content:center}
+  .side{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);align-items:start}
+  .side>details{grid-column:1/-1}
+}
+@media (max-width:700px){
+  body{padding-block:8px}
+  .wrap{gap:8px}
+  .top{gap:6px 8px}
+  .top .titleblock{flex:1 1 100%;min-width:0;flex-direction:row;flex-wrap:wrap;align-items:baseline;gap:2px 10px}
+  .brand{font-size:32px!important}
+  .round{font-size:15px!important}
+  .timer{font-size:13px}
+  .top .spacer{display:none}
+  .top .btn{padding:6px 10px;font-size:13px}
+  .mini{display:flex}
+  .boardbox{width:min(100cqw,calc(100dvh - 250px))!important;min-width:0!important}
+  .boardrow{gap:6px}
+  .dartbar{gap:6px;flex-wrap:nowrap}
+  .slots{gap:4px}
+  .slot{min-width:46px;height:38px;font-size:18px;padding:0 4px}
+  .missbtn{font-size:15px;padding:6px 8px;white-space:nowrap;height:38px}
+  .thrower .dartn{font-size:13px}
+  .ondeck .lbl,.ondeck .tm{font-size:13px}
+  .menutitle{font-size:56px}
+  .gcard{min-height:0;padding:16px}
+  .gcard .gname,.gcard.feature .gname{font-size:38px}
+}
+</style>
+
+<div class="wrap" id="app"></div>
+
+<script>
+(function(){
+const ORDER=[20,1,18,4,13,6,10,15,2,17,3,19,7,16,8,11,14,9,12,5];
+const R={bull:10,obull:24,tin:94,tout:116,din:150,dout:174,label:197};
+const OPAC=[0,.22,.48,.78];
+const STORE='turfwar.v2';
+const $=s=>document.querySelector(s);
+const esc=s=>String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+
+let S=null; let history=[]; let ui={confirm:false};
+const COLORS={orange:{c:'#ff8a3d',ink:'#2a1606',label:'Orange'},blue:{c:'#3fb4e6',ink:'#06202b',label:'Blue'},purple:{c:'#c08cff',ink:'#1f0d38',label:'Purple'},lime:{c:'#a6e04a',ink:'#1a2606',label:'Lime'},red:{c:'#ff5a5f',ink:'#2e0709',label:'Red'},yellow:{c:'#ffd23f',ink:'#2b2104',label:'Yellow'},pink:{c:'#ff6fb5',ink:'#33081d',label:'Pink'},teal:{c:'#2fd4b0',ink:'#052a22',label:'Teal'},silver:{c:'#c9d1d9',ink:'#1b2126',label:'Silver'},olive:{c:'#a3a83a',ink:'#22240a',label:'Olive'}};
+const DEF_TEAMS=['Home','Away','Wild','Rogue','Storm','Ace','Blaze','Comet'].map((name,i)=>({name,color:['orange','blue','purple','lime','red','teal','yellow','pink'][i],solo:`Player ${i+1}`,players:[`Player ${2*i+1}`,`Player ${2*i+2}`]}));
+function applyColors(teams){const r=document.documentElement.style;teams.forEach((t,i)=>{let k=COLORS[t.color]?t.color:(DEF_TEAMS[i]||DEF_TEAMS[0]).color;if(teams.slice(0,i).some(o=>o.color===k))k=Object.keys(COLORS).find(c=>!teams.slice(0,i).some(o=>o.color===c));t.color=k;r.setProperty('--t'+i,COLORS[k].c);r.setProperty('--t'+i+'-ink',COLORS[k].ink)})}
+let setupDraft={teams:JSON.parse(JSON.stringify(DEF_TEAMS)),numTeams:3,perTeam:2,rounds:8,penalty:0.5};
+function normDraft(){const d=setupDraft;d.teams=d.teams||[];for(let i=0;i<8;i++){d.teams[i]=Object.assign({},JSON.parse(JSON.stringify(DEF_TEAMS[i])),d.teams[i]||{})}d.perTeam=d.perTeam||2;if(d.penalty==null||!d.penV2){d.penalty=0.5;d.penV2=1}d.numTeams=d.numTeams||2;if(d.perTeam===2&&d.numTeams>5)d.numTeams=5}
+
+function freshTerr(){const t={};[...ORDER,25].forEach(n=>t[n]={owner:null,s:0});return t}
+function newGame(cfg){const P=cfg.perTeam||cfg.teams[0].players.length;const teams=cfg.teams.slice(0,cfg.numTeams||cfg.teams.length).map(t=>P===1?{name:t.solo||t.name,color:t.color,players:[t.solo||t.players[0]]}:{name:t.name,color:t.color,players:t.players.slice(0,2)});
+  return{phase:'play',teams,rounds:cfg.rounds,penalty:cfg.penalty==null?0.5:cfg.penalty,penV2:1,startedAt:Date.now(),roundStartedAt:Date.now(),roundTimes:[],off:teams.map(()=>0),shame:{},round:1,turnIdx:0,darts:[],pending:false,lastTurn:null,terr:freshTerr(),feed:[]}}
+function save(){try{localStorage.setItem(STORE,JSON.stringify({S,history:history.slice(-40),setupDraft}))}catch(e){}}
+function load(){try{const d=JSON.parse(localStorage.getItem(STORE)||'null');if(d){if(d.setupDraft)setupDraft=d.setupDraft;normDraft();if(d.S&&d.S.phase!=='setup'){S=d.S;history=d.history||[]}}}catch(e){}}
+function snap(){history.push(JSON.stringify(S))}
+
+const NT=()=>S.teams.length;const PP=()=>S.teams[0].players.length;const TPR=()=>NT()*PP();
+function current(){const N=NT();const team=S.turnIdx%N;const p=Math.floor(S.turnIdx/N);return{team,player:p,name:S.teams[team].players[p]}}
+function nextUp(){const N=NT();let t=S.turnIdx+1,r=S.round;if(t===TPR()){t=0;r++}if(r>S.rounds)return null;const team=t%N;return{team,name:S.teams[team].players[Math.floor(t/N)]}}
+function numName(n){return n===25?'Bull':String(n)}
+function hitLabel(n,m){if(n===25)return m===2?'BULL':'OB';return(['','S','D','T'][m])+n}
+
+function applyHit(team,n,mult){
+  const t=S.terr[n];const m=mult;const other=t.owner===null?'':S.teams[t.owner].name;const nn=numName(n);
+  const mk=(text,kind)=>({text,kind,nn});const mw=s=>s===1?'1 mark':s+' marks';
+  if(t.owner===null){t.owner=team;t.s=Math.min(3,m);return t.s===3?mk(`locked ${nn}`,'lock'):mk(`claimed ${nn} (${mw(t.s)})`,'claim')}
+  if(t.owner===team){if(t.s===3)return mk(`${nn} already locked`,'none');t.s=Math.min(3,t.s+m);return t.s===3?mk(`locked ${nn}`,'lock'):mk(`built ${nn} up to ${mw(t.s)}`,'reinforce')}
+  if(t.s===3){const breaks=(n!==25&&mult===3)||(n===25&&mult===2);if(breaks){t.owner=null;t.s=0;return mk(`broke ${other}'s lock on ${nn}`,'break')}return mk(`${nn} is locked, no effect`,'none')}
+  const rem=t.s-m;
+  if(rem>0){t.s=rem;return mk(`knocked ${other} down to ${mw(rem)} on ${nn}`,'weaken')}
+  if(rem===0){t.owner=null;t.s=0;return mk(`knocked ${nn} back to neutral`,'neutral')}
+  t.owner=team;t.s=Math.min(3,-rem);return mk(`stole ${nn} from ${other} (${mw(t.s)})`,'steal');
+}
+
+function tally(team){
+  let held=0,locks=0,pts=0,bull=0,heldPts=0,lockPts=0;
+  for(const n of [...ORDER,25]){const t=S.terr[n];if(t.owner!==team)continue;const v=(t.s===3?2:1)*(n===25?2:1);pts+=v;held++;if(t.s===3)locks++;if(n===25)bull=v;else if(t.s===3)lockPts+=2;else heldPts+=1}
+  // chains of 3+ neighbors around the board
+  const own=ORDER.map(n=>S.terr[n].owner===team);let chain=0,chains=[];
+  if(own.every(Boolean)){chain=20;chains=[20]}else{
+    const start=own.indexOf(false);let run=0;
+    for(let k=1;k<=20;k++){const i=(start+k)%20;if(own[i])run++;else{if(run>=3){chain+=run;chains.push(run)}run=0}}
+  }
+  const off=(S.off&&S.off[team])||0,pen=off*(S.penalty==null?0.5:S.penalty);
+  const base=pts;return{held,locks,base,chain,chains,bull,heldPts,lockPts,off,pen,total:base+chain-pen};
+}
+
+function throwDart(n,mult){buzz(n);
+  if(!S||S.phase!=='play'||S.pending)return;
+  snap();const c=current();const before=S.teams.map((_,i)=>tally(i).total);
+  let r,label;
+  let offboard=false;
+  if(n===-1){offboard=true;const pen=S.penalty==null?0.5:S.penalty;S.off=S.off||S.teams.map(()=>0);S.off[c.team]=(S.off[c.team]||0)+1;S.shame=S.shame||{};S.shame[c.name]=(S.shame[c.name]||0)+1;
+    r={text:pen?`off the board, −${pen} point${pen!==1?'s':''}`:'off the board',kind:'off'};label='OFF'}
+  else if(n===0){r={text:'missed',kind:'miss'};label='Miss'}else{r=applyHit(c.team,n,mult);label=hitLabel(n,mult)}
+  const text=r.text;S.turn=S.turn||[];S.turn.push({label,text,kind:r.kind,nn:r.nn});
+  S.darts.push(label);
+  const after=S.teams.map((_,i)=>tally(i).total);const dl=after.map((v,i)=>+(v-before[i]).toFixed(2));
+  {const tl=S.turn[S.turn.length-1];tl.d=dl[c.team];tl.opp=dl.map((v,i)=>[i,v]).filter(([i,v])=>i!==c.team&&v!==0)}
+  S.feed.unshift({team:c.team,who:c.name,label,text,kind:r.kind,r:S.round,d:dl[c.team],opp:dl.map((v,i)=>[i,v]).filter(([i,v])=>i!==c.team&&v!==0)});
+  if(S.darts.length===3){S.pending=true;S.lastTurn={team:c.team,who:c.name,darts:S.darts.slice(),turn:S.turn.slice()};if(!nextUp()){S.phase='over';S.endedAt=Date.now()}}
+  save();render();
+  if(offboard)showOff(c.name);
+  if(n>0){const el=document.querySelector(`[data-n="${n}"][data-m="${mult}"]`);if(el){el.classList.remove('flash');void el.getBBox();el.classList.add('flash')}}
+}
+const QUIPS=['The wall felt that one','Somebody check the drywall','That dart is in another zip code','Board is over here, champ','Sponsored by spackle','Bold strategy','The cat is not safe','Physics has left the chat','Was that a warning shot?','Wrong game, wrong wall','Have you tried aiming?','Somewhere a dartboard weeps'];
+let offTimer=null;
+function showOff(name){const pen=S.penalty==null?0.5:S.penalty;let el=$('#offtoast');if(el)el.remove();
+  el=document.createElement('div');el.id='offtoast';el.className='offtoast';el.setAttribute('role','status');
+  el.innerHTML=`<div class="inner"><div class="big">Off the board!</div><div class="quip">${esc(QUIPS[Math.floor(Math.random()*QUIPS.length)])}</div>${pen?`<div class="pen">−${pen} ${esc(name)}</div>`:''}</div>`;
+  document.body.appendChild(el);const bb=$('#boardbox');if(bb){bb.classList.remove('shake');void bb.offsetWidth;bb.classList.add('shake')}
+  clearTimeout(offTimer);offTimer=setTimeout(()=>{el.remove()},1950)}
+function advance(){snap();S.pending=false;S.darts=[];S.turn=[];S.turnIdx++;if(S.turnIdx===TPR()){S.turnIdx=0;S.round++;S.roundTimes=S.roundTimes||[];S.roundTimes.push(Date.now()-(S.roundStartedAt||Date.now()));S.roundStartedAt=Date.now()}save();render()}
+function undo(){if(!history.length)return;S=JSON.parse(history.pop());ui.confirm=false;save();render()}
+
+/* ---------- board svg ---------- */
+function pt(r,a){const t=a*Math.PI/180;return[(r*Math.cos(t)).toFixed(2),(r*Math.sin(t)).toFixed(2)]}
+function wedge(r1,r2,a1,a2){const[a,b]=pt(r2,a1),[c,d]=pt(r2,a2),[e,f]=pt(r1,a2),[g,h]=pt(r1,a1);return`M${a} ${b}A${r2} ${r2} 0 0 1 ${c} ${d}L${e} ${f}A${r1} ${r1} 0 0 0 ${g} ${h}Z`}
+function markG(n,x,y,sc){const parts=['<path class="X1" d="M-8 8L8 -8"/>','<path class="X2" d="M-8 -8L8 8"/>','<circle class="X3" r="14"/>'];
+  return`<g class="mk" id="mk-${n}" transform="translate(${x} ${y}) scale(${sc})">${parts.map(p=>p.replace('class="','class="h ')).join('')}${parts.map(p=>p.replace('class="','class="c ')).join('')}</g>`}
+function boardSVG(){
+  let s='',ov='',bd='';
+  ORDER.forEach((n,i)=>{
+    const c=-90+i*18,a1=c-9,a2=c+9;const even=i%2===0;
+    const single=even?'var(--seg-dark)':'var(--seg-light)',ring=even?'var(--ring-red)':'var(--ring-green)';
+    s+=`<path class="seg" data-n="${n}" data-m="1" fill="${single}" d="${wedge(R.obull,R.tin,a1,a2)}"/>`;
+    s+=`<path class="seg" data-n="${n}" data-m="3" fill="${ring}" d="${wedge(R.tin,R.tout,a1,a2)}"/>`;
+    s+=`<path class="seg" data-n="${n}" data-m="1" fill="${single}" d="${wedge(R.tout,R.din,a1,a2)}"/>`;
+    s+=`<path class="seg" data-n="${n}" data-m="2" fill="${ring}" d="${wedge(R.din,R.dout,a1,a2)}"/>`;
+    ov+=`<path class="ov" id="ov-${n}" fill="transparent" fill-opacity="0" d="${wedge(R.obull,R.dout,a1,a2)}"/>`;
+    const[x,y]=pt(R.label,c);
+    const[mx,my]=pt(133,c);bd+=markG(n,mx,my,1);
+    bd+=`<g class="badge" id="bd-${n}" transform="translate(${x} ${y})"><circle r="15" fill="transparent" stroke="transparent" stroke-width="2.5"/><text y="1" fill="var(--chalk)">${n}</text></g>`;
+  });
+  s+=`<circle class="seg" data-n="25" data-m="1" r="${R.obull}" fill="var(--ring-green)"/>`;
+  s+=`<circle class="seg" data-n="25" data-m="2" r="${R.bull}" fill="var(--ring-red)"/>`;
+  ov+=`<circle class="ov" id="ov-25" r="${R.obull}" fill="transparent" fill-opacity="0"/>`;
+  ov+=markG(25,0,0,.62);
+  ov+=`<circle id="bull-ring" r="${R.obull+3}" fill="none" stroke="transparent" stroke-width="3" pointer-events="none"/>`;
+  return`<svg id="board" viewBox="-222 -222 444 444" role="img" aria-label="Dartboard. Tap where the dart landed.">
+    <circle id="missring" r="218" fill="var(--panel)" stroke="var(--line)"><title>Tap here for a miss</title></circle>
+    <circle r="${R.dout+1}" fill="var(--wire)"/>${s}<g>${ov}</g>${bd}</svg>`;
+}
+function paintBoard(){
+  const svg=$('#board');if(!svg)return;
+  svg.classList.toggle('locked',!(S.phase==='tb'||(S.phase==='play'&&!S.pending)));
+  svg.querySelectorAll('.seg').forEach(e=>e.classList.toggle('tbt',S.phase==='tb'&&+e.dataset.n===S.tb.target));
+  for(const n of [...ORDER,25]){
+    const t=S.terr[n],o=$('#ov-'+n);
+    o.style.fill=t.owner===null?'transparent':`var(--t${t.owner})`;o.setAttribute('fill-opacity',OPAC[t.s]);
+    const mg=$('#mk-'+n);[1,2,3].forEach(k=>mg.querySelectorAll('.X'+k).forEach(e=>e.style.opacity=t.s>=k?1:0));
+    mg.querySelectorAll('.c').forEach(e=>e.style.stroke=t.owner===null?'transparent':`var(--t${t.owner})`);
+    if(n===25){const ring=$('#bull-ring');ring.style.stroke=t.s===3?`var(--t${t.owner})`:'transparent';continue}
+    const g=$('#bd-'+n),ci=g.querySelector('circle'),tx=g.querySelector('text');
+    if(t.owner===null){ci.style.fill='transparent';ci.style.stroke='transparent';tx.style.fill='var(--chalk)'}
+    else{const col=`var(--t${t.owner})`;ci.style.stroke=col;
+      ci.style.fill=t.s===3?col:t.s===2?`color-mix(in srgb, ${col} 30%, transparent)`:'transparent';
+      tx.style.fill=t.s===3?`var(--t${t.owner}-ink)`:col}
+  }
+}
+
+/* ---------- views ---------- */
+function render(){
+  const app=$('#app');
+  if(appMode==='menu'){applyColors(DEF_TEAMS);app.innerHTML=menuView();window.scrollTo(0,0);return}
+  if(appMode==='classic'){renderClassic();return}
+  applyColors(S?S.teams:setupDraft.teams);
+  if(!S){app.innerHTML=setupView();bindSetup();return}
+  const keepBoard=$('#board')&&$('.game:not(.cgame)');
+  if(!keepBoard){app.innerHTML=gameShell();$('#boardbox').insertAdjacentHTML('afterbegin',boardSVG());bindGame()}
+  fillGame();paintBoard();
+}
+
+function setupView(){
+  const d=setupDraft,P=d.perTeam,N=d.numTeams;
+  const mins=estMin(d.rounds*N*P);
+  const tf=(i)=>`<div class="teamform" style="--tc:var(--t${i})">
+    ${P===1?`<label for="tn${i}">Player ${i+1}</label><input class="tname" id="tn${i}" maxlength="14" value="${esc(d.teams[i].solo)}">`
+    :`<label for="tn${i}">Team ${i+1}</label><input class="tname" id="tn${i}" maxlength="16" value="${esc(d.teams[i].name)}">`}
+    <div class="swatches" role="group" aria-label="Team ${i+1} color">${Object.entries(COLORS).map(([k,v])=>{const taken=d.teams.slice(0,d.numTeams).some((t,j)=>j!==i&&t.color===k);return`<button type="button" class="sw" data-team="${i}" data-color="${k}" style="--c:${v.c}" aria-label="${v.label}" title="${v.label}${taken?' (taken)':''}" aria-pressed="${d.teams[i].color===k}" ${taken?'disabled':''}></button>`}).join('')}</div>
+    ${P===1?'':`<div class="pair"><div><label for="p${i}a">Thrower 1</label><input id="p${i}a" maxlength="14" value="${esc(d.teams[i].players[0])}"></div>
+    <div><label for="p${i}b">Thrower 2</label><input id="p${i}b" maxlength="14" value="${esc(d.teams[i].players[1])}"></div></div>`}</div>`;
+  return`<div class="setup">
+    <div class="form">
+      <button type="button" class="btn" data-act="g-menu" style="align-self:flex-start">← All games</button>
+      <div class="hero"><h1><span>Turf</span> <em>War</em></h1><p>A darts game for 2 to 10 players: solo for up to 8, or teams of two for up to 10. Claim numbers, defend them, steal everyone else's, and build chains of neighbors around the board.</p></div>
+      <div><span class="fieldlabel">Format</span><div class="seg-ctl" id="fmt">${[[1,'Solo'],[2,'Pairs']].map(([k,l])=>`<button type="button" data-k="${k}" aria-pressed="${k===P}">${l}</button>`).join('')}</div></div>
+      <div><span class="fieldlabel">${P===1?'Players':'Teams'}</span><div class="seg-ctl" id="nteams">${(P===1?[2,3,4,5,6,7,8]:[2,3,4,5]).map(k=>`<button type="button" data-k="${k}" aria-pressed="${k===N}">${P===1?(k===2?'1 vs 1':k):(k===2?'2 vs 2':k+' teams')}</button>`).join('')}</div></div>
+      <div class="shufflebar">${P===2?'<button type="button" class="btn" id="shuf-teams">Random teams</button>':''}<button type="button" class="btn" id="shuf-order">Random order</button></div>
+      ${[...Array(N).keys()].map(tf).join('')}
+      <div class="order"><span class="fieldlabel" style="margin:0 6px 0 0">Throwing order</span>${throwOrder(d).map((x,k)=>`${k?'<span>→</span>':''}<b style="color:var(--t${x.t})">${esc(x.n)}</b>`).join('')}</div>
+      <div><span class="fieldlabel">Rounds</span><div class="seg-ctl" id="rounds">${[6,8,10,12].map(r=>`<button type="button" data-r="${r}" aria-pressed="${r===d.rounds}">${r}</button>`).join('')}</div>
+      <div style="font-size:13px;color:var(--muted);margin-top:6px">Each round, every player throws 3 darts. ${d.rounds} rounds with ${N*P} players runs about ${mins} minutes.</div></div>
+      <div><span class="fieldlabel">Off-the-board penalty</span><div class="seg-ctl" id="pen">${[[0,'None'],[0.5,'−0.5 point'],[1,'−1 point']].map(([k,l])=>`<button type="button" data-k="${k}" aria-pressed="${k===d.penalty}">${l}</button>`).join('')}</div>
+      <div style="font-size:13px;color:var(--muted);margin-top:6px">Tap Off board when a dart misses the whole board. Tap Miss for darts that land on the board but outside the scoring rings.</div></div>
+      <button class="btn primary big" id="start">Start game</button>
+    </div>
+    <div class="card rules"><h2>How to play</h2><ol>${rulesHTML()}</ol></div>
+  </div>`;
+}
+function throwOrder(d){const N=d.numTeams,out=[];
+  if(d.perTeam===1){for(let i=0;i<N;i++)out.push({t:i,n:d.teams[i].solo});return out}
+  for(let k=0;k<2;k++)for(let i=0;i<N;i++)out.push({t:i,n:d.teams[i].players[k]});return out}
+function shuffle(a){for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]]}return a}
+function rulesHTML(){return`
+  <li><b>Hit a number to claim it.</b> A single adds 1 mark, a double 2, a triple 3. Outer bull is 1, bullseye is 2.</li>
+  <li><b>Marks are strength.</b> 1 mark is shaky, 2 is held, 3 is <b>locked</b>.</li>
+  <li><b>Hit the other team's number</b> to knock marks off. Knock it past zero and it flips to you with the leftover marks.</li>
+  <li><b>Locks only break to a triple</b> (a bullseye on the Bull). The number goes back to neutral.</li>
+  <li><b>Scoring:</b> each number you hold is 1 point, locked is 2. The Bull counts double.</li>
+  <li><b>Chain bonus:</b> 3 or more neighboring numbers around the board, like <span class="k">20 · 1 · 18</span>, earn +1 for every number in the chain.</li>
+  <li><b>Throw order:</b> everyone throws in the same order each round. In pairs, each team's first player throws, then each team's second player.</li>
+  <li><b>Off the board:</b> a dart that misses the whole board costs your side points (−0.5 by default, set on the setup screen or in Settings).</li>
+  <li><b>Ties:</b> if the top spots finish level on points, play a tiebreaker. The app picks a number and each tied side throws one dart in turn. Hitting it wins, unless the next thrower also hits it to cancel, then go again.</li>
+  <li><b>More than two sides:</b> stealing works the same against any opponent. A broken lock goes back to neutral for anyone to grab.</li>`}
+function bindSetup(){
+  const st=$('#shuf-teams');if(st)st.addEventListener('click',()=>{readSetup();const d=setupDraft,N=d.numTeams;
+    const names=shuffle(d.teams.slice(0,N).flatMap(t=>t.players.slice(0,2)));
+    for(let i=0;i<N;i++)d.teams[i].players=[names[2*i],names[2*i+1]];render()});
+  $('#shuf-order').addEventListener('click',()=>{readSetup();const d=setupDraft,N=d.numTeams;
+    const part=shuffle(d.teams.slice(0,N));if(d.perTeam===2)part.forEach(t=>{if(Math.random()<.5)t.players=[t.players[1],t.players[0]]});
+    d.teams.splice(0,N,...part);render()});
+  $('#pen').addEventListener('click',e=>{const b=e.target.closest('button');if(!b)return;readSetup();setupDraft.penalty=+b.dataset.k;render()});
+  $('#fmt').addEventListener('click',e=>{const b=e.target.closest('button');if(!b)return;readSetup();setupDraft.perTeam=+b.dataset.k;if(setupDraft.perTeam===2&&setupDraft.numTeams>5)setupDraft.numTeams=5;render()});
+  $('#nteams').addEventListener('click',e=>{const b=e.target.closest('button');if(!b)return;readSetup();setupDraft.numTeams=+b.dataset.k;render()});
+  document.querySelectorAll('.swatches').forEach(g=>g.addEventListener('click',e=>{const b=e.target.closest('.sw');if(!b||b.disabled)return;readSetup();setupDraft.teams[+b.dataset.team].color=b.dataset.color;render()}));
+  $('#rounds').addEventListener('click',e=>{const b=e.target.closest('button');if(!b)return;setupDraft.rounds=+b.dataset.r;readSetup();render()});
+  $('#start').addEventListener('click',()=>{readSetup();S=newGame(setupDraft);history=[];ui.confirm=false;save();render()});
+}
+function readSetup(){
+  for(let i=0;i<setupDraft.numTeams;i++){const T=setupDraft.teams[i],D=DEF_TEAMS[i];
+    if(setupDraft.perTeam===1){T.solo=$('#tn'+i).value.trim()||D.solo;continue}
+    T.name=$('#tn'+i).value.trim()||D.name;
+    T.players[0]=$('#p'+i+'a').value.trim()||D.players[0];T.players[1]=$('#p'+i+'b').value.trim()||D.players[1]}
+  try{localStorage.setItem(STORE,JSON.stringify({S:null,history:[],setupDraft}))}catch(e){}
+}
+
+function gameShell(){return`
+  <header class="top">
+    <div class="titleblock"><h1 class="brand"><span>Turf</span><em>War</em></h1>
+    <div class="round" id="round"></div><div class="timer" id="timer"></div></div>
+    <div class="spacer"></div>
+    <button class="btn" id="undo">↶ Undo</button>
+    <button class="btn" data-act="settings-open">Settings</button>
+    <button class="btn" data-act="g-menu">All games</button>
+    <button class="btn" id="newgame">New game</button>
+  </header>
+  <div class="mini" id="mini"></div>
+  <div id="confirmslot"></div><div id="tbslot"></div>
+  <div class="game">
+    <div class="boardcol">
+      <div class="boardrow"><div class="thrower" id="thrower"></div><div class="boardbox" id="boardbox"><div class="pending" id="pending" hidden></div></div><div class="ondeck" id="ondeck"></div></div>
+      <div class="dartbar" id="dartbar"></div>
+    </div>
+    <aside class="side">
+      <div class="teams" id="teams"></div>
+      <div class="card"><h2>Play by play</h2><ul class="feed" id="feed"></ul></div>
+      <div class="card"><h2>Reading the board</h2><div class="legend">
+        <svg width="34" height="34" viewBox="-17 -17 34 34"><circle r="14" fill="none" stroke="var(--t0)" stroke-width="2.5"/><text text-anchor="middle" dominant-baseline="central" y="1" fill="var(--t0)" font-family="Teko,sans-serif" font-size="18">7</text></svg><span>Shaky: 1 mark, one slash on the wedge</span>
+        <svg width="34" height="34" viewBox="-17 -17 34 34"><circle r="14" fill="color-mix(in srgb, var(--t0) 30%, transparent)" stroke="var(--t0)" stroke-width="2.5"/><text text-anchor="middle" dominant-baseline="central" y="1" fill="var(--t0)" font-family="Teko,sans-serif" font-size="18">7</text></svg><span>Held: 2 marks, an X on the wedge</span>
+        <svg width="34" height="34" viewBox="-17 -17 34 34"><circle r="14" fill="var(--t0)" stroke="var(--t0)" stroke-width="2.5"/><text text-anchor="middle" dominant-baseline="central" y="1" fill="var(--t0-ink)" font-family="Teko,sans-serif" font-size="18">7</text></svg><span>Locked: circled X. Only a triple breaks it</span>
+      </div></div>
+      <details class="card rules"><summary style="cursor:pointer;font-weight:600">Full rules</summary><ol style="margin-top:10px">${rulesHTML()}</ol></details>
+    </aside>
+  </div>
+  <div id="resultslot"></div><div id="settingsslot"></div>`}
+
+function bindGame(){
+  $('#board').addEventListener('click',e=>{const p=e.target.closest('.seg');
+    if(p){if(S&&S.phase==='tb')tbThrow(+p.dataset.n,+p.dataset.m);else throwDart(+p.dataset.n,+p.dataset.m);return}
+    if(e.target.id==='missring'&&S&&(S.phase==='tb'||(S.phase==='play'&&!S.pending))){if(S.phase==='tb')tbThrow(0,0);else throwDart(0,0);const m=$('#missring');if(m){m.classList.remove('flashmiss');void m.getBBox();m.classList.add('flashmiss')}}});
+  $('#undo').addEventListener('click',undo);
+  $('#newgame').addEventListener('click',()=>{ui.confirm=true;fillGame()});
+}
+function bindApp(){
+  $('#app').addEventListener('click',e=>{
+    const b=e.target.closest('[data-act]');if(!b)return;const a=b.dataset.act;
+    if(a==='undo')undo();
+    if(a==='miss'){if(S.phase==='tb')tbThrow(0,0);else throwDart(0,0)}
+    if(a==='offboard'){if(S.phase==='tb')tbThrow(-1,0);else throwDart(-1,0)}
+    if(a==='tb-start')startTB();
+    if(a==='tb-reroll'){snap();S.tb.target=pickTarget(S.tb.target);save();render()}
+    if(a==='extend'){snap();S.rounds+=+b.dataset.k;S.phase='play';S.endedAt=null;S.tbWinner=null;S.tb=null;S.pending=true;ui.review=false;save();render()}
+    if(a==='next')advance();
+    if(a==='keep'){ui.confirm=false;fillGame()}
+    if(a==='end'||a==='setup'){S=null;history=[];ui.confirm=false;save();render()}
+    if(a==='rematch'){const cfg={teams:S.teams,numTeams:S.teams.length,rounds:S.rounds,penalty:S.penalty};S=newGame(cfg);history=[];save();render()}
+    if(a==='settings-open'){ui.settings={teams:JSON.parse(JSON.stringify(S.teams)),rounds:S.rounds,penalty:S.penalty==null?0.5:S.penalty};renderSettings()}
+    if(a==='set-cancel'){ui.settings=null;renderSettings();render()}
+    if(a==='set-rminus'||a==='set-rplus'){readSettings();const d=ui.settings;d.rounds=Math.max(S.round,Math.min(30,d.rounds+(a==='set-rplus'?1:-1)));renderSettings()}
+    if(a==='set-pen'){readSettings();ui.settings.penalty=+b.dataset.k;renderSettings()}
+    if(a==='set-color'){if(b.disabled)return;readSettings();ui.settings.teams[+b.dataset.team].color=b.dataset.color;renderSettings()}
+    if(a==='set-save'){readSettings();snap();const d=ui.settings;S.teams=d.teams;S.rounds=d.rounds;S.penalty=d.penalty;
+      if(S.pending&&!nextUp())S.phase='over';else if(S.phase==='over'&&nextUp()){S.phase='play';S.endedAt=null;ui.review=false}
+      ui.settings=null;renderSettings();save();render()}
+    if(a==='review'){$('#resultslot').innerHTML='';ui.review=true}
+  });
+}
+
+function fitText(el,max,min){if(!el)return;let s=max;el.style.fontSize=s+'px';
+  while(s>min&&(el.scrollWidth>el.clientWidth+1||el.scrollHeight>s*0.9*2+4)){s-=2;el.style.fontSize=s+'px'}}
+function fitNames(){const w=window.innerWidth;fitText($('#thrower .tname'),w<=700?30:w<620?44:64,12);fitText($('#ondeck .dname'),w<=700?22:w<620?30:40,11)}
+window.addEventListener('resize',()=>{if(S&&$('#thrower'))fitNames()});
+try{document.fonts.ready.then(()=>{if(S&&$('#thrower'))fitNames()})}catch(e){}
+function fmtDur(ms){ms=Math.max(0,ms);const t=Math.floor(ms/1000),h=Math.floor(t/3600),m=Math.floor(t%3600/60),sec=t%60;const p=n=>String(n).padStart(2,'0');return h?`${h}:${p(m)}:${p(sec)}`:`${m}:${p(sec)}`}
+function tick(){const el=$('#timer');if(!el||!S||!S.startedAt)return;const now=S.phase==='over'&&S.endedAt?S.endedAt:Date.now();
+  el.innerHTML=`Game <b>${fmtDur(now-S.startedAt)}</b>${S.phase==='over'?'':` · Round <b>${fmtDur(now-(S.roundStartedAt||S.startedAt))}</b>`}`;
+  el.title=S.timerJoined?'Timer started when it was added mid-game':''}
+setInterval(tick,1000);
+const fmtD=d=>d==null?'':d>0?'+'+d:d<0?'−'+Math.abs(d):'0';
+function feedHTML(feed){let out='',lastR=null;
+  for(const f of feed){if(f.r!=null&&f.r!==lastR){out+=`<li class="sep">${f.r==='TB'?'Tiebreaker':'Round '+f.r}</li>`;lastR=f.r}
+    const cls=f.d==null||f.d===0?'zero':f.d>0?'pos':'neg';
+    const opp=(f.opp||[]).map(([i,v])=>`<span style="color:var(--t${i})">${esc(S.teams[i]?S.teams[i].name:'')} ${fmtD(v)}</span>`).join(' · ');
+    out+=`<li><span class="who" style="color:var(--t${f.team})">${esc(f.who)}</span><span class="hit">${f.label}</span><span class="what">${esc(f.text)}${opp?`<span class="opp">${opp}</span>`:''}</span><span class="delta ${cls}">${f.d==null?'':fmtD(f.d)}</span></li>`}
+  return out}
+function playerStats(){const m=new Map();
+  S.teams.forEach((t,i)=>t.players.forEach(p=>m.set(i+'|'+p,{team:i,name:p,darts:0,gain:0,dmg:0,lock:0,steal:0,brk:0,off:0})));
+  for(const f of S.feed){if(f.tb)continue;const k=f.team+'|'+f.who;if(!m.has(k))m.set(k,{team:f.team,name:f.who,darts:0,gain:0,dmg:0,lock:0,steal:0,brk:0,off:0});const p=m.get(k);
+    p.darts++;p.gain+=f.d||0;(f.opp||[]).forEach(([,v])=>{if(v<0)p.dmg-=v});
+    if(f.kind==='lock')p.lock++;if(f.kind==='steal')p.steal++;if(f.kind==='break')p.brk++;if(f.kind==='off'||f.label==='OFF')p.off++}
+  const arr=[...m.values()].map(p=>({...p,gain:+p.gain.toFixed(2),dmg:+p.dmg.toFixed(2),impact:+(p.gain+p.dmg).toFixed(2)}));
+  return arr.sort((a,b)=>b.impact-a.impact||b.gain-a.gain)}
+function dartsLeft(i,k){if(!S||S.phase!=='play')return 0;const N=NT(),slot=k*N+i;
+  let d=(S.rounds-S.round)*3;if(slot>S.turnIdx)d+=3;else if(slot===S.turnIdx&&!S.pending)d+=3-S.darts.length;return Math.max(0,d)}
+const leftBadge=n=>n?`<span class="left" title="Darts left in the game">${n} left</span>`:'<span class="left done">Done</span>';
+// 4 players x 6 rounds = about 30 minutes, so each turn is about 1.25 minutes
+function estMin(turns){return Math.max(5,Math.round(turns*1.25/5)*5)}
+function extendBtns(){const t=NT()*PP();return[1,2,3].map(k=>`<button class="btn big" data-act="extend" data-k="${k}">+${k} round${k>1?'s':''} <span style="color:var(--muted);font-weight:500">~${Math.max(1,Math.round(k*t*1.25))} min</span></button>`).join('')}
+function topTied(){const T=S.teams.map((_,i)=>({i,v:tally(i).total}));const lead=Math.max(...T.map(x=>x.v));return T.filter(x=>x.v===lead).map(x=>x.i)}
+function pickTarget(prev){const opts=[...ORDER,25].filter(n=>n!==prev);return opts[Math.floor(Math.random()*opts.length)]}
+function startTB(){snap();const sides=topTied();S.tb={sides,target:pickTarget(),cycle:1,idx:0,cycleHits:[],log:[],msg:''};S.phase='tb';S.pending=false;S.endedAt=null;ui.review=false;save();render()}
+function tbWho(side){const pl=S.teams[side].players;return pl[(S.tb.cycle-1)%pl.length]}
+function tbThrow(n,mult){if(!S||S.phase!=='tb')return;buzz(n);snap();const tb=S.tb,side=tb.sides[tb.idx],who=tbWho(side);
+  const hit=n===tb.target;const label=n<=0?(n===-1?'OFF':'Miss'):hitLabel(n,mult);
+  tb.log.push({team:side,who,hit,label,cycle:tb.cycle});if(hit)tb.cycleHits.push(side);
+  S.feed.unshift({team:side,who,label,text:hit?`hit ${numName(tb.target)}`:`missed ${numName(tb.target)}`,kind:hit?'tbhit':'tbmiss',r:'TB',tb:1});
+  tb.idx++;tb.msg='';
+  if(tb.idx>=tb.sides.length){const h=tb.cycleHits;
+    if(h.length===1){S.tbWinner=h[0];S.tbTarget=tb.target;S.phase='over';S.pending=false;S.endedAt=Date.now()}
+    else{if(h.length>=2){const out=tb.sides.filter(x=>!h.includes(x));tb.msg=out.length?`${h.map(i=>S.teams[i].name).join(' and ')} both hit. ${out.map(i=>S.teams[i].name).join(' and ')} ${out.length>1?'are':'is'} out. Hits cancel, go again.`:'Everyone hit, so the hits cancel. Go again.';tb.sides=h}
+      else tb.msg='Nobody hit it. Go again.';
+      tb.cycle++;tb.idx=0;tb.cycleHits=[]}}
+  else if(hit&&tb.idx<tb.sides.length)tb.msg=`${who} hit ${numName(tb.target)}! ${tbWho(tb.sides[tb.idx])} has to hit it to cancel.`;
+  save();render();
+  if(n>0){const el=document.querySelector(`[data-n="${n}"][data-m="${mult}"]`);if(el){el.classList.remove('flash');void el.getBBox();el.classList.add('flash')}}}
+function tbHTML(){const tb=S.tb;const side=tb.sides[tb.idx];
+  const cur=tb.log.filter(x=>x.cycle===tb.cycle);
+  return`<div class="tbbar"><div class="tbtarget"><div class="l">Tiebreaker · first to hit</div><div class="v">${numName(tb.target)}</div></div>
+    <div class="tbinfo"><div>${tb.sides.map(i=>{const d=cur.find(x=>x.team===i);return`<span class="tbside" style="--tc:var(--t${i})">${esc(S.teams[i].name)} ${d?(d.hit?'<b class="ok">✓ hit</b>':'<b class="no">✗</b>'):''}</span>`}).join('')}</div>
+    <div class="tbmsg">${esc(tb.msg||'One dart each, in order. Any single, double or triple of the number counts. If the first thrower hits, the next thrower can cancel it by hitting too.')}</div>
+    <div class="tbmeta">Pass ${tb.cycle}${tb.log.length?'':' · <button class="btn" data-act="tb-reroll">Pick a different number</button>'}</div></div></div>`}
+function fillGame(){
+  const c=current();const over=S.phase!=='play',ended=S.phase==='over',inTB=S.phase==='tb';
+  $('#round').innerHTML=inTB?'<b>Tiebreaker</b>':`Round <b>${Math.min(S.round,S.rounds)}</b> of ${S.rounds}`;
+  $('#tbslot').innerHTML=inTB?tbHTML():'';
+  $('#undo').disabled=!history.length;
+  $('#confirmslot').innerHTML=ui.confirm?`<div class="confirm"><span>End this game and go back to setup? Scores will be cleared.</span><button class="btn" data-act="keep">Keep playing</button><button class="btn primary" data-act="end">End game</button></div>`:'';
+  // teams
+  const tm=$('#teams');
+  const prev={};tm.querySelectorAll('.team').forEach(el=>prev[el.dataset.t]=el.getBoundingClientRect().top);
+  const T=S.teams.map((_,i)=>({i,t:tally(i)}));
+  T.sort((x,y)=>y.t.total-x.t.total||y.t.locks-x.t.locks||x.i-y.i);
+  const lead=T[0].t.total;
+  tm.innerHTML=T.map((r,k)=>{const i=r.i,Tm=S.teams[i],t=r.t;const active=!over&&!S.pending&&c.team===i;
+    const rank=T.findIndex(x=>x.t.total===t.total)+1;const upIdx=c.team===i&&!S.pending?c.player:-1;
+    const dl=Tm.players.map((_,k2)=>dartsLeft(i,k2)),allDone=dl.every(x=>x===0)&&!over;
+    const gap=t.total===lead?(T.filter(x=>x.t.total===lead).length>1?'Tied':'Leader'):`${+(lead-t.total).toFixed(1)} back`;
+    return`<div class="team${active?' active':''}${rank===1?' first':''}${allDone?' done':''}" data-t="${i}" style="--tc:var(--t${i})">
+      <div class="rank">${rank}</div>
+      <div class="mid"><div class="name">${esc(Tm.name)}</div>
+      ${Tm.players.length===1?'':`<div class="players">${Tm.players.map((p,k2)=>`<span class="${k2===upIdx&&!over?'up':''}${!over&&!dl[k2]?' isdone':''}">${esc(p)}${over?'':leftBadge(dl[k2])}</span>`).join('')}</div>`}
+      <div class="stats">${t.held} numbers · ${t.locks} locked${t.chain?` · chain +${t.chain}`:''}${t.pen?` · <span style="color:#ff8f8f">−${t.pen} off</span>`:''}</div></div>
+      <div class="right"><div class="score">${t.total}</div><div class="gap">${gap}</div>${Tm.players.length===1&&!over?leftBadge(dl[0]):''}</div></div>`}).join('');
+  $('#mini').innerHTML=T.map(r=>`<span class="mchip${!over&&c.team===r.i?' on':''}" style="--tc:var(--t${r.i})">${esc(S.teams[r.i].name)} <b>${r.t.total}</b></span>`).join('');
+  if(!matchMedia('(prefers-reduced-motion: reduce)').matches)tm.querySelectorAll('.team').forEach(el=>{const p=prev[el.dataset.t];if(p==null)return;const d=p-el.getBoundingClientRect().top;
+    if(Math.abs(d)>2&&el.animate)el.animate([{transform:`translateY(${d}px)`},{transform:'none'}],{duration:450,easing:'cubic-bezier(.2,.8,.2,1)'})});
+  // feed
+  const fd=$('#feed'),atTop=fd.scrollTop<8;fd.innerHTML=S.feed.length?feedHTML(S.feed)
+    :`<li class="empty">Every dart shows up here. Tap the board where ${esc(c.name)}'s first dart landed.</li>`;
+  if(atTop)fd.scrollTop=0;
+  // dart bar
+  const slots=[0,1,2].map(i=>`<div class="slot${S.darts[i]?' filled':''}">${S.darts[i]||'·'}</div>`).join('');
+  $('#dartbar').innerHTML=over?'':S.pending?`<div class="slots">${slots}</div>`:
+    `<div class="slots">${slots}</div><button class="btn missbtn" data-act="miss" title="Landed outside the scoring rings or bounced out">Miss</button><button class="btn missbtn offbtn" data-act="offboard" title="Missed the board completely">Off board</button>`;
+  const th=$('#thrower');th.style.setProperty('--tc',`var(--t${c.team})`);
+  th.innerHTML=over||S.pending?'':`<span class="dartn">Throwing</span><span class="tname">${esc(c.name)}</span><span class="dartn">Dart ${S.darts.length+1} of 3</span>`;
+  const od=$('#ondeck'),nx=over||S.pending?null:nextUp();
+  if(nx){od.style.setProperty('--tc',`var(--t${nx.team})`);od.innerHTML=`<span class="lbl">On deck</span><span class="dname">${esc(nx.name)}</span>${PP()>1?`<span class="tm">${esc(S.teams[nx.team].name)}</span>`:''}`}
+  else od.innerHTML=over||S.pending?'':`<span class="lbl">On deck</span><span class="dname" style="--tc:var(--chalk)">Final turn</span>`;
+  if(inTB){const tb=S.tb,side=tb.sides[tb.idx],nxs=tb.sides[(tb.idx+1)%tb.sides.length];
+    th.style.setProperty('--tc',`var(--t${side})`);th.innerHTML=`<span class="dartn">Tiebreaker</span><span class="tname">${esc(tbWho(side))}</span><span class="dartn">1 dart at ${numName(tb.target)}</span>`;
+    od.style.setProperty('--tc',`var(--t${nxs})`);od.innerHTML=`<span class="lbl">On deck</span><span class="dname">${esc(tb.idx+1<tb.sides.length?tbWho(nxs):S.teams[nxs].players[tb.cycle%S.teams[nxs].players.length])}</span>`;
+    $('#dartbar').innerHTML=`<button class="btn missbtn" data-act="miss">Miss</button><button class="btn missbtn offbtn" data-act="offboard">Off board</button>`}
+  fitNames();tick();
+  // pending overlay
+  const pend=$('#pending');
+  if(S.pending&&!over){const n=nextUp();const lt=S.lastTurn;pend.hidden=false;pend.innerHTML=recapHTML(lt,n);
+  }else{pend.hidden=true;pend.innerHTML=''}
+  // results
+  if(ended&&!ui.review)$('#resultslot').innerHTML=resultView();
+  else if(!ended){$('#resultslot').innerHTML='';if(!inTB)ui.review=false}
+}
+
+
+const KIND={lock:'Closed out',steal:'Stole',break:'Broke lock on',neutral:'Knocked out',claim:'Claimed',reinforce:'Built up',weaken:'Weakened'};
+const HOT=['lock','steal','break','neutral'];
+function recapHTML(lt,n){
+  const turn=lt.turn&&lt.turn.length?lt.turn:lt.darts.map(l=>({label:l,text:'',kind:'none'}));
+  const groups={};turn.forEach(d=>{if(KIND[d.kind]){(groups[d.kind]=groups[d.kind]||[]);if(!groups[d.kind].includes(d.nn))groups[d.kind].push(d.nn)}});
+  const order=['lock','steal','break','neutral','claim','reinforce','weaken'];
+  const offs=turn.filter(d=>d.kind==='off').length,pen=S.penalty==null?0.5:S.penalty;
+  const chips=order.filter(k=>groups[k]).map(k=>`<span class="chip ${k}">${KIND[k]} ${groups[k].join(', ')}</span>`).join('')+(offs?`<span class="chip off">Off the board${offs>1?' ×'+offs:''}${pen?` (−${offs*pen})`:''}</span>`:'');
+  let headline;
+  if(groups.lock)headline=`Closed out ${groups.lock.join(' and ')}`;
+  else if(groups.steal)headline=`Stole ${groups.steal.join(' and ')}`;
+  else if(groups.break)headline=`Broke the lock on ${groups.break.join(' and ')}`;
+  else if(offs===3)headline='Three darts, zero board';
+  else if(chips&&offs&&!Object.keys(groups).length)headline='Hit the wall';
+  else if(chips)headline='Turf in play';
+  else headline='No turf changed';
+  const hasD=turn.some(d=>d.d!=null);const gain=+turn.reduce((a,d)=>a+(d.d||0),0).toFixed(2);
+  const dmg={};turn.forEach(d=>(d.opp||[]).forEach(([i,v])=>{if(v<0)dmg[i]=(dmg[i]||0)-v}));
+  const dmgLine=Object.keys(dmg).length?`<div class="recap" style="margin-top:6px">Took ${Object.entries(dmg).map(([i,v])=>`<b style="color:var(--t${i})">${+v.toFixed(2)} from ${esc(S.teams[i].name)}</b>`).join(', ')}</div>`:'';
+  const minis=S.teams.map((t,i)=>`<span style="color:var(--t${i})"><b>${tally(i).total}</b>${esc(t.name)}</span>`).join('');
+  return`<div class="pending-card" role="dialog" aria-label="Turn recap" style="--tc:var(--t${lt.team});--tink:var(--t${lt.team}-ink)">
+    <div class="turnhead"><div><div class="eyebrow">Turn over · pull your darts</div>
+    <div class="headline" style="margin-top:6px"><span style="color:var(--t${lt.team})">${esc(lt.who)}</span>: ${headline}</div>${dmgLine}</div>
+    ${hasD?`<div class="turngain ${gain>0?'pos':gain<0?'neg':'zero'}"><div class="v">${fmtD(gain)}</div><div class="l">${Math.abs(gain)===1?'point':'points'} this turn</div></div>`:''}</div>
+    ${chips?`<div class="chips">${chips}</div>`:''}
+    <ul class="recaplist">${turn.map(d=>`<li class="${HOT.includes(d.kind)?'hot':''}"><span class="lbl">${d.label}</span><span class="txt">${esc(d.text)}</span><span class="dd ${d.d==null||d.d===0?'zero':d.d>0?'pos':'neg'}">${d.d==null?'':fmtD(d.d)}</span></li>`).join('')}</ul>
+    <div class="minis">${minis}</div>
+    <div class="nextrow"><div><div class="eyebrow">Up next</div><div class="who" style="color:var(--t${n.team})">${esc(n.name)}</div></div>
+    <div style="display:flex;gap:8px;flex-wrap:wrap"><button class="btn big" data-act="undo">↶ Undo last dart</button><button class="btn primary big" data-act="next">Start ${esc(n.name)}'s turn</button></div></div></div>`;
+}
+
+function readSettings(){const d=ui.settings;d.teams.forEach((t,i)=>{
+  t.name=$('#st-n'+i).value.trim()||S.teams[i].name;
+  if(t.players.length===1){t.players[0]=t.name;return}
+  t.players[0]=$('#st-p'+i+'a').value.trim()||S.teams[i].players[0];t.players[1]=$('#st-p'+i+'b').value.trim()||S.teams[i].players[1]})}
+function renderSettings(){
+  const slot=$('#settingsslot');if(!slot)return;const d=ui.settings;
+  if(!d){slot.innerHTML='';return}
+  applyColors(d.teams);
+  const tf=(t,i)=>`<div class="teamform" style="--tc:var(--t${i})">
+    <label for="st-n${i}">${t.players.length===1?'Player':'Team'} ${i+1}</label><input class="tname" id="st-n${i}" maxlength="16" value="${esc(t.name)}">
+    <div class="swatches" role="group" aria-label="Team ${i+1} color">${Object.entries(COLORS).map(([k,v])=>{const taken=d.teams.some((o,j)=>j!==i&&o.color===k);
+      return`<button type="button" class="sw" data-act="set-color" data-team="${i}" data-color="${k}" style="--c:${v.c}" aria-label="${v.label}" title="${v.label}${taken?' (taken)':''}" aria-pressed="${t.color===k}" ${taken?'disabled':''}></button>`}).join('')}</div>
+    ${t.players.length===1?'':`<div class="pair"><div><label for="st-p${i}a">Thrower 1</label><input id="st-p${i}a" maxlength="14" value="${esc(t.players[0])}"></div>
+    <div><label for="st-p${i}b">Thrower 2</label><input id="st-p${i}b" maxlength="14" value="${esc(t.players[1])}"></div></div>`}</div>`;
+  slot.innerHTML=`<div class="overlay" style="z-index:30"><div class="result" role="dialog" aria-label="Game settings">
+    <h2 class="winner" style="font-size:40px">Settings</h2>
+    <div><span class="fieldlabel">Rounds</span><div class="stepper">
+      <button class="btn" data-act="set-rminus" aria-label="Fewer rounds" ${d.rounds<=S.round?'disabled':''}>−</button>
+      <span class="val">${d.rounds}</span>
+      <button class="btn" data-act="set-rplus" aria-label="More rounds" ${d.rounds>=30?'disabled':''}>+</button>
+      <span style="color:var(--muted);font-size:13px">Now on round ${Math.min(S.round,S.rounds)}. Can't go below it.</span></div></div>
+    <div><span class="fieldlabel">Off-the-board penalty</span><div class="seg-ctl">${[[0,'None'],[0.5,'−0.5 point'],[1,'−1 point']].map(([k,l])=>`<button type="button" data-act="set-pen" data-k="${k}" aria-pressed="${k===d.penalty}">${l}</button>`).join('')}</div></div>
+    <div class="settings-teams">${d.teams.map(tf).join('')}</div>
+    <div style="color:var(--muted);font-size:13px">Changes keep the board, scores and turn order as they are. Undo reverses them.</div>
+    <div class="actions"><button class="btn primary big" data-act="set-save">Save changes</button><button class="btn big" data-act="set-cancel">Cancel</button></div>
+  </div></div>`;
+}
+
+function timeHTML(){if(!S.startedAt)return'';const end=S.endedAt||Date.now();const rt=(S.roundTimes||[]).concat([end-(S.roundStartedAt||S.startedAt)]);
+  const avg=rt.reduce((a,b)=>a+b,0)/rt.length;
+  return`<div class="shame">Game length <b style="color:var(--chalk)">${fmtDur(end-S.startedAt)}</b>${S.timerJoined?' (since the timer was added)':''} · average round <b style="color:var(--chalk)">${fmtDur(avg)}</b></div>`}
+function shameHTML(){const e=Object.entries(S.shame||{}).sort((a,b)=>b[1]-a[1]);if(!e.length)return'<div class="shame">Wall of shame: empty. Every dart hit the board.</div>';
+  const top=e[0][1];const worst=e.filter(x=>x[1]===top).map(x=>esc(x[0]));
+  return`<div class="shame">Wall of shame: <b>${worst.join(' and ')}</b> missed the board ${top} time${top>1?'s':''}.</div>`}
+function resultView(){
+  const T=S.teams.map((_,i)=>tally(i));
+  const rank=T.map((t,i)=>i).sort((x,y)=>T[y].total-T[x].total||T[y].locks-T[x].locks);
+  const a=T[rank[0]],b=T[rank[1]];
+  const tied=a.total===b.total;const w=tied?(S.tbWinner!=null?S.tbWinner:null):rank[0];
+  const tiedNames=topTied().map(i=>esc(S.teams[i].name));
+  const head=w===null?`Tied at ${a.total}`:`${esc(S.teams[w].name)} wins`;
+  const sub=w===null?`${tiedNames.join(' and ')} are level. Settle it with a tiebreaker or play more rounds.`:tied?`Won the tiebreaker on ${numName(S.tbTarget)} after a ${a.total}–${a.total} tie.`:`${rank.map(i=>T[i].total).join(' to ')}`;
+  const row=(l,f)=>`<tr><td>${l}</td>${T.map(t=>`<td>${f(t)}</td>`).join('')}</tr>`;
+  const ps=playerStats();const mvp=ps[0]&&ps[0].darts?ps[0]:null;
+  return`<div class="overlay"><div class="result wide">
+    <div><div style="font-size:12px;letter-spacing:.14em;text-transform:uppercase;color:var(--muted);font-weight:600">Final after ${S.rounds} rounds</div>
+    <h2 class="winner" style="color:${w===null?'var(--chalk)':`var(--t${w})`}">${head}</h2><div style="color:var(--muted)">${sub}</div></div>
+    <div style="overflow-x:auto"><table><thead><tr><th></th>${S.teams.map((t,i)=>`<th style="color:var(--t${i})">${esc(t.name)}<div style="font-family:var(--font-body);font-size:11.5px;font-weight:500;color:var(--muted);letter-spacing:0;text-transform:none;margin-top:2px">${T[i].held} held · ${T[i].locks} locked</div></th>`).join('')}</tr></thead>
+    <tbody>${row('Held numbers <small style="opacity:.7">1 pt each</small>',t=>t.heldPts)}${row('Locked numbers <small style="opacity:.7">2 pts each</small>',t=>t.lockPts?'+'+t.lockPts:'0')}${row('Bull <small style="opacity:.7">counts double</small>',t=>t.bull?'+'+t.bull:'0')}${row('Chain bonus',t=>t.chain?'+'+t.chain:'0')}${row('Off the board',t=>t.pen?'−'+t.pen:'0')}</tbody>
+    <tfoot><tr><td>Total <small style="font-family:var(--font-body);font-size:12px;color:var(--muted)">sum of the rows above</small></td>${T.map(t=>`<td>${t.total}</td>`).join('')}</tr></tfoot></table></div>
+    ${timeHTML()}
+    ${shameHTML()}
+    <div style="display:flex;flex-direction:column;gap:8px"><h3>Player scorecard</h3>
+    ${mvp?`<div class="shame">MVP: <b style="color:var(--t${mvp.team})">${esc(mvp.name)}</b> with ${fmtD(mvp.gain)} for ${S.teams.length>2||S.teams[0].players.length>1?'the team':'themselves'} and ${mvp.dmg} taken from opponents.</div>`:''}
+    <div style="overflow-x:auto"><table class="pstats"><thead><tr><th>Player</th><th>Darts</th><th>Points won</th><th>Taken from others</th><th>Locks</th><th>Steals</th><th>Lock breaks</th><th>Off board</th></tr></thead>
+    <tbody>${ps.map(p=>`<tr><td><span style="color:var(--t${p.team})">${esc(p.name)}</span></td><td>${p.darts}</td><td>${fmtD(p.gain)}</td><td>${p.dmg}</td><td>${p.lock}</td><td>${p.steal}</td><td>${p.brk}</td><td>${p.off}</td></tr>`).join('')}</tbody></table></div>
+    <div class="shame">Points won counts every point change a player's darts caused for their own side, including penalties. Taken from others is what their darts knocked off opponents.</div></div>
+    <details><summary>Full play-by-play (${S.feed.length} darts)</summary><ul class="feed" style="margin-top:10px">${feedHTML(S.feed)}</ul></details>
+    <div class="actions">${w===null?'<button class="btn primary big" data-act="tb-start">Start tiebreaker</button>':''}${extendBtns()}</div>
+    <div class="actions"><button class="btn ${w===null?'':'primary '}big" data-act="rematch">Rematch</button><button class="btn big" data-act="setup">New teams</button><button class="btn big" data-act="g-menu">All games</button><button class="btn big" data-act="review">View board</button><button class="btn big" data-act="undo">↶ Undo last dart</button></div>
+  </div></div>`;
+}
+
+
+/* ================= Game menu + classic games ================= */
+const CSTORE='darts.classic.v1';
+const GAMES={
+  x01:{name:'301 / 501',tag:'Count down to exactly zero. Finish on a double.',min:1},
+  cricket:{name:'Cricket',tag:'Close 15 through 20 and the Bull. Score on numbers you own.',min:2},
+  atw:{name:'Around the World',tag:'Hit 1 through 20 in order. First one around wins.',min:1},
+  killer:{name:'Killer',tag:'Claim your number, become a killer, knock everyone out.',min:2},
+  bounty:{name:'Bounty',tag:'A new number every round. Cash per mark, rob the leader with triples.',min:2,max:10},
+  bingo:{name:'Dart Bingo',tag:'Close squares on a shared bingo card. First full row wins.',min:1}
+};
+const BSTEAL=25,BBUST=10;
+const gMax=g=>GAMES[g].max||8;
+const CRICK=[20,19,18,17,16,15,25];
+let appMode='menu',cview='setup',C=null,chist=[];
+let cdraft={game:'x01',n:2,players:DEF_TEAMS.map(t=>({name:t.solo,color:t.color})).concat([{name:'Player 9',color:'silver'},{name:'Player 10',color:'olive'}]),
+  opts:{start:501,dout:true,din:false,cpts:true,atwBull:true,atwSkip:false,atwLast:true,bdiag:true,lives:3,kmode:'double',brounds:7}};
+function csave(){try{localStorage.setItem(CSTORE,JSON.stringify({C,chist:chist.slice(-60),cdraft,appMode,cview}))}catch(e){}}
+function cload(){try{const d=JSON.parse(localStorage.getItem(CSTORE)||'null');if(!d)return;
+  if(d.cdraft){cdraft.game=d.cdraft.game||cdraft.game;cdraft.n=d.cdraft.n||cdraft.n;Object.assign(cdraft.opts,d.cdraft.opts||{});
+    (d.cdraft.players||[]).forEach((p,i)=>{if(cdraft.players[i]&&p)cdraft.players[i]=Object.assign(cdraft.players[i],p)})}
+  if(d.C)C=d.C;chist=d.chist||[];if(d.appMode)appMode=d.appMode;if(d.cview)cview=d.cview;if(cview==='game'&&!C)cview='setup'}catch(e){}}
+const pv=v=>{try{return JSON.parse(v)}catch(e){return v}};
+const cP=()=>C.players[C.turn];
+const atwTargets=()=>{const t=[];for(let i=1;i<=20;i++)t.push(i);if(C.opts.atwBull)t.push(25);return t};
+
+/* ---------- menu ---------- */
+function menuView(){
+  const turfLive=S&&S.phase!=='over';const cLive=C&&C.phase==='play';
+  const card=(act,extra,title,tag,meta,cls='')=>`<button type="button" class="gcard ${cls}" data-act="${act}" ${extra}><span class="gname">${title}</span><span class="gtag">${tag}</span><span class="gmeta">${meta}</span></button>`;
+  return`<div class="menu">
+    <div class="menuhead"><div><div class="eyebrow">Tap a game to start</div><h1 class="menutitle">Pick your game</h1></div></div>
+    ${turfLive||cLive?`<div class="resume">${turfLive?`<button class="btn big primary" data-act="g-turf">Resume Turf War · round ${Math.min(S.round,S.rounds)} of ${S.rounds}</button>`:''}${cLive?`<button class="btn big primary" data-act="g-cresume">Resume ${esc(GAMES[C.game].name)} · round ${C.round}</button>`:''}</div>`:''}
+    <div class="menugrid">
+      ${card('g-turf','','<span style="color:var(--t0)">Turf</span> <span style="color:var(--t1)">War</span>','Claim numbers, lock them, steal them, and chain neighbors for bonus points. Our house game.','2–10 players · solo or teams','feature')}
+      ${card('g-classic','data-game="x01"','301 / 501',GAMES.x01.tag,'1–8 players · double-out optional')}
+      ${card('g-classic','data-game="cricket"','Cricket',GAMES.cricket.tag,'2–8 players · the bar classic')}
+      ${card('g-classic','data-game="atw"','Around the World',GAMES.atw.tag,'1–8 players · great for beginners')}
+      ${card('g-classic','data-game="killer"','Killer',GAMES.killer.tag,'2–8 players · last one standing')}
+      ${card('g-classic','data-game="bounty"','Bounty',GAMES.bounty.tag,'2–10 players · ends at High Noon')}
+      ${card('g-classic','data-game="bingo"','Dart Bingo',GAMES.bingo.tag,'1–8 players · 5×5 card, Bullseye in the middle')}
+    </div>
+    <div style="display:flex;align-items:center;gap:12px;flex-wrap:wrap;color:var(--muted);font-size:14px"><button type="button" class="btn" data-act="g-assist" aria-pressed="${assistOn()}">Tap assist: ${assistOn()?'On':'Off'}</button><span>Tap a number, then pick single, double or triple. Handy on phones.</span></div>
+    </div>`;
+}
+
+/* ---------- setup ---------- */
+function cRules(g){const o=C?C.opts:cdraft.opts;return({
+  x01:`<li><b>Everyone starts at ${o.start}.</b> Every dart is subtracted from your score.</li>
+    <li><b>Doubles and triples</b> count 2× and 3×. Outer bull is 25, bullseye is 50.</li>
+    ${o.din?'<li><b>Double in:</b> nothing counts until you hit a double.</li>':''}
+    <li><b>Finish on exactly zero</b>${o.dout?' with a double (the bullseye counts as a double)':''}.</li>
+    <li><b>Bust:</b> going below zero${o.dout?', landing on 1, or hitting zero without a double':''} ends your turn and your score goes back to where it started that turn.</li>
+    <li>The app suggests a checkout once you're in range.</li>`,
+  cricket:`<li><b>Only 15 to 20 and the Bull count.</b> Everything else is a miss.</li>
+    <li><b>Three marks closes a number.</b> A single is 1 mark, a double 2, a triple 3. Outer bull is 1, bullseye 2.</li>
+    ${o.cpts?`<li><b>Score on numbers you've closed</b> while at least one opponent still has them open. Extra marks score the number's value (Bull is 25).</li>
+    <li><b>To win,</b> close all seven and have the most points (or be tied for most).</li>`:'<li><b>No-points game:</b> first to close all seven wins.</li>'}
+    <li>A number closed by everyone is dead and shows dark on the board.</li>`,
+  atw:`<li><b>Hit 1, then 2, then 3,</b> all the way to 20${o.atwBull?', then the Bull':''}.</li>
+    <li>Any single, double or triple of your number counts.</li>
+    ${o.atwSkip?'<li><b>Doubles skip ahead 2, triples skip ahead 3.</b></li>':''}
+    ${o.atwLast!==false?'<li><b>Last dart bonus:</b> hit your target with your third dart and you throw another three darts right away.</li>':''}
+    <li>Your next target glows on the board. First one around wins.</li>`,
+  killer:`<li><b>Everyone gets a number</b> and ${o.lives} lives.</li>
+    <li><b>Become a killer</b> by hitting ${o.kmode==='double'?'the double of your own number':'your own number 3 times (single 1, double 2, triple 3)'}.</li>
+    <li><b>Killers take lives</b> by hitting ${o.kmode==='double'?'other players\' doubles (1 life each)':'other players\' numbers (single 1, double 2, triple 3 lives)'}.</li>
+    <li><b>Careful:</b> a killer who hits their own ${o.kmode==='double'?'double':'number'} loses a life.</li>
+    <li>Run out of lives and you're out. Last player standing wins.</li>`,
+  bounty:`<li>Every round a new <b>bounty number</b> is posted. Everyone shoots 3 darts at that number only.</li>
+    <li>Single = 1 mark, double = 2, triple = 3. Each mark pays the number's value: 3 marks on 18 is $54.</li>
+    <li>Miss with all three darts and you <b>go bust</b>: lose $${BBUST}.</li>
+    <li>Whoever leads at the start of a round is <b>Wanted</b>. Hit a triple and you rob them of $${BSTEAL} per triple.</li>
+    <li>The last round is <b>High Noon</b>: everyone shoots the Bull. Outer bull = 1 mark, bullseye = 2. Each mark pays $25, and a bullseye counts as a triple for robbing the leader.</li>
+    <li>Most cash after the last round wins. Tied? Closest to the bull takes it.</li>`,
+  bingo:`<li><b>One shared 5×5 card.</b> 20 squares are the numbers 1–20 in random spots, the middle is <b>BULLSEYE</b>, and the corners are color and ring squares.</li>
+    <li><b>Three marks claims a square.</b> On a number: single 1, double 2, triple 3. On BULLSEYE: outer bull 1, bullseye 2.</li>
+    <li><b>DOUBLE and TRIPLE corners:</b> any double (bullseye too) or any triple adds 1 mark. Three marks claims it.</li>
+    <li><b>ODD/EVEN and B/W are 3-dart combos:</b> all 3 darts on odd numbers, or all on even numbers, earns 1 mark on ODD/EVEN. All 3 in black segments, or all in white, earns 1 mark on B/W. A combo uses up all 3 darts that turn.</li>
+    <li><b>Each dart counts once, and you choose after your 3 darts.</b> At the end of the turn, pick which square each dart goes to. A T5 can close 5 or add 1 mark to TRIPLE. Stack darts on one square to close it faster.</li>
+    <li>Once someone claims a square it's theirs. Nobody else can mark it.</li>
+    <li><b>Win:</b> first to claim a full row across, down${o.bdiag!==false?' or diagonal':''}.</li>`
+})[g]}
+function cSetupView(){
+  const d=cdraft,g=d.game,G=GAMES[g],o=d.opts;
+  const seg=(k,list)=>`<div class="seg-ctl">${list.map(([v,l])=>`<button type="button" data-act="c-opt" data-k="${k}" data-v='${JSON.stringify(v)}' aria-pressed="${o[k]===v}">${l}</button>`).join('')}</div>`;
+  const opts={
+    x01:`<div><span class="fieldlabel">Starting score</span>${seg('start',[[301,'301'],[501,'501'],[701,'701']])}</div>
+      <div class="pair"><div><span class="fieldlabel">Finish</span>${seg('dout',[[true,'Double out'],[false,'Any finish']])}</div>
+      <div><span class="fieldlabel">Start</span>${seg('din',[[false,'Open start'],[true,'Double in']])}</div></div>`,
+    cricket:`<div><span class="fieldlabel">Scoring</span>${seg('cpts',[[true,'Standard (points)'],[false,'No points, just close']])}</div>`,
+    atw:`<div class="pair"><div><span class="fieldlabel">Finish on</span>${seg('atwBull',[[true,'Bull'],[false,'20']])}</div>
+      <div><span class="fieldlabel">Doubles & triples</span>${seg('atwSkip',[[false,'Count as 1'],[true,'Skip ahead']])}</div></div>
+      <div><span class="fieldlabel">Last dart bonus</span>${seg('atwLast',[[true,'On'],[false,'Off']])}
+      <div style="font-size:13px;color:var(--muted);margin-top:6px">Hit your target with your third dart and you throw another round.</div></div>`,
+    killer:`<div class="pair"><div><span class="fieldlabel">Lives</span>${seg('lives',[[3,'3'],[5,'5']])}</div>
+      <div><span class="fieldlabel">Mode</span>${seg('kmode',[['double','Doubles only'],['any','Any hit']])}</div></div>`,
+    bounty:`<div><span class="fieldlabel">Rounds</span>${seg('brounds',[[3,'3'],[5,'5'],[7,'7'],[9,'9']])}
+      <div style="font-size:13px;color:var(--muted);margin-top:6px">${d.n} shooters × ${o.brounds} rounds ≈ ${Math.max(5,Math.round(d.n*o.brounds*25/60/5)*5)} minutes. The last round is always High Noon on the Bull.</div></div>`
+,
+    bingo:`<div><span class="fieldlabel">Diagonals count</span>${seg('bdiag',[[true,'Yes'],[false,'No']])}<div style="font-size:13px;color:var(--muted);margin-top:6px">Each new game shuffles the numbers on the card.</div></div>`
+  }[g];
+  const pf=i=>{const p=d.players[i];return`<div class="teamform" style="--tc:var(--t${i})">
+    <label for="cp${i}">Player ${i+1}</label><input class="tname" id="cp${i}" maxlength="14" value="${esc(p.name)}">
+    <div class="swatches" role="group" aria-label="Player ${i+1} color">${Object.entries(COLORS).map(([k,v])=>{const taken=d.players.slice(0,d.n).some((q,j)=>j!==i&&q.color===k);
+      return`<button type="button" class="sw" data-act="c-color" data-p="${i}" data-color="${k}" style="--c:${v.c}" aria-label="${v.label}" aria-pressed="${p.color===k}" ${taken?'disabled':''}></button>`}).join('')}</div></div>`};
+  const counts=[];for(let k=G.min;k<=gMax(g);k++)counts.push(k);
+  return`<div class="setup">
+    <div class="form">
+      <button type="button" class="btn" data-act="g-menu" style="align-self:flex-start">← All games</button>
+      <div class="hero"><h1 style="font-size:clamp(48px,8vw,88px)">${esc(G.name)}</h1><p>${esc(G.tag)}</p></div>
+      <div><span class="fieldlabel">Game</span><div class="seg-ctl">${Object.entries(GAMES).map(([k,v])=>`<button type="button" data-act="c-game" data-v="${k}" aria-pressed="${k===g}" style="font-size:18px">${v.name}</button>`).join('')}</div></div>
+      <div><span class="fieldlabel">Players</span><div class="seg-ctl">${counts.map(k=>`<button type="button" data-act="c-n" data-v="${k}" aria-pressed="${k===d.n}">${k}</button>`).join('')}</div></div>
+      ${opts}
+      <div class="shufflebar"><button type="button" class="btn" data-act="c-shuffle">Random order</button></div>
+      ${[...Array(d.n).keys()].map(pf).join('')}
+      <button class="btn primary big" id="start" data-act="c-start">Start ${esc(G.name)}</button>
+    </div>
+    <div class="card rules"><h2>How to play</h2><ol>${cRules(g)}</ol></div>
+  </div>`;
+}
+function readC(){for(let i=0;i<cdraft.n;i++){const el=$('#cp'+i);if(el)cdraft.players[i].name=el.value.trim()||('Player '+(i+1))}}
+
+/* ---------- game state ---------- */
+function cNew(){
+  const d=cdraft,o=JSON.parse(JSON.stringify(d.opts));
+  const players=d.players.slice(0,d.n).map(p=>({name:p.name,color:p.color}));
+  const nums=shuffle([...Array(20)].map((_,i)=>i+1));
+  players.forEach((p,i)=>{
+    if(d.game==='x01')Object.assign(p,{rem:o.start,turnStart:o.start,opened:!o.din,scored:0,darts:0,best:0,turnPts:0});
+    if(d.game==='cricket')Object.assign(p,{marks:{20:0,19:0,18:0,17:0,16:0,15:0,25:0},pts:0,darts:0,mpr:0});
+    if(d.game==='atw')Object.assign(p,{ti:0,darts:0});
+    if(d.game==='killer')Object.assign(p,{num:nums[i],lives:o.lives,killer:false,hits:0,out:false,darts:0,kills:0});
+    if(d.game==='bounty')Object.assign(p,{score:0,marks:0,tops:0,steals:0,busts:0,darts:0});
+    if(d.game==='bingo')Object.assign(p,{claims:0,darts:0});
+  });
+  C={game:d.game,opts:o,players,turn:0,round:1,darts:[],turnLog:[],pending:false,phase:'play',winner:null,feed:[],startedAt:Date.now(),endedAt:null};
+  if(d.game==='bingo'){const nn=shuffle([...Array(20)].map((_,i)=>i+1)),cs=shuffle(['DOUBLE','TRIPLE','BW','OE']);C.card=[];let ni=0,ci=0;
+    for(let i=0;i<25;i++){const k=i===12?'BULL':[0,4,20,24].includes(i)?cs[ci++]:nn[ni++];C.card.push({k,owner:null,marks:players.map(()=>0)})}}
+  if(d.game==='bounty'){C.rounds=o.brounds;C.targets=nums.slice(0,o.brounds-1).concat([25]);C.wanted=null}
+  chist=[];cview='game';csave();renderClassic();
+}
+function cSnap(){chist.push(JSON.stringify(C))}
+function cNextIdx(from){const N=C.players.length;for(let k=1;k<=N;k++){const j=(from+k)%N;if(!C.players[j].out)return j}return from}
+function cAlive(){return C.players.filter(p=>!p.out)}
+
+function cThrow(n,m){buzz(n);
+  if(!C||C.phase!=='play'||C.pending)return;
+  cSnap();const p=cP(),o=C.opts,g=C.game;
+  const label=n===-1?'OFF':n===0?'Miss':hitLabel(n,m);
+  let text='',delta=null,endTurn=false,win=false,atwHit=false;p.darts++;
+  if(g==='bingo'){C.darts.push(label);C.bDarts=C.bDarts||[];C.bDarts.push({n,m,label});
+    if(C.darts.length===3){const opts=C.bDarts.map(d=>bingoOpts(d.n,d.m));C.alloc={opts,sel:opts.map(o=>o.length?0:-1),combos:bingoCombos(C.bDarts),combo:null}}
+    csave();renderClassic();if(n===-1)cOff(p.name);if(n>0)cFlash(n,m);return}
+  if(g==='x01'){
+    let v=n<=0?0:(n===25?(m===2?50:25):n*m);const dbl=m===2&&n>0;
+    if(!p.opened){if(dbl){p.opened=true}else{v=0;text=n>0?'needs a double to start':'missed'}}
+    if(p.opened&&n>0||v){
+      const nr=p.rem-v;
+      if(nr<0||(o.dout&&nr===1)||(o.dout&&nr===0&&!dbl)){text=`BUST, back to ${p.turnStart}`;delta=-(p.turnStart-p.rem);p.scored-=(p.turnStart-p.rem);p.rem=p.turnStart;endTurn=true;p.bust=true}
+      else{p.rem=nr;p.scored+=v;delta=v?-v:null;text=v?`${v} scored, ${nr} left`:'missed';if(nr===0){win=true;text=`checked out on ${label}!`}}
+    }else if(!text)text='missed';
+  }
+  else if(g==='cricket'){
+    if(CRICK.includes(n)){
+      const before=p.marks[n],use=Math.min(m,3-before),extra=m-use;p.marks[n]+=use;
+      const val=n===25?25:n,openElsewhere=C.players.some((q,j)=>j!==C.turn&&q.marks[n]<3);
+      let got=0;if(extra&&o.cpts&&openElsewhere){got=extra*val;p.pts+=got}
+      const nm=numName(n);
+      if(use&&p.marks[n]===3&&before<3)text=`closed ${nm}`+(got?`, +${got}`:'');
+      else if(use)text=`${p.marks[n]} mark${p.marks[n]>1?'s':''} on ${nm}`;
+      else text=got?`scored ${got} on ${nm}`:`${nm} closed${!openElsewhere?' by everyone':''}`;
+      if(use&&p.marks[n]===3&&before<3&&got)text=`closed ${nm} and scored ${got}`;
+      delta=got||null;p.mpr+=use+(got?extra:0);
+      const allClosed=CRICK.every(k=>p.marks[k]>=3);
+      if(allClosed&&(!o.cpts||C.players.every((q,j)=>j===C.turn||p.pts>=q.pts))){win=true;text+=' · closed everything!'}
+    }else text=n>0?`${numName(n)} doesn't count`:'missed';
+  }
+  else if(g==='atw'){
+    const T=atwTargets(),t=T[p.ti];
+    if(n===t){atwHit=true;const adv=o.atwSkip?m:1;let ni=p.ti+adv;if(ni>=T.length)ni=(p.ti===T.length-1)?T.length:T.length-1;p.ti=ni;
+      if(p.ti>=T.length){win=true;text='made it all the way around!'}else text=`hit ${numName(t)}${adv>1?` (+${adv})`:''}, next: ${numName(T[p.ti])}`}
+    else text=`needed ${numName(t)}`;
+  }
+  else if(g==='killer'){
+    const owner=n>0&&n!==25?C.players.findIndex(q=>q.num===n&&!q.out):-1;
+    const cnt=o.kmode==='double'?(m===2?1:0):m;
+    if(owner<0)text=n>0?`${numName(n)} belongs to nobody`:'missed';
+    else if(!cnt)text=`${numName(n)} needs the double`;
+    else if(owner===C.turn){
+      if(!p.killer){p.hits+=cnt;const need=o.kmode==='double'?1:3;if(p.hits>=need){p.killer=true;text='is now a KILLER'}else text=`${p.hits} of ${need} on own number`}
+      else{p.lives=Math.max(0,p.lives-cnt);text=`hit own number, −${cnt} life`;if(!p.lives){p.out=true;text+=', knocked out';endTurn=true}}
+    }else{const q=C.players[owner];
+      if(!p.killer)text=`not a killer yet, ${q.name}'s number`;
+      else{q.lives=Math.max(0,q.lives-cnt);text=`took ${cnt} ${cnt>1?'lives':'life'} from ${q.name}`;if(!q.lives){q.out=true;p.kills++;text+=`, ${q.name} is out!`}}}
+    if(cAlive().length<=1){win=true}
+  }
+  let bm=0,btop=false;
+  if(g==='bounty'){const t=C.targets[C.round-1],val=t===25?25:t;
+    bm=(n===t)?m:0;btop=bm>0&&(t===25?m===2:m===3);
+    if(bm){delta=bm*val;text=`${bm} mark${bm>1?'s':''} on ${t===25?'the Bull':t}`;
+      if(btop&&C.wanted!=null&&C.wanted!==C.turn)text+=` · bounty shot on ${C.players[C.wanted].name}!`}
+    else text=n>0?`needed ${t===25?'the Bull':t}`:'missed'}
+  let bonusNow=false;
+  C.darts.push(label);C.turnLog.push({label,text,delta,bm,btop});
+  C.feed.unshift({pi:C.turn,who:p.name,label,text,delta,r:C.round});
+  if(win){C.phase='over';C.winner=g==='killer'?C.players.findIndex(q=>!q.out):C.turn;C.endedAt=Date.now()}
+  else if(g==='atw'&&o.atwLast!==false&&atwHit&&C.darts.length===3){C.darts=[];C.bonus=(C.bonus||0)+1;p.bonuses=(p.bonuses||0)+1;
+    C.feed.unshift({pi:C.turn,who:p.name,label:'BONUS',text:'last dart hit, throws again',delta:null,r:C.round});bonusNow=true}
+  else if(endTurn||C.darts.length===3){C.pending=true;if(g==='bounty')bSettle()}
+  csave();renderClassic();
+  if(bonusNow)cBonus(p.name,C.turn);
+  if(n===-1)cOff(p.name);
+  if(n>0){const el=document.querySelector(`#board [data-n="${n}"][data-m="${m}"]`);if(el){el.classList.remove('flash');void el.getBBox();el.classList.add('flash')}}
+}
+const BINGO_LINES=(()=>{const L=[];for(let r=0;r<5;r++)L.push([0,1,2,3,4].map(c=>r*5+c));for(let c=0;c<5;c++)L.push([0,1,2,3,4].map(r=>r*5+c));L.push([0,6,12,18,24],[4,8,12,16,20]);return L})();
+function isRedNum(n){return ORDER.indexOf(n)%2===0}
+function bingoLabel(k){return k==='BULL'?'Bullseye':k==='DOUBLE'?'Double':k==='TRIPLE'?'Triple':k==='BW'?'B/W':k==='OE'?'Odd/Even':String(k)}
+function bingoGain(k,n,m){if(n<=0)return 0;
+  if(typeof k==='number')return n===k?m:0;
+  if(k==='BULL')return n===25?m:0;
+  if(k==='DOUBLE')return m===2?1:0;
+  if(k==='TRIPLE')return m===3?1:0;
+  if(k==='BW'||k==='OE')return 0;
+  return 0}
+function bingoOpts(n,m){const out=[];C.card.forEach((cell,i)=>{if(cell.owner!=null)return;const gn=bingoGain(cell.k,n,m);if(!gn)return;
+    out.push({i,k:cell.k,gain:gn,after:Math.min(3,cell.marks[C.turn]+gn)})});
+  return out.sort((a,b)=>(typeof b.k==='number'||b.k==='BULL')-(typeof a.k==='number'||a.k==='BULL')||b.after-a.after)}
+function bingoApply(o){const cell=C.card[o.i],p=cP();cell.marks[C.turn]=o.after;let text,delta=null,win=false;
+  if(o.after>=3){cell.owner=C.turn;p.claims++;delta=1;text=`closed ${bingoLabel(o.k)}`}else text=`${bingoLabel(o.k)} ${o.after}/3`;
+  const line=bingoWinLine(C.turn);if(line){win=true;C.winLine=line;text+=' · BINGO!'}
+  return{text,delta,win}}
+function bingoFinish(label,r){const p=cP();C.darts.push(label);C.turnLog.push({label,text:r.text,delta:r.delta});
+  C.feed.unshift({pi:C.turn,who:p.name,label,text:r.text,delta:r.delta,r:C.round});
+  if(r.win){C.phase='over';C.winner=C.turn;C.endedAt=Date.now()}else if(C.darts.length===3)C.pending=true;
+  csave();renderClassic()}
+function bingoCombos(ds){const out=[];if(ds.length!==3||!ds.every(d=>d.n>=1&&d.n<=20))return out;
+  const add=(k,why)=>{const i=C.card.findIndex(c=>c.k===k);if(i>=0&&C.card[i].owner==null)out.push({k,i,why})};
+  if(ds.every(d=>d.n%2===1))add('OE','All odd');else if(ds.every(d=>d.n%2===0))add('OE','All even');
+  if(ds.every(d=>isRedNum(d.n)))add('BW','All black');else if(ds.every(d=>!isRedNum(d.n)))add('BW','All white');
+  return out}
+function bingoProj(){const a=C.alloc,proj={};if(a.combo){const c=a.combos.find(x=>x.k===a.combo);if(c)proj[c.i]=1;return proj}a.sel.forEach((si,d)=>{if(si<0)return;const o=a.opts[d][si];proj[o.i]=(proj[o.i]||0)+o.gain});return proj}
+function bingoAllocHTML(){const a=C.alloc;if(!a)return'';const proj=bingoProj();
+  const closing=Object.keys(proj).filter(i=>C.card[i].marks[C.turn]+proj[i]>=3).map(i=>bingoLabel(C.card[i].k));
+  const rows=C.bDarts.map((d,di)=>{const opts=a.opts[di];
+    return`<div class="arow"><div class="alab">${d.label}</div><div class="aopts">${opts.length?opts.map((o,oi)=>{const cell=C.card[o.i];const sel=a.sel[di]===oi;const tot=Math.min(3,cell.marks[C.turn]+(proj[o.i]||0)+(sel?0:o.gain));
+      return`<button type="button" class="btn aopt${sel?' on':''}${sel&&tot>=3?' closes':''}" data-act="c-pick" data-d="${di}" data-i="${oi}" style="--tc:var(--t${C.turn})"><span class="bcl">${typeof o.k==='number'?o.k:bingoLabel(o.k)}</span><span class="bcs">+${o.gain} → ${tot>=3?'closes':tot+'/3'}</span></button>`}).join(''):`<span class="anone">${d.n>0?'No open square':'Missed'}</span>`}</div></div>`}).join('');
+  return`<div class="overlay" style="z-index:26"><div class="result" role="dialog" aria-label="Choose where your darts go" style="max-width:760px;gap:14px">
+    <div><div style="font-size:12px;letter-spacing:.14em;text-transform:uppercase;color:var(--muted);font-weight:600">${esc(cP().name)} · turn over</div>
+    <h2 class="winner" style="font-size:46px;color:var(--t${C.turn})">Pick where each dart goes</h2>
+    <div style="color:var(--muted)">Each dart counts on one square. ${closing.length?`<b style="color:var(--chalk)">Closes: ${closing.join(', ')}</b>`:'Nothing closes yet with these picks.'}</div></div>
+    ${a.combos&&a.combos.length?`<div class="acombo"><div class="aclab">3-dart combo<small>${a.combos.map(c=>c.why).join(' · ')}</small></div><div class="aopts">
+      <button type="button" class="btn aopt${!a.combo?' on':''}" data-act="c-combo" data-k="" style="--tc:var(--t${C.turn})"><span class="bcl">Use darts separately</span><span class="bcs">pick per dart below</span></button>
+      ${a.combos.map(c=>{const cell=C.card[c.i];const tot=Math.min(3,cell.marks[C.turn]+1);return`<button type="button" class="btn aopt${a.combo===c.k?' on':''}${a.combo===c.k&&tot>=3?' closes':''}" data-act="c-combo" data-k="${c.k}" style="--tc:var(--t${C.turn})"><span class="bcl">${bingoLabel(c.k)}</span><span class="bcs">+1 → ${tot>=3?'closes':tot+'/3'} · uses all 3 darts</span></button>`}).join('')}</div></div>`:''}
+    <div class="arows${a.combo?' off':''}">${rows}</div>
+    <div class="actions"><button type="button" class="btn primary big" data-act="c-alloc">Lock it in</button><button type="button" class="btn big" data-act="c-undo">↶ Undo last dart</button></div>
+  </div></div>`}
+function bingoCommit(){if(!C||!C.alloc)return;cSnap();const a=C.alloc,p=cP();
+  if(a.combo){const c=a.combos.find(x=>x.k===a.combo),cell=C.card[c.i];let text,delta=null;
+    cell.marks[C.turn]=Math.min(3,cell.marks[C.turn]+1);
+    if(cell.marks[C.turn]>=3){cell.owner=C.turn;p.claims++;delta=1;text=`${c.why} → closed ${bingoLabel(c.k)}`}else text=`${c.why} → ${bingoLabel(c.k)} ${cell.marks[C.turn]}/3`;
+    const lbl=C.bDarts.map(d=>d.label).join(' ');C.turnLog.push({label:'COMBO',text:`${lbl}: ${text}`,delta});C.feed.unshift({pi:C.turn,who:p.name,label:'COMBO',text:`${lbl}: ${text}`,delta,r:C.round});
+    C.bDarts=[];}
+  else C.bDarts.forEach((d,di)=>{const si=a.sel[di];let text,delta=null;
+    if(si<0)text=d.n>0?'no open square':'missed';
+    else{const o=a.opts[di][si],cell=C.card[o.i];
+      if(cell.owner!=null)text=`${bingoLabel(o.k)} already closed`;
+      else{cell.marks[C.turn]=Math.min(3,cell.marks[C.turn]+o.gain);
+        if(cell.marks[C.turn]>=3){cell.owner=C.turn;p.claims++;delta=1;text=`closed ${bingoLabel(o.k)}`}else text=`${bingoLabel(o.k)} ${cell.marks[C.turn]}/3`}}
+    C.turnLog.push({label:d.label,text,delta});C.feed.unshift({pi:C.turn,who:p.name,label:d.label,text,delta,r:C.round})});
+  C.alloc=null;C.bDarts=[];
+  const line=bingoWinLine(C.turn);
+  if(line){C.winLine=line;C.phase='over';C.winner=C.turn;C.endedAt=Date.now();C.feed[0].text+=' · BINGO!'}else C.pending=true;
+  csave();renderClassic()}
+function cChoose(i){if(!C||!C.choice)return;cSnap();const ch=C.choice;C.choice=null;bingoFinish(ch.label,bingoApply(ch.opts[i]))}
+function cFlash(n,m){const el=document.querySelector(`#board [data-n="${n}"][data-m="${m}"]`);if(el){el.classList.remove('flash');void el.getBBox();el.classList.add('flash')}}
+function bingoChoiceHTML(){const ch=C.choice;if(!ch)return'';
+  return`<div class="overlay" style="z-index:26;align-items:flex-end"><div class="result" role="dialog" aria-label="Choose a square" style="max-width:640px;gap:12px">
+    <div><div style="font-size:12px;letter-spacing:.14em;text-transform:uppercase;color:var(--muted);font-weight:600">${esc(cP().name)} hit</div>
+    <h2 class="winner" style="font-size:56px;color:var(--t${C.turn})">${ch.label} <span style="font-size:28px;color:var(--chalk)">pick one square</span></h2></div>
+    <div class="bchoices">${ch.opts.map((o,i)=>`<button type="button" class="btn bchoice${o.after>=3?' closes':''}" data-act="c-choose" data-i="${i}" style="--tc:var(--t${C.turn})"><span class="bcl">${typeof o.k==='number'?o.k:bingoLabel(o.k)}</span><span class="bcs">${o.after>=3?'Closes it':`+${o.gain} · ${o.after}/3`}</span></button>`).join('')}</div>
+    <button type="button" class="btn" data-act="c-undo" style="align-self:flex-start">↶ Undo this dart</button>
+  </div></div>`}
+function bingoWinLine(pi){const lines=C.opts.bdiag===false?BINGO_LINES.slice(0,10):BINGO_LINES;return lines.find(l=>l.every(i=>C.card[i].owner===pi))||null}
+function bingoBest(pi){const lines=C.opts.bdiag===false?BINGO_LINES.slice(0,10):BINGO_LINES;let b=0;for(const l of lines){if(l.some(i=>C.card[i].owner!=null&&C.card[i].owner!==pi))continue;b=Math.max(b,l.filter(i=>C.card[i].owner===pi).length)}return b}
+function bSettle(){const p=cP(),t=C.targets[C.round-1],val=t===25?25:t;
+  const marks=C.turnLog.reduce((a,d)=>a+(d.bm||0),0),tops=C.turnLog.filter(d=>d.btop).length;
+  const st={pts:0,bust:false,stole:0,from:null};
+  if(!marks){const loss=Math.min(BBUST,p.score);p.score-=loss;p.busts++;st.pts=-loss;st.bust=true;
+    C.feed.unshift({pi:C.turn,who:p.name,label:'BUST',text:`went bust, −$${loss}`,delta:-loss,r:C.round})}
+  else{st.pts=marks*val;p.score+=st.pts;p.marks+=marks}
+  p.tops+=tops;const w=C.wanted;
+  if(tops&&w!=null&&w!==C.turn){let tot=0;for(let k=0;k<tops;k++){const take=Math.min(BSTEAL,C.players[w].score);C.players[w].score-=take;p.score+=take;tot+=take}
+    if(tot){p.steals++;st.stole=tot;st.from=w;C.feed.unshift({pi:C.turn,who:p.name,label:'ROB',text:`collected the bounty on ${C.players[w].name}`,delta:tot,r:C.round})}}
+  C.settle=st;
+  if(C.turn===C.players.length-1&&C.round>=C.rounds){C.pending=false;C.phase='over';C.endedAt=Date.now();
+    const mx=Math.max(...C.players.map(q=>q.score));const top=C.players.map((q,i)=>i).filter(i=>C.players[i].score===mx);C.winner=top.length===1?top[0]:null;C.tied=top}}
+function bSetWanted(){const mx=Math.max(...C.players.map(p=>p.score));const lead=C.players.map((p,i)=>i).filter(i=>C.players[i].score===mx);C.wanted=(mx>0&&lead.length===1)?lead[0]:null}
+function cNext(){cSnap();const prev=C.turn;const p=cP();if(C.game==='x01'){p.best=Math.max(p.best||0,p.turnStart-p.rem);p.bust=false}
+  C.pending=false;C.darts=[];C.turnLog=[];C.settle=null;C.bonus=0;C.turn=cNextIdx(prev);if(C.turn<=prev){C.round++;if(C.game==='bounty')bSetWanted()}
+  if(C.game==='x01')cP().turnStart=cP().rem;csave();renderClassic()}
+function cUndo(){if(!chist.length)return;C=JSON.parse(chist.pop());csave();renderClassic()}
+function cBonus(name,i){let el=$('#offtoast');if(el)el.remove();el=document.createElement('div');el.id='offtoast';el.className='offtoast bonus';el.setAttribute('role','status');el.style.setProperty('--tc',`var(--t${i})`);
+  el.innerHTML=`<div class="inner"><div class="big">Last dart!</div><div class="quip">${esc(name)} throws again</div></div>`;
+  document.body.appendChild(el);if(!nativeHaptic('success')){try{if(navigator.vibrate)navigator.vibrate([30,40,30,40,60])}catch(e){}}setTimeout(()=>el.remove(),2100)}
+function cOff(name){let el=$('#offtoast');if(el)el.remove();el=document.createElement('div');el.id='offtoast';el.className='offtoast';
+  el.innerHTML=`<div class="inner"><div class="big">Off the board!</div><div class="quip">${esc(QUIPS[Math.floor(Math.random()*QUIPS.length)])}</div></div>`;
+  document.body.appendChild(el);const bb=$('#boardbox');if(bb){bb.classList.remove('shake');void bb.offsetWidth;bb.classList.add('shake')}setTimeout(()=>el.remove(),1950)}
+
+/* ---------- checkout helper ---------- */
+const CO_ALL=(()=>{const a=[];for(let i=20;i>=1;i--)a.push({l:'T'+i,v:3*i});a.push({l:'Bull',v:50});for(let i=20;i>=1;i--)a.push({l:'D'+i,v:2*i});a.push({l:'25',v:25});for(let i=20;i>=1;i--)a.push({l:'S'+i,v:i});return a})();
+const CO_D=CO_ALL.filter(d=>d.l[0]==='D'||d.l==='Bull');
+function checkout(rem,darts,dout){if(rem<=0||rem>170||darts<1)return null;const fin=dout?CO_D:CO_ALL;
+  let f=fin.find(d=>d.v===rem);if(f)return[f.l];if(darts<2)return null;
+  for(const a of CO_ALL){f=fin.find(d=>d.v===rem-a.v);if(f)return[a.l,f.l]}if(darts<3)return null;
+  for(const a of CO_ALL)for(const b of CO_ALL){f=fin.find(d=>d.v===rem-a.v-b.v);if(f)return[a.l,b.l,f.l]}return null}
+
+/* ---------- game screen ---------- */
+function cShell(){const G=GAMES[C.game];return`
+  <header class="top">
+    <div class="titleblock"><h1 class="brand"><span>${esc(G.name)}</span></h1><div class="round" id="cround"></div><div class="timer" id="ctimer"></div></div>
+    <div class="spacer"></div>
+    <button class="btn" data-act="c-undo" id="cundo">↶ Undo</button>
+    <button class="btn" data-act="g-menu">All games</button>
+    <button class="btn" data-act="c-newask">New game</button>
+  </header>
+  <div class="mini" id="mini"></div>
+  <div id="cconfirm"></div>
+  <div class="game cgame">
+    <div class="boardcol">
+      <div class="boardrow"><div class="thrower" id="thrower"></div><div class="boardbox" id="boardbox"><div class="pending" id="cpending" hidden></div></div><div class="ondeck" id="ondeck"></div></div>
+      <div class="dartbar" id="dartbar"></div>
+    </div>
+    <aside class="side">
+      <div id="cscore"></div>
+      <div class="card"><h2>Play by play</h2><ul class="feed" id="cfeed"></ul></div>
+      <details class="card rules"><summary style="cursor:pointer;font-weight:600">How to play ${esc(G.name)}</summary><ol style="margin-top:10px">${cRules(C.game)}</ol></details>
+    </aside>
+  </div>
+  <div id="cresult"></div><div id="cchoice"></div>`}
+
+function renderClassic(){
+  const app=$('#app');
+  if(cview!=='game'||!C){applyColors(cdraft.players.slice(0,cdraft.n));app.innerHTML=cSetupView();return}
+  applyColors(C.players);
+  if(!$('.cgame')){app.innerHTML=cShell();$('#boardbox').insertAdjacentHTML('afterbegin',boardSVG());
+    $('#board').addEventListener('click',e=>{const s=e.target.closest('.seg');if(s){cThrow(+s.dataset.n,+s.dataset.m);return}if(e.target.id==='missring')cThrow(0,0)})}
+  cFill();cPaint();
+}
+function cAim(p){const g=C.game,o=C.opts;
+  if(g==='x01'){if(!p.opened)return'Need a double to start';const co=checkout(p.rem,3-C.darts.length,o.dout);return`${p.rem} left${co?' · '+co.join(' '):''}`}
+  if(g==='atw'){const T=atwTargets();return`Aim for ${numName(T[p.ti])}`}
+  if(g==='killer')return p.killer?'Killer · hit their numbers':`Hit ${o.kmode==='double'?'D':''}${p.num} to become a killer`;
+  if(g==='bingo'){const b=bingoBest(C.turn);return b?`Best line ${b} of 5 · claim 3 marks per square`:'Claim squares: 3 marks each'}
+  if(g==='bounty'){const t=C.targets[C.round-1];const w=C.wanted;return`Aim ${t===25?'Bull':t} · $${t===25?25:t}/mark${w!=null&&w!==C.turn?` · ${t===25?'bullseye':'triple'} robs ${C.players[w].name}`:w===C.turn?' · you\'re Wanted':''}`}
+  if(g==='cricket'){const open=CRICK.filter(k=>p.marks[k]<3);return open.length?`${open.length} number${open.length>1?'s':''} to close`:'All closed'}
+  return''}
+function cFill(){
+  const over=C.phase==='over',p=cP(),g=C.game;
+  $('#cround').innerHTML=g==='bounty'?`Round <b>${Math.min(C.round,C.rounds)}</b> of ${C.rounds}${C.targets[Math.min(C.round,C.rounds)-1]===25?' · High Noon':''}`:`Round <b>${C.round}</b>`;
+  $('#cundo').disabled=!chist.length;
+  $('#ctimer').innerHTML=`Game <b>${fmtDur((C.endedAt||Date.now())-C.startedAt)}</b>`;
+  $('#cconfirm').innerHTML=ui.cconfirm?`<div class="confirm"><span>Start over with new players? This game will be cleared.</span><button class="btn" data-act="c-keep">Keep playing</button><button class="btn primary" data-act="c-setup">New game</button></div>`:'';
+  $('#cscore').innerHTML=cScoreHTML();$('#mini').innerHTML=cMiniHTML();
+  const fd=$('#cfeed'),atTop=fd.scrollTop<8;
+  let out='',lastR=null;for(const f of C.feed){if(f.r!==lastR){out+=`<li class="sep">Round ${f.r}</li>`;lastR=f.r}
+    const cls=f.delta==null||f.delta===0?'zero':(g==='x01'?(f.delta<0?'pos':'neg'):(f.delta>0?'pos':'neg'));
+    const dv=f.delta==null?'':g==='x01'?(f.delta<0?String(-f.delta):'+'+f.delta):g==='bounty'?(f.delta<0?'−$'+(-f.delta):'+$'+f.delta):'+'+f.delta;
+    out+=`<li><span class="who" style="color:var(--t${f.pi})">${esc(f.who)}</span><span class="hit">${f.label}</span><span class="what">${esc(f.text)}</span><span class="delta ${cls}">${dv}</span></li>`}
+  fd.innerHTML=out||`<li class="empty">Every dart shows up here. Tap the board where ${esc(p.name)}'s first dart landed.</li>`;if(atTop)fd.scrollTop=0;
+  const slots=[0,1,2].map(i=>`<div class="slot${C.darts[i]?' filled':''}">${C.darts[i]||'·'}</div>`).join('');
+  $('#dartbar').innerHTML=over?'':(C.pending||C.alloc)?`<div class="slots">${slots}</div>`:`<div class="slots">${slots}</div><button class="btn missbtn" data-act="c-miss">Miss</button><button class="btn missbtn offbtn" data-act="c-off">Off board</button>`;
+  const th=$('#thrower'),od=$('#ondeck');
+  th.style.setProperty('--tc',`var(--t${C.turn})`);
+  th.innerHTML=over||C.pending||C.alloc?'':`<span class="dartn">Throwing</span><span class="tname">${esc(p.name)}</span>${C.bonus?`<span class="dartn" style="color:var(--tc)">Bonus round${C.bonus>1?' ×'+C.bonus:''}</span>`:''}<span class="dartn">Dart ${C.darts.length+1} of 3</span><span class="dartn aim">${esc(cAim(p))}</span>`;
+  const ni=cNextIdx(C.turn);
+  if(!over&&!C.pending&&!C.alloc&&ni!==C.turn){od.style.setProperty('--tc',`var(--t${ni})`);od.innerHTML=`<span class="lbl">On deck</span><span class="dname">${esc(C.players[ni].name)}</span>`}else od.innerHTML='';
+  fitNames();
+  const pend=$('#cpending');
+  if(C.pending&&!over){pend.hidden=false;pend.innerHTML=cRecapHTML()}else{pend.hidden=true;pend.innerHTML=''}
+  $('#cresult').innerHTML=over&&!ui.creview?cResultHTML():'';
+  const cc=$('#cchoice');if(cc)cc.innerHTML=C.game==='bingo'&&C.alloc?bingoAllocHTML():'';
+}
+function cRecapHTML(){const p=cP(),g=C.game,ni=cNextIdx(C.turn),nx=C.players[ni];
+  let big='',lbl='';
+  if(g==='x01'){const s=p.bust?0:p.turnStart-p.rem;big=p.bust?'BUST':String(s);lbl=p.bust?`back to ${p.rem}`:`scored · ${p.rem} left`}
+  if(g==='cricket'){const pts=C.turnLog.reduce((a,d)=>a+(d.delta||0),0);big=pts?'+'+pts:'0';lbl='points this turn'}
+  if(g==='atw'){big=numName(atwTargets()[Math.min(p.ti,atwTargets().length-1)]);lbl='next target'}
+  if(g==='bingo'){const c=C.turnLog.reduce((a,d)=>a+(d.delta||0),0);big=String(c);lbl=c===1?'square claimed':'squares claimed'}
+  if(g==='bounty'){const st=C.settle||{pts:0};big=st.pts<0?'−$'+(-st.pts):'+$'+st.pts;lbl=st.bust?'went bust':st.stole?`incl. $${st.stole} robbed from ${C.players[st.from].name}`:'this turn';if(st.stole){big='+$'+(st.pts+st.stole)}}
+  if(g==='killer'){big=p.out?'OUT':(p.killer?'☠':String(p.lives));lbl=p.out?'knocked out':(p.killer?`killer · ${p.lives} ${p.lives===1?'life':'lives'}`:`${p.lives} ${p.lives===1?'life':'lives'}`)}
+  return`<div class="pending-card" role="dialog" aria-label="Turn recap" style="--tc:var(--t${C.turn});--tink:var(--t${C.turn}-ink)">
+    <div class="turnhead"><div><div class="eyebrow">Turn over · pull your darts</div>
+    <div class="headline" style="margin-top:6px;color:var(--t${C.turn})">${esc(p.name)}</div></div>
+    <div class="turngain ${(g==='x01'&&p.bust)||(g==='bounty'&&C.settle&&C.settle.bust)?'neg':'pos'}"><div class="v">${big}</div><div class="l">${esc(lbl)}</div></div></div>
+    <ul class="recaplist">${C.turnLog.map(d=>`<li class="${/closed|KILLER|out!|checked|took|stole|bounty shot/.test(d.text)?'hot':''}"><span class="lbl">${d.label}</span><span class="txt">${esc(d.text)}</span><span class="dd"></span></li>`).join('')}</ul>
+    <div class="nextrow"><div><div class="eyebrow">Up next</div><div class="who" style="color:var(--t${ni})">${esc(nx.name)}</div></div>
+    <div style="display:flex;gap:8px;flex-wrap:wrap"><button class="btn big" data-act="c-undo">↶ Undo last dart</button><button class="btn primary big" data-act="c-next">Start ${esc(nx.name)}'s turn</button></div></div></div>`}
+
+function cMiniHTML(){const g=C.game,over=C.phase==='over';
+  const val=p=>g==='x01'?p.rem:g==='cricket'?p.pts:g==='atw'?(p.ti>=atwTargets().length?'✓':numName(atwTargets()[p.ti])):g==='killer'?(p.out?'out':'♥'+p.lives):g==='bingo'?p.claims+'□':'$'+p.score;
+  return C.players.map((p,i)=>`<span class="mchip${!over&&C.turn===i?' on':''}" style="--tc:var(--t${i})">${esc(p.name)} <b>${val(p)}</b></span>`).join('')}
+function cScoreHTML(){const g=C.game,over=C.phase==='over';
+  const row=(i,rank,mid,right,extra='')=>{const p=C.players[i],act=!over&&C.turn===i;
+    return`<div class="team${act?' active':''}${rank===1?' first':''}${p.out?' done':''}" style="--tc:var(--t${i})"><div class="rank">${rank}</div><div class="mid"><div class="name">${esc(p.name)}</div>${mid}</div><div class="right">${right}</div>${extra}</div>`};
+  const idx=C.players.map((_,i)=>i);
+  if(g==='x01'){idx.sort((a,b)=>C.players[a].rem-C.players[b].rem);
+    return`<div class="teams">${idx.map((i,k)=>{const p=C.players[i];const avg=p.darts?(p.scored/p.darts*3).toFixed(1):'–';
+      const co=p.rem<=170?checkout(p.rem,3,C.opts.dout):null;
+      return row(i,idx.findIndex(j=>C.players[j].rem===p.rem)+1,`<div class="stats">3-dart avg ${avg}${p.best?` · best ${p.best}`:''}${!p.opened?' · needs a double':''}${co?` · out: ${co.join(' ')}`:''}</div>`,`<div class="score">${p.rem}</div><div class="gap">left</div>`)}).join('')}</div>`}
+  if(g==='atw'){const T=atwTargets();idx.sort((a,b)=>C.players[b].ti-C.players[a].ti);
+    return`<div class="teams">${idx.map(i=>{const p=C.players[i];const pct=Math.round(p.ti/T.length*100);
+      return row(i,idx.findIndex(j=>C.players[j].ti===p.ti)+1,`<div class="bar"><span style="width:${pct}%"></span></div><div class="stats">${p.ti} of ${T.length} done · ${p.darts} darts</div>`,`<div class="score">${p.ti>=T.length?'✓':numName(T[p.ti])}</div><div class="gap">${p.ti>=T.length?'finished':'target'}</div>`)}).join('')}</div>`}
+  if(g==='killer'){idx.sort((a,b)=>(C.players[a].out-C.players[b].out)||(C.players[b].lives-C.players[a].lives));
+    return`<div class="teams">${idx.map(i=>{const p=C.players[i];const hearts='♥'.repeat(p.lives)+'<span style="opacity:.25">'+'♥'.repeat(Math.max(0,C.opts.lives-p.lives))+'</span>';
+      return row(i,p.out?'–':idx.filter(j=>!C.players[j].out).indexOf(i)+1,`<div class="stats"><span class="hearts" style="color:var(--tc)">${hearts}</span>${p.killer?' <span class="kchip">KILLER</span>':''}${p.out?' · out':''}${p.kills?` · ${p.kills} KO`:''}</div>`,`<div class="score knum">${p.num}</div><div class="gap">${C.opts.kmode==='double'?'hit D'+p.num:'number'}</div>`)}).join('')}</div>`}
+  if(g==='bingo'){const me=over?-1:C.turn;
+    const cellHTML=(cell,i)=>{const own=cell.owner;const win=C.winLine&&C.winLine.includes(i);
+      const myM=me>=0?cell.marks[me]:0;const others=cell.marks.map((v,j)=>({v,j})).filter(x=>x.j!==me&&x.v>0&&own==null);
+      const glyph=own!=null?'':myM>=2?'✕':myM===1?'╱':'';
+      const lab=typeof cell.k==='number'?cell.k:cell.k==='BULL'?'BULL':cell.k==='OE'?'ODD/<br>EVEN':bingoLabel(cell.k).toUpperCase();
+      return`<div class="bcell${own!=null?' own':''}${win?' win':''}${typeof cell.k==='number'?'':' spec'}" style="${own!=null?`--tc:var(--t${own})`:me>=0?`--tc:var(--t${me})`:''}"><span class="bl">${lab}</span>${glyph?`<span class="bg">${glyph}</span>`:''}${others.length?`<span class="bo">${others.map(x=>`<i style="background:var(--t${x.j})">${x.v}</i>`).join('')}</span>`:''}</div>`};
+    idx.sort((a,b)=>C.players[b].claims-C.players[a].claims);
+    return`<div class="card" style="padding:10px"><div class="bcard">${C.card.map(cellHTML).join('')}</div></div>
+      <div class="teams">${idx.map(i=>{const p=C.players[i];return row(i,idx.findIndex(j=>C.players[j].claims===p.claims)+1,`<div class="stats">best line ${bingoBest(i)} of 5</div>`,`<div class="score">${p.claims}</div><div class="gap">squares</div>`)}).join('')}</div>`}
+  if(g==='bounty'){const t=C.targets[Math.min(C.round,C.rounds)-1];idx.sort((a,b)=>C.players[b].score-C.players[a].score);
+    return`<div class="bposter"><span class="r">Round ${Math.min(C.round,C.rounds)}/${C.rounds}</span>${t===25?'<span class="noon">High Noon</span>':''}<div class="w">Wanted</div><div class="tgt">${t===25?'BULL':t}</div><div class="pay">$${t===25?25:t} per mark${C.wanted!=null?` · leader: <b style="color:var(--t${C.wanted})">${esc(C.players[C.wanted].name)}</b>`:''}</div></div>
+    <div class="teams">${idx.map(i=>{const p=C.players[i];return row(i,idx.findIndex(j=>C.players[j].score===p.score)+1,`<div class="stats">${i===C.wanted?'<span class="kchip">WANTED</span> ':''}${p.marks} marks · ${p.tops} ${'triples'} · ${p.steals} robberies${p.busts?` · ${p.busts} busts`:''}</div>`,`<div class="score">$${p.score}</div>`)}).join('')}</div>`}
+  if(g==='cricket'){
+    const cell=k=>k>=3?'<span class="cmk c3">✕</span>':k===2?'<span class="cmk">✕</span>':k===1?'<span class="cmk">╱</span>':'';
+    const dead=n=>C.players.every(p=>p.marks[n]>=3);
+    const lead=Math.max(...C.players.map(p=>p.pts));
+    return`<div class="card" style="padding:10px 8px;overflow-x:auto"><table class="ctable"><thead><tr><th></th>${CRICK.map(n=>`<th class="${dead(n)?'dead':''}">${n===25?'B':n}</th>`).join('')}${C.opts.cpts?'<th>Pts</th>':''}</tr></thead>
+      <tbody>${C.players.map((p,i)=>`<tr class="${!over&&C.turn===i?'act':''}" style="--tc:var(--t${i})"><td class="pn">${esc(p.name)}</td>${CRICK.map(n=>`<td class="${dead(n)?'dead':''}" style="color:var(--tc)">${cell(p.marks[n])}</td>`).join('')}${C.opts.cpts?`<td class="pts${p.pts===lead&&lead>0?' lead':''}">${p.pts}</td>`:''}</tr>`).join('')}</tbody></table></div>`}
+  return''}
+
+function cPaint(){const svg=$('#board');if(!svg)return;const g=C.game,p=cP(),over=C.phase==='over';
+  svg.classList.toggle('locked',over||C.pending||!!C.alloc);
+  const all=[...ORDER,25];
+  for(const n of all){const o=$('#ov-'+n);o.style.fill='transparent';o.setAttribute('fill-opacity',0);
+    const mg=$('#mk-'+n);if(mg){[1,2,3].forEach(k=>mg.querySelectorAll('.X'+k).forEach(e=>e.style.opacity=0))}
+    if(n!==25){const b=$('#bd-'+n),ci=b.querySelector('circle'),tx=b.querySelector('text');ci.style.fill='transparent';ci.style.stroke='transparent';tx.style.fill='var(--chalk)'}}
+  $('#bull-ring').style.stroke='transparent';
+  svg.querySelectorAll('.seg').forEach(e=>e.classList.remove('tbt'));
+  const dim=n=>{const o=$('#ov-'+n);o.style.fill='var(--bg)';o.setAttribute('fill-opacity',.6)};
+  const glow=n=>svg.querySelectorAll(`.seg[data-n="${n}"]`).forEach(e=>e.classList.add('tbt'));
+  const badge=(n,col,solid)=>{if(n===25){$('#bull-ring').style.stroke=col;return}const b=$('#bd-'+n),ci=b.querySelector('circle'),tx=b.querySelector('text');ci.style.stroke=col;ci.style.fill=solid?col:'transparent';tx.style.fill=solid?'var(--bg)':col};
+  if(g==='cricket'){
+    for(const n of all){if(!CRICK.includes(n)){dim(n);continue}
+      const k=p.marks[n],mg=$('#mk-'+n);if(mg){[1,2,3].forEach(j=>mg.querySelectorAll('.X'+j).forEach(e=>e.style.opacity=k>=j?1:0));mg.querySelectorAll('.c').forEach(e=>e.style.stroke=`var(--t${C.turn})`)}
+      if(C.players.every(q=>q.marks[n]>=3)){const o=$('#ov-'+n);o.style.fill='#000';o.setAttribute('fill-opacity',.55)}
+      else badge(n,`var(--t${C.turn})`,k>=3)}}
+  if(g==='atw'){const T=atwTargets(),t=T[Math.min(p.ti,T.length-1)];
+    for(const n of all){if(n!==t)dim(n)}if(!over){glow(t);badge(t,`var(--t${C.turn})`,true)}}
+  if(g==='bingo'){const owned={};C.card.forEach(c=>{if(typeof c.k==='number'&&c.owner!=null)owned[c.k]=c.owner;if(c.k==='BULL'&&c.owner!=null)owned[25]=c.owner});
+    for(const n of all){if(owned[n]!=null){const o=$('#ov-'+n);o.style.fill=`var(--t${owned[n]})`;o.setAttribute('fill-opacity',.4);badge(n,`var(--t${owned[n]})`,true);continue}
+      const cell=C.card.find(c=>c.k===(n===25?'BULL':n));const k=cell?cell.marks[C.turn]:0;const mg=$('#mk-'+n);
+      if(mg&&!over){[1,2,3].forEach(j=>mg.querySelectorAll('.X'+j).forEach(e=>e.style.opacity=k>=j?1:0));mg.querySelectorAll('.c').forEach(e=>e.style.stroke=`var(--t${C.turn})`)}}}
+  if(g==='bounty'){const t=C.targets[Math.min(C.round,C.rounds)-1];for(const n of all){if(n!==t)dim(n)}if(!over){glow(t);badge(t,`var(--t${C.turn})`,true)}}
+  if(g==='killer'){const owned={};C.players.forEach((q,i)=>{if(!q.out)owned[q.num]=i});
+    for(const n of all){if(owned[n]==null){dim(n);continue}const i=owned[n];const o=$('#ov-'+n);o.style.fill=`var(--t${i})`;o.setAttribute('fill-opacity',.32);badge(n,`var(--t${i})`,true)}
+    if(!over&&!p.out){if(!p.killer)glow(p.num);else Object.keys(owned).forEach(n=>{if(+n!==p.num)glow(+n)})}}
+}
+
+function cResultHTML(){const g=C.game,w=C.winner,W=w==null?null:C.players[w];
+  const rows=C.players.map((p,i)=>({p,i})).sort(g==='bounty'?(a,b)=>b.p.score-a.p.score:(a,b)=>a.i===w?-1:b.i===w?1:0);
+  const head={x01:['Left','Darts','3-dart avg','Best turn'],cricket:['Points','Closed','Darts','Marks/round'],atw:['Reached','Darts'],killer:['Lives','KOs','Darts'],bounty:['Cash','Marks','Triples','Robberies','Busts'],bingo:['Squares','Best line','Darts']}[g];
+  const cells=p=>({x01:()=>[p.rem,p.darts,p.darts?(p.scored/p.darts*3).toFixed(1):'–',p.best||0],
+    cricket:()=>[p.pts,CRICK.filter(k=>p.marks[k]>=3).length+' of 7',p.darts,p.darts?(p.mpr/p.darts*3).toFixed(2):'–'],
+    atw:()=>[p.ti>=atwTargets().length?'Finished':numName(atwTargets()[p.ti]),p.darts],
+    killer:()=>[p.out?'Out':p.lives,p.kills,p.darts],bounty:()=>['$'+p.score,p.marks,p.tops,p.steals,p.busts],bingo:()=>[p.claims,bingoBest(C.players.indexOf(p))+' of 5',p.darts]})[g]();
+  return`<div class="overlay"><div class="result wide">
+    <div><div style="font-size:12px;letter-spacing:.14em;text-transform:uppercase;color:var(--muted);font-weight:600">${esc(GAMES[g].name)} · ${C.round} round${C.round>1?'s':''} · ${fmtDur(C.endedAt-C.startedAt)}</div>
+    ${W?`<h2 class="winner" style="color:var(--t${w})">${esc(W.name)} wins</h2>${g==='bounty'?`<div style="color:var(--muted)">$${W.score} in the saddlebag</div>`:''}`:`<h2 class="winner">Tied at $${C.players[C.tied[0]].score}</h2><div style="color:var(--muted)">${C.tied.map(i=>esc(C.players[i].name)).join(' & ')}: shoot for the bull, closest takes it.</div>`}</div>
+    <div style="overflow-x:auto"><table class="pstats"><thead><tr><th>Player</th>${head.map(h=>`<th>${h}</th>`).join('')}</tr></thead>
+    <tbody>${rows.map(({p,i})=>`<tr><td><span style="color:var(--t${i})">${esc(p.name)}</span>${i===w?' 🏆':''}${C.tied&&C.tied.length>1&&C.tied.includes(i)?' (tied)':''}</td>${cells(p).map(c=>`<td>${c}</td>`).join('')}</tr>`).join('')}</tbody></table></div>
+    <div class="actions"><button class="btn primary big" data-act="c-rematch">Rematch</button><button class="btn big" data-act="c-setup">Change players</button><button class="btn big" data-act="g-menu">All games</button><button class="btn big" data-act="c-review">View board</button><button class="btn big" data-act="c-undo">↶ Undo last dart</button></div>
+  </div></div>`}
+
+/* ---------- events ---------- */
+function bindClassic(){
+  $('#app').addEventListener('click',e=>{const b=e.target.closest('[data-act]');if(!b||b.disabled)return;const a=b.dataset.act;
+    if(a==='g-assist'){setAssist(!assistOn());render();return}
+    if(a==='g-menu'){appMode='menu';ui.cconfirm=false;csave();render();return}
+    if(a==='g-turf'){appMode='turf';csave();render();return}
+    if(a==='g-classic'){appMode='classic';cdraft.game=b.dataset.game;if(cdraft.n<GAMES[cdraft.game].min)cdraft.n=GAMES[cdraft.game].min;if(cdraft.n>gMax(cdraft.game))cdraft.n=gMax(cdraft.game);cview='setup';csave();render();return}
+    if(a==='g-cresume'){appMode='classic';cview='game';csave();render();return}
+    if(!a.startsWith('c-'))return;
+    if(a==='c-game'){readC();cdraft.game=b.dataset.v;if(cdraft.n<GAMES[cdraft.game].min)cdraft.n=GAMES[cdraft.game].min;if(cdraft.n>gMax(cdraft.game))cdraft.n=gMax(cdraft.game);csave();renderClassic()}
+    if(a==='c-n'){readC();cdraft.n=+b.dataset.v;csave();renderClassic()}
+    if(a==='c-opt'){readC();cdraft.opts[b.dataset.k]=pv(b.dataset.v);csave();renderClassic()}
+    if(a==='c-color'){readC();cdraft.players[+b.dataset.p].color=b.dataset.color;csave();renderClassic()}
+    if(a==='c-shuffle'){readC();const part=shuffle(cdraft.players.slice(0,cdraft.n));cdraft.players.splice(0,cdraft.n,...part);csave();renderClassic()}
+    if(a==='c-start'){readC();ui.creview=false;cNew()}
+    if(a==='c-pick'&&C&&C.alloc){C.alloc.sel[+b.dataset.d]=+b.dataset.i;csave();cFill()}
+    if(a==='c-alloc')bingoCommit();
+    if(a==='c-combo'&&C&&C.alloc){C.alloc.combo=b.dataset.k||null;csave();cFill()}
+    if(a==='c-miss')cThrow(0,0);
+    if(a==='c-off')cThrow(-1,0);
+    if(a==='c-next')cNext();
+    if(a==='c-undo'){ui.creview=false;cUndo()}
+    if(a==='c-newask'){ui.cconfirm=true;cFill()}
+    if(a==='c-keep'){ui.cconfirm=false;cFill()}
+    if(a==='c-setup'){ui.cconfirm=false;ui.creview=false;C=null;chist=[];cview='setup';csave();renderClassic()}
+    if(a==='c-rematch'){ui.creview=false;cdraft.game=C.game;cdraft.opts=JSON.parse(JSON.stringify(C.opts));cNew()}
+    if(a==='c-review'){ui.creview=true;cFill()}
+  });
+  document.addEventListener('keydown',e=>{if(appMode!=='classic'||e.key!=='Enter'||e.repeat)return;const ae=document.activeElement;if(ae&&(ae.tagName==='BUTTON'||ae.tagName==='SUMMARY'))return;
+    const al=document.querySelector('[data-act="c-alloc"]');if(al){e.preventDefault();al.click();return}
+    const nx=document.querySelector('#cpending:not([hidden]) [data-act="c-next"]');if(nx){e.preventDefault();nx.click();return}
+    const k=document.querySelector('[data-act="c-keep"]');if(k){e.preventDefault();k.click()}});
+  setInterval(()=>{if(appMode==='classic'&&C&&C.phase==='play'&&$('#ctimer'))$('#ctimer').innerHTML=`Game <b>${fmtDur(Date.now()-C.startedAt)}</b>`},1000);
+  window.addEventListener('resize',()=>{if(appMode==='classic'&&$('#thrower'))fitNames()});
+}
+
+
+/* ---------- phone helpers: haptics, tap assist, keep screen awake ---------- */
+function nativeHaptic(kind){try{const H=window.Capacitor&&window.Capacitor.Plugins&&window.Capacitor.Plugins.Haptics;if(!H)return false;
+  if(kind==='heavy')H.impact({style:'HEAVY'});else if(kind==='success')H.notification({type:'SUCCESS'});else H.impact({style:kind==='medium'?'MEDIUM':'LIGHT'});return true}catch(e){return false}}
+function buzz(n){if(nativeHaptic(n===-1?'heavy':n===0?'light':'medium'))return;try{if(navigator.vibrate)navigator.vibrate(n===-1?[40,40,90]:n===0?12:22)}catch(e){}}
+const isPhone=()=>matchMedia('(max-width:700px)').matches;
+function assistOn(){let v=null;try{v=localStorage.getItem('darts.assist')}catch(e){}return v==null?isPhone():v==='1'}
+function setAssist(on){try{localStorage.setItem('darts.assist',on?'1':'0')}catch(e){}}
+function routeThrow(n,m){if(appMode==='classic')cThrow(n,m);else if(S&&S.phase==='tb')tbThrow(n,m);else throwDart(n,m)}
+function closePick(){const a=$('#picksheet'),b=$('#pickback');if(a)a.remove();if(b)b.remove()}
+function openPick(n){closePick();
+  const opts=n===25?[[1,'Outer','25'],[2,'Bullseye','50']]:[[1,'Single',n],[2,'Double','D'+n],[3,'Triple','T'+n]];
+  const back=document.createElement('div');back.id='pickback';back.className='pickback';back.addEventListener('click',closePick);
+  const el=document.createElement('div');el.id='picksheet';el.className='picksheet';el.setAttribute('role','dialog');el.setAttribute('aria-label','Pick where the dart landed');
+  el.innerHTML=`<div class="ph"><div class="pn">${n===25?'BULL':n}</div><div class="pw">Where did it land?</div></div>
+    <div class="pickrow" style="--k:${opts.length}">${opts.map(([m,l,v])=>`<button type="button" class="btn ${m===2?'d':m===3?'t':''}" data-pm="${m}">${v}<small>${l}</small></button>`).join('')}</div>
+    <div style="display:flex;gap:10px"><button type="button" class="btn" data-pc="1" style="flex:1;justify-content:center;padding:12px">Cancel</button><button type="button" class="btn" data-poff="1" style="justify-content:center;padding:12px">Turn off tap assist</button></div>`;
+  el.addEventListener('click',e=>{const b=e.target.closest('button');if(!b)return;
+    if(b.dataset.pm){closePick();routeThrow(n,+b.dataset.pm);return}
+    if(b.dataset.poff){setAssist(false);closePick();return}
+    closePick()});
+  document.body.appendChild(back);document.body.appendChild(el);el.querySelector('[data-pm="1"]').focus()}
+document.addEventListener('click',e=>{const s=e.target.closest&&e.target.closest('#board .seg');if(!s||!assistOn())return;
+  const b=$('#board');if(!b||b.classList.contains('locked'))return;
+  e.stopPropagation();e.preventDefault();openPick(+s.dataset.n)},true);
+document.addEventListener('keydown',e=>{if(e.key==='Escape')closePick()});
+let wl=null;async function keepAwake(){try{const KA=window.Capacitor&&window.Capacitor.Plugins&&window.Capacitor.Plugins.KeepAwake;if(KA){KA.keepAwake();return}}catch(e){}try{if(navigator.wakeLock&&!wl){wl=await navigator.wakeLock.request('screen');wl.addEventListener('release',()=>{wl=null})}}catch(e){}}
+document.addEventListener('pointerdown',keepAwake,{once:true});
+document.addEventListener('visibilitychange',()=>{if(document.visibilityState==='visible')keepAwake()});
+document.addEventListener('keydown',e=>{
+  if(e.key!=='Enter'||e.isComposing||e.repeat||e.altKey||e.ctrlKey||e.metaKey)return;
+  const ae=document.activeElement;
+  if(ae&&(ae.tagName==='BUTTON'||ae.tagName==='SUMMARY'||ae.tagName==='A'))return; // let the focused control handle its own Enter
+  // settings panel open: Enter saves
+  if(ui.settings){const b=document.querySelector('[data-act="set-save"]');if(b){e.preventDefault();b.click()}return}
+  // setup screen: Enter moves to the next name box, then starts the game
+  if(!S){const st=$('#start');if(!st)return;e.preventDefault();
+    const ins=[...document.querySelectorAll('.setup input')];const i=ins.indexOf(ae);
+    if(i>=0&&i<ins.length-1){ins[i+1].focus();ins[i+1].select()}else st.click();return}
+  // turn recap: Enter starts the next turn
+  const nx=document.querySelector('#pending:not([hidden]) [data-act="next"]');if(nx){e.preventDefault();nx.click();return}
+  // end-game confirm open: Enter keeps playing (safe default)
+  const keep=document.querySelector('[data-act="keep"]');if(keep){e.preventDefault();keep.click();return}
+  // tie: Enter starts the tiebreaker
+  const tb=document.querySelector('#resultslot [data-act="tb-start"]');if(tb){e.preventDefault();tb.click()}
+});
+load();normDraft();if(S&&!S.startedAt){S.startedAt=S.roundStartedAt=Date.now();S.roundTimes=[];S.timerJoined=1;save()}if(S&&!S.penV2){S.penalty=0.5;S.penV2=1;save()}cload();bindApp();bindClassic();render();
+})();
+</script>
+<script>if('serviceWorker' in navigator){window.addEventListener('load',function(){navigator.serviceWorker.register('sw.js',{scope:'/apps/bar-darts/play/'}).catch(function(){})})}</script>
+</body>
+</html>

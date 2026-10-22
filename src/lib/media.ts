@@ -292,6 +292,8 @@ export type AppListing = {
   features: string[];
   appStoreUrl?: string;
   playStoreUrl?: string;
+  /** Installable web version that runs in the browser. */
+  webAppUrl?: string;
 };
 
 export const apps: AppListing[] = [
@@ -339,5 +341,6 @@ export const apps: AppListing[] = [
     ],
     features: ["X01", "Cricket", "Bingo", "Bounty", "Turf War"],
     appStoreUrl: undefined,
+    webAppUrl: "/apps/bar-darts/play",
   },
 ];
