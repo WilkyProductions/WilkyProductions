@@ -11,6 +11,7 @@ export default function sitemap(): MetadataRoute.Sitemap {
     { path: "/contact", priority: 0.6, changeFrequency: "yearly" as const },
     { path: "/review", priority: 0.4, changeFrequency: "yearly" as const },
     { path: "/bar-darts/privacy", priority: 0.2, changeFrequency: "yearly" as const },
+    { path: "/bar-darts/support", priority: 0.2, changeFrequency: "yearly" as const },
   ];
 
   const lastModified = new Date();
