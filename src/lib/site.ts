@@ -22,6 +22,7 @@ export const nav = [
   { href: "/photography", label: "Photography" },
   { href: "/design", label: "Design" },
   { href: "/website-design", label: "Website Design" },
+  { href: "/apps", label: "Apps" },
   { href: "/contact", label: "Contact" },
 ];
 

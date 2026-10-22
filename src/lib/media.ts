@@ -279,3 +279,65 @@ export const reviews: Review[] = [
     rating: 5,
   },
 ];
+
+export type AppScreenshot = { src: string; width: number; height: number };
+
+export type AppListing = {
+  slug: string;
+  name: string;
+  tagline: string;
+  description: string;
+  icon: { src: string; width: number; height: number };
+  screenshots: AppScreenshot[];
+  features: string[];
+  appStoreUrl?: string;
+  playStoreUrl?: string;
+};
+
+export const apps: AppListing[] = [
+  {
+    slug: "list-master",
+    name: "List Master",
+    tagline: "To-dos, shopping lists & trip packing — shared with your person in seconds.",
+    description:
+      "List Master keeps every list in one place: to-dos with reminders, a shopping list for every store, and trip packing lists, all shareable with the people you're planning with.",
+    icon: { src: "/apps/list-master/icon.png", width: 512, height: 512 },
+    screenshots: [
+      { src: "/apps/list-master/screenshots/screen-1.jpg", width: 507, height: 1100 },
+      { src: "/apps/list-master/screenshots/screen-2.jpg", width: 507, height: 1100 },
+      { src: "/apps/list-master/screenshots/screen-3.jpg", width: 507, height: 1100 },
+      { src: "/apps/list-master/screenshots/screen-4.jpg", width: 507, height: 1100 },
+      { src: "/apps/list-master/screenshots/screen-5.jpg", width: 507, height: 1100 },
+      { src: "/apps/list-master/screenshots/screen-6.jpg", width: 507, height: 1100 },
+      { src: "/apps/list-master/screenshots/screen-7.jpg", width: 507, height: 1100 },
+      { src: "/apps/list-master/screenshots/screen-8.jpg", width: 507, height: 1100 },
+    ],
+    features: [
+      "To-do lists with reminders",
+      "A shopping list for every store",
+      "Trip packing lists",
+      "Share any list with the people you're planning with",
+    ],
+    appStoreUrl: "https://apps.apple.com/app/id6816552790",
+    playStoreUrl: "https://play.google.com/store/apps/details?id=com.wilkyproductions.listmaster",
+  },
+  {
+    slug: "bar-darts",
+    name: "Bar Darts",
+    tagline: "Classic dart games, scored for you — built for bar nights.",
+    description:
+      "Bar Darts keeps score for every classic dart game so your group can focus on throwing, not math. No accounts, no ads, just drop in and play.",
+    icon: { src: "/apps/bar-darts/icon.png", width: 1024, height: 1024 },
+    screenshots: [
+      { src: "/apps/bar-darts/screenshots/01-turf.png", width: 1284, height: 2778 },
+      { src: "/apps/bar-darts/screenshots/02-menu.png", width: 1284, height: 2778 },
+      { src: "/apps/bar-darts/screenshots/03-turfrecap.png", width: 1284, height: 2778 },
+      { src: "/apps/bar-darts/screenshots/04-bingo.png", width: 1284, height: 2778 },
+      { src: "/apps/bar-darts/screenshots/05-bounty.png", width: 1284, height: 2778 },
+      { src: "/apps/bar-darts/screenshots/06-cricket.png", width: 1284, height: 2778 },
+      { src: "/apps/bar-darts/screenshots/07-x01.png", width: 1284, height: 2778 },
+    ],
+    features: ["X01", "Cricket", "Bingo", "Bounty", "Turf War"],
+    appStoreUrl: undefined,
+  },
+];
