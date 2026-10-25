@@ -1,5 +1,5 @@
 // Bar Darts offline cache. CACHE changes whenever the app files change.
-const CACHE = 'bar-darts-7010284211';
+const CACHE = 'bar-darts-5ad6b87cc6';
 const FILES = ['index.html', 'splash.png', 'manifest.webmanifest', 'icon-192.png', 'icon-512.png', 'apple-touch-icon.png', 'fonts/barlow-latin-400-normal.woff2', 'fonts/barlow-latin-500-normal.woff2', 'fonts/barlow-latin-600-normal.woff2', 'fonts/barlow-latin-700-normal.woff2', 'fonts/teko-latin-500-normal.woff2', 'fonts/teko-latin-600-normal.woff2', 'fonts/teko-latin-700-normal.woff2'];
 self.addEventListener('install', e => {
   e.waitUntil(caches.open(CACHE).then(c => c.addAll(FILES)).then(() => self.skipWaiting()));

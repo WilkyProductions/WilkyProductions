@@ -585,6 +585,7 @@ function setupView(){
     <div class="form">
       <button type="button" class="btn" data-act="g-menu" style="align-self:flex-start">← All games</button>
       <div class="hero"><h1><span>Turf</span> <em>War</em></h1><p>A darts game for 2 to 10 players: solo for up to 8, or teams of two for up to 10. Claim numbers, defend them, steal everyone else's, and build chains of neighbors around the board.</p></div>
+      ${gamePicker('turf')}
       <div><span class="fieldlabel">Format</span><div class="seg-ctl" id="fmt">${[[1,'Solo'],[2,'Pairs']].map(([k,l])=>`<button type="button" data-k="${k}" aria-pressed="${k===P}">${l}</button>`).join('')}</div></div>
       <div><span class="fieldlabel">${P===1?'Players':'Teams'}</span><div class="seg-ctl" id="nteams">${(P===1?[2,3,4,5,6,7,8]:[2,3,4,5]).map(k=>`<button type="button" data-k="${k}" aria-pressed="${k===N}">${P===1?(k===2?'1 vs 1':k):(k===2?'2 vs 2':k+' teams')}</button>`).join('')}</div></div>
       <div class="shufflebar">${P===2?'<button type="button" class="btn" id="shuf-teams">Random teams</button>':''}<button type="button" class="btn" id="shuf-order">Random order</button></div>
@@ -996,6 +997,8 @@ function cRules(g){const o=C?C.opts:cdraft.opts;return({
     <li><b>Fall short</b> and you lose a life. The score to beat stays where it was for the next player.</li>
     <li>Lose all your lives and you're out. Last player standing wins.</li>`
 })[g]}
+function gamePicker(cur){const b='font-size:18px;flex:1 1 130px';
+  return`<div><span class="fieldlabel">Game</span><div class="seg-ctl" style="flex-wrap:wrap"><button type="button" data-act="g-turf" aria-pressed="${cur==='turf'}" style="${b}">Turf War</button>${Object.entries(GAMES).map(([k,v])=>cur==='turf'?`<button type="button" data-act="g-classic" data-game="${k}" aria-pressed="false" style="${b}">${v.name}</button>`:`<button type="button" data-act="c-game" data-v="${k}" aria-pressed="${k===cur}" style="${b}">${v.name}</button>`).join('')}</div></div>`}
 function cSetupView(){
   const d=cdraft,g=d.game,G=GAMES[g],o=d.opts;
   const seg=(k,list)=>`<div class="seg-ctl">${list.map(([v,l])=>`<button type="button" data-act="c-opt" data-k="${k}" data-v='${JSON.stringify(v)}' aria-pressed="${o[k]===v}">${l}</button>`).join('')}</div>`;
@@ -1027,7 +1030,7 @@ function cSetupView(){
     <div class="form">
       <button type="button" class="btn" data-act="g-menu" style="align-self:flex-start">← All games</button>
       <div class="hero"><h1 style="font-size:clamp(48px,8vw,88px)">${esc(G.name)}</h1><p>${esc(G.tag)}</p></div>
-      <div><span class="fieldlabel">Game</span><div class="seg-ctl" style="flex-wrap:wrap">${Object.entries(GAMES).map(([k,v])=>`<button type="button" data-act="c-game" data-v="${k}" aria-pressed="${k===g}" style="font-size:18px;flex:1 1 130px">${v.name}</button>`).join('')}</div></div>
+      ${gamePicker(g)}
       <div><span class="fieldlabel">Players</span><div class="seg-ctl">${counts.map(k=>`<button type="button" data-act="c-n" data-v="${k}" aria-pressed="${k===d.n}">${k}</button>`).join('')}</div></div>
       ${opts}
       <div class="shufflebar"><button type="button" class="btn" data-act="c-shuffle">Random order</button></div>
