@@ -907,14 +907,16 @@ const GAMES={
   atw:{name:'Around the World',tag:'Hit 1 through 20 in order. First one around wins.',min:1},
   killer:{name:'Killer',tag:'Claim your number, become a killer, knock everyone out.',min:2},
   bounty:{name:'Bounty',tag:'A new number every round. Cash per mark, rob the leader with triples.',min:2,max:10},
-  bingo:{name:'Dart Bingo',tag:'Close squares on a shared bingo card. First full row wins.',min:1}
+  bingo:{name:'Dart Bingo',tag:'Close squares on a shared bingo card. First full row wins.',min:1},
+  baseball:{name:'Baseball',tag:'Nine innings, one number per inning. Singles, doubles and triples score runs.',min:1},
+  knockout:{name:'Knockout',tag:'Beat the score before you or lose a life. Last one standing wins.',min:2}
 };
 const BSTEAL=25,BBUST=10;
 const gMax=g=>GAMES[g].max||8;
 const CRICK=[20,19,18,17,16,15,25];
 let appMode='menu',cview='setup',C=null,chist=[];
 let cdraft={game:'x01',n:2,players:DEF_TEAMS.map(t=>({name:t.solo,color:t.color})).concat([{name:'Player 9',color:'silver'},{name:'Player 10',color:'olive'}]),
-  opts:{start:501,dout:true,din:false,cpts:true,atwBull:true,atwSkip:false,atwLast:true,bdiag:true,lives:3,kmode:'double',brounds:7}};
+  opts:{start:501,dout:true,din:false,cpts:true,atwBull:true,atwSkip:false,atwLast:true,bdiag:true,lives:3,kmode:'double',brounds:7,bbInn:9,koLives:3,koTie:'survive'}};
 function csave(){try{localStorage.setItem(CSTORE,JSON.stringify({C,chist:chist.slice(-60),cdraft,appMode,cview}))}catch(e){}}
 function cload(){try{const d=JSON.parse(localStorage.getItem(CSTORE)||'null');if(!d)return;
   if(d.cdraft){cdraft.game=d.cdraft.game||cdraft.game;cdraft.n=d.cdraft.n||cdraft.n;Object.assign(cdraft.opts,d.cdraft.opts||{});
@@ -922,6 +924,8 @@ function cload(){try{const d=JSON.parse(localStorage.getItem(CSTORE)||'null');if
   if(d.C)C=d.C;chist=d.chist||[];if(d.appMode)appMode=d.appMode;if(d.cview)cview=d.cview;if(cview==='game'&&!C)cview='setup'}catch(e){}}
 const pv=v=>{try{return JSON.parse(v)}catch(e){return v}};
 const cP=()=>C.players[C.turn];
+const bbT=r=>r>20?25:r;
+const koNeed=t=>C.opts.koTie==='strike'?`more than ${t}`:`${t} or more`;
 const atwTargets=()=>{const t=[];for(let i=1;i<=20;i++)t.push(i);if(C.opts.atwBull)t.push(25);return t};
 
 /* ---------- menu ---------- */
@@ -939,6 +943,8 @@ function menuView(){
       ${card('g-classic','data-game="killer"','Killer',GAMES.killer.tag,'2–8 players · last one standing')}
       ${card('g-classic','data-game="bounty"','Bounty',GAMES.bounty.tag,'2–10 players · ends at High Noon')}
       ${card('g-classic','data-game="bingo"','Dart Bingo',GAMES.bingo.tag,'1–8 players · 5×5 card, Bullseye in the middle')}
+      ${card('g-classic','data-game="baseball"','Baseball',GAMES.baseball.tag,'1–8 players · extra innings if tied')}
+      ${card('g-classic','data-game="knockout"','Knockout',GAMES.knockout.tag,'2–8 players · lives, not points')}
     </div>
     <div style="display:flex;align-items:center;gap:12px;flex-wrap:wrap;color:var(--muted);font-size:14px"><button type="button" class="btn" data-act="g-assist" aria-pressed="${assistOn()}">Tap assist: ${assistOn()?'On':'Off'}</button><span>Tap a number, then pick single, double or triple. Handy on phones.</span></div>
     </div>`;
@@ -979,7 +985,16 @@ function cRules(g){const o=C?C.opts:cdraft.opts;return({
     <li><b>ODD/EVEN and B/W are 3-dart combos:</b> all 3 darts on odd numbers, or all on even numbers, earns 1 mark on ODD/EVEN. All 3 in black segments, or all in white, earns 1 mark on B/W. A combo uses up all 3 darts that turn.</li>
     <li><b>Each dart counts once, and you choose after your 3 darts.</b> At the end of the turn, pick which square each dart goes to. A T5 can close 5 or add 1 mark to TRIPLE. Stack darts on one square to close it faster.</li>
     <li>Once someone claims a square it's theirs. Nobody else can mark it.</li>
-    <li><b>Win:</b> first to claim a full row across, down${o.bdiag!==false?' or diagonal':''}.</li>`
+    <li><b>Win:</b> first to claim a full row across, down${o.bdiag!==false?' or diagonal':''}.</li>`,
+  baseball:`<li><b>${o.bbInn} innings.</b> In inning 1 everyone aims at 1, in inning 2 at 2, and so on.</li>
+    <li><b>Runs:</b> single = 1, double = 2, triple = 3. Only the inning's number counts.</li>
+    <li>Your target glows on the board. Most runs after ${o.bbInn} innings wins.</li>
+    <li><b>Tied?</b> The tied players go to extra innings (${o.bbInn+1}, ${o.bbInn+2}…) until someone leads after a full inning. Past 20, extra innings are on the Bull: outer bull 1 run, bullseye 2.</li>`,
+  knockout:`<li>Everyone starts with <b>${o.koLives} lives</b>.</li>
+    <li><b>Opening throw:</b> the first player's 3-dart total sets the score to beat. Nobody loses a life on it.</li>
+    <li><b>Stay alive:</b> your 3-dart total must ${o.koTie==='strike'?'beat':'match or beat'} the score to beat. Make it and your total becomes the new score to beat.</li>
+    <li><b>Fall short</b> and you lose a life. The score to beat stays where it was for the next player.</li>
+    <li>Lose all your lives and you're out. Last player standing wins.</li>`
 })[g]}
 function cSetupView(){
   const d=cdraft,g=d.game,G=GAMES[g],o=d.opts;
@@ -998,6 +1013,9 @@ function cSetupView(){
     bounty:`<div><span class="fieldlabel">Rounds</span>${seg('brounds',[[3,'3'],[5,'5'],[7,'7'],[9,'9']])}
       <div style="font-size:13px;color:var(--muted);margin-top:6px">${d.n} shooters × ${o.brounds} rounds ≈ ${Math.max(5,Math.round(d.n*o.brounds*25/60/5)*5)} minutes. The last round is always High Noon on the Bull.</div></div>`
 ,
+    baseball:`<div><span class="fieldlabel">Innings</span>${seg('bbInn',[[7,'7'],[9,'9']])}<div style="font-size:13px;color:var(--muted);margin-top:6px">${d.n} ${d.n===1?'player':'players'} × ${o.bbInn} innings ≈ ${Math.max(5,Math.round(d.n*o.bbInn*25/60/5)*5)} minutes.</div></div>`,
+    knockout:`<div class="pair"><div><span class="fieldlabel">Lives</span>${seg('koLives',[[3,'3'],[5,'5']])}</div>
+      <div><span class="fieldlabel">Tie with the score to beat</span>${seg('koTie',[['survive','Survives'],['strike','Loses a life']])}</div></div>`,
     bingo:`<div><span class="fieldlabel">Diagonals count</span>${seg('bdiag',[[true,'Yes'],[false,'No']])}<div style="font-size:13px;color:var(--muted);margin-top:6px">Each new game shuffles the numbers on the card.</div></div>`
   }[g];
   const pf=i=>{const p=d.players[i];return`<div class="teamform" style="--tc:var(--t${i})">
@@ -1009,7 +1027,7 @@ function cSetupView(){
     <div class="form">
       <button type="button" class="btn" data-act="g-menu" style="align-self:flex-start">← All games</button>
       <div class="hero"><h1 style="font-size:clamp(48px,8vw,88px)">${esc(G.name)}</h1><p>${esc(G.tag)}</p></div>
-      <div><span class="fieldlabel">Game</span><div class="seg-ctl">${Object.entries(GAMES).map(([k,v])=>`<button type="button" data-act="c-game" data-v="${k}" aria-pressed="${k===g}" style="font-size:18px">${v.name}</button>`).join('')}</div></div>
+      <div><span class="fieldlabel">Game</span><div class="seg-ctl" style="flex-wrap:wrap">${Object.entries(GAMES).map(([k,v])=>`<button type="button" data-act="c-game" data-v="${k}" aria-pressed="${k===g}" style="font-size:18px;flex:1 1 130px">${v.name}</button>`).join('')}</div></div>
       <div><span class="fieldlabel">Players</span><div class="seg-ctl">${counts.map(k=>`<button type="button" data-act="c-n" data-v="${k}" aria-pressed="${k===d.n}">${k}</button>`).join('')}</div></div>
       ${opts}
       <div class="shufflebar"><button type="button" class="btn" data-act="c-shuffle">Random order</button></div>
@@ -1033,10 +1051,13 @@ function cNew(){
     if(d.game==='killer')Object.assign(p,{num:nums[i],lives:o.lives,killer:false,hits:0,out:false,darts:0,kills:0});
     if(d.game==='bounty')Object.assign(p,{score:0,marks:0,tops:0,steals:0,busts:0,darts:0});
     if(d.game==='bingo')Object.assign(p,{claims:0,darts:0});
+    if(d.game==='baseball')Object.assign(p,{runs:0,inn:[],darts:0,out:false});
+    if(d.game==='knockout')Object.assign(p,{lives:o.koLives,out:false,darts:0,last:null,best:0,strikes:0});
   });
   C={game:d.game,opts:o,players,turn:0,round:1,darts:[],turnLog:[],pending:false,phase:'play',winner:null,feed:[],startedAt:Date.now(),endedAt:null};
   if(d.game==='bingo'){const nn=shuffle([...Array(20)].map((_,i)=>i+1)),cs=shuffle(['DOUBLE','TRIPLE','BW','OE']);C.card=[];let ni=0,ci=0;
     for(let i=0;i<25;i++){const k=i===12?'BULL':[0,4,20,24].includes(i)?cs[ci++]:nn[ni++];C.card.push({k,owner:null,marks:players.map(()=>0)})}}
+  if(d.game==='knockout'){C.koTarget=null;C.koBy=null}
   if(d.game==='bounty'){C.rounds=o.brounds;C.targets=nums.slice(0,o.brounds-1).concat([25]);C.wanted=null}
   chist=[];cview='game';csave();renderClassic();
 }
@@ -1095,6 +1116,10 @@ function cThrow(n,m){buzz(n);
       else{q.lives=Math.max(0,q.lives-cnt);text=`took ${cnt} ${cnt>1?'lives':'life'} from ${q.name}`;if(!q.lives){q.out=true;p.kills++;text+=`, ${q.name} is out!`}}}
     if(cAlive().length<=1){win=true}
   }
+  if(g==='baseball'){const t=bbT(C.round);
+    if(n===t){p.runs+=m;p.inn[C.round-1]=(p.inn[C.round-1]||0)+m;delta=m;text=`${m} run${m>1?'s':''} on ${numName(t)}`}
+    else text=n>0?`needed ${numName(t)}`:'missed'}
+  if(g==='knockout'){const v=n<=0?0:(n===25?(m===2?50:25):n*m);delta=v||null;text=v?`${v} points`:'missed'}
   let bm=0,btop=false;
   if(g==='bounty'){const t=C.targets[C.round-1],val=t===25?25:t;
     bm=(n===t)?m:0;btop=bm>0&&(t===25?m===2:m===3);
@@ -1107,7 +1132,7 @@ function cThrow(n,m){buzz(n);
   if(win){C.phase='over';C.winner=g==='killer'?C.players.findIndex(q=>!q.out):C.turn;C.endedAt=Date.now()}
   else if(g==='atw'&&o.atwLast!==false&&atwHit&&C.darts.length===3){C.darts=[];C.bonus=(C.bonus||0)+1;p.bonuses=(p.bonuses||0)+1;
     C.feed.unshift({pi:C.turn,who:p.name,label:'BONUS',text:'last dart hit, throws again',delta:null,r:C.round});bonusNow=true}
-  else if(endTurn||C.darts.length===3){C.pending=true;if(g==='bounty')bSettle()}
+  else if(endTurn||C.darts.length===3){C.pending=true;if(g==='bounty')bSettle();if(g==='baseball')bbSettle();if(g==='knockout')koSettle()}
   csave();renderClassic();
   if(bonusNow)cBonus(p.name,C.turn);
   if(n===-1)cOff(p.name);
@@ -1195,6 +1220,19 @@ function bSettle(){const p=cP(),t=C.targets[C.round-1],val=t===25?25:t;
   C.settle=st;
   if(C.turn===C.players.length-1&&C.round>=C.rounds){C.pending=false;C.phase='over';C.endedAt=Date.now();
     const mx=Math.max(...C.players.map(q=>q.score));const top=C.players.map((q,i)=>i).filter(i=>C.players[i].score===mx);C.winner=top.length===1?top[0]:null;C.tied=top}}
+function bbSettle(){const p=cP();p.inn[C.round-1]=p.inn[C.round-1]||0;
+  if(cNextIdx(C.turn)>C.turn||C.round<C.opts.bbInn)return;
+  const alive=C.players.map((q,i)=>i).filter(i=>!C.players[i].out);const mx=Math.max(...alive.map(i=>C.players[i].runs));const top=alive.filter(i=>C.players[i].runs===mx);
+  if(top.length===1){C.pending=false;C.phase='over';C.winner=top[0];C.endedAt=Date.now();return}
+  alive.forEach(i=>{if(!top.includes(i))C.players[i].out=true});C.extra=true;
+  C.feed.unshift({pi:top[0],who:'Extra innings',label:'TIE',text:`tied at ${mx}: ${top.map(i=>C.players[i].name).join(' vs ')}`,delta:null,r:C.round})}
+function koSettle(){const p=cP(),tot=C.turnLog.reduce((a,d)=>a+(d.delta||0),0),t=C.koTarget;
+  p.last=tot;p.best=Math.max(p.best||0,tot);const st={tot,opening:t==null,ok:true,lost:false,target:t};
+  if(t==null||tot>t||(tot===t&&C.opts.koTie!=='strike')){C.koTarget=tot;C.koBy=C.turn}
+  else{st.ok=false;st.lost=true;p.lives=Math.max(0,p.lives-1);p.strikes++;if(!p.lives)p.out=true;
+    C.feed.unshift({pi:C.turn,who:p.name,label:p.out?'OUT':'STRIKE',text:p.out?`needed ${koNeed(t)}, knocked out!`:`needed ${koNeed(t)}, ${p.lives} ${p.lives===1?'life':'lives'} left`,delta:null,r:C.round})}
+  C.settle=st;
+  if(C.players.filter(q=>!q.out).length<=1){C.pending=false;C.phase='over';C.endedAt=Date.now();C.winner=C.players.findIndex(q=>!q.out)}}
 function bSetWanted(){const mx=Math.max(...C.players.map(p=>p.score));const lead=C.players.map((p,i)=>i).filter(i=>C.players[i].score===mx);C.wanted=(mx>0&&lead.length===1)?lead[0]:null}
 function cNext(){cSnap();const prev=C.turn;const p=cP();if(C.game==='x01'){p.best=Math.max(p.best||0,p.turnStart-p.rem);p.bust=false}
   C.pending=false;C.darts=[];C.turnLog=[];C.settle=null;C.bonus=0;C.turn=cNextIdx(prev);if(C.turn<=prev){C.round++;if(C.game==='bounty')bSetWanted()}
@@ -1253,11 +1291,13 @@ function cAim(p){const g=C.game,o=C.opts;
   if(g==='killer')return p.killer?'Killer · hit their numbers':`Hit ${o.kmode==='double'?'D':''}${p.num} to become a killer`;
   if(g==='bingo'){const b=bingoBest(C.turn);return b?`Best line ${b} of 5 · claim 3 marks per square`:'Claim squares: 3 marks each'}
   if(g==='bounty'){const t=C.targets[C.round-1];const w=C.wanted;return`Aim ${t===25?'Bull':t} · $${t===25?25:t}/mark${w!=null&&w!==C.turn?` · ${t===25?'bullseye':'triple'} robs ${C.players[w].name}`:w===C.turn?' · you\'re Wanted':''}`}
+  if(g==='baseball'){const t=bbT(C.round);return`Inning ${C.round} · aim ${numName(t)} · ${p.runs} run${p.runs===1?'':'s'}`}
+  if(g==='knockout'){const sum=C.turnLog.reduce((a,d)=>a+(d.delta||0),0);return C.koTarget==null?`Opening throw sets the score${sum?` · ${sum} so far`:''}`:`Need ${koNeed(C.koTarget)}${sum?` · ${sum} so far`:''}`}
   if(g==='cricket'){const open=CRICK.filter(k=>p.marks[k]<3);return open.length?`${open.length} number${open.length>1?'s':''} to close`:'All closed'}
   return''}
 function cFill(){
   const over=C.phase==='over',p=cP(),g=C.game;
-  $('#cround').innerHTML=g==='bounty'?`Round <b>${Math.min(C.round,C.rounds)}</b> of ${C.rounds}${C.targets[Math.min(C.round,C.rounds)-1]===25?' · High Noon':''}`:`Round <b>${C.round}</b>`;
+  $('#cround').innerHTML=g==='baseball'?(C.round>C.opts.bbInn?`Extra inning <b>${C.round}</b>`:`Inning <b>${C.round}</b> of ${C.opts.bbInn}`):g==='bounty'?`Round <b>${Math.min(C.round,C.rounds)}</b> of ${C.rounds}${C.targets[Math.min(C.round,C.rounds)-1]===25?' · High Noon':''}`:`Round <b>${C.round}</b>`;
   $('#cundo').disabled=!chist.length;
   $('#ctimer').innerHTML=`Game <b>${fmtDur((C.endedAt||Date.now())-C.startedAt)}</b>`;
   $('#cconfirm').innerHTML=ui.cconfirm?`<div class="confirm"><span>Start over with new players? This game will be cleared.</span><button class="btn" data-act="c-keep">Keep playing</button><button class="btn primary" data-act="c-setup">New game</button></div>`:'';
@@ -1288,17 +1328,19 @@ function cRecapHTML(){const p=cP(),g=C.game,ni=cNextIdx(C.turn),nx=C.players[ni]
   if(g==='atw'){big=numName(atwTargets()[Math.min(p.ti,atwTargets().length-1)]);lbl='next target'}
   if(g==='bingo'){const c=C.turnLog.reduce((a,d)=>a+(d.delta||0),0);big=String(c);lbl=c===1?'square claimed':'squares claimed'}
   if(g==='bounty'){const st=C.settle||{pts:0};big=st.pts<0?'−$'+(-st.pts):'+$'+st.pts;lbl=st.bust?'went bust':st.stole?`incl. $${st.stole} robbed from ${C.players[st.from].name}`:'this turn';if(st.stole){big='+$'+(st.pts+st.stole)}}
+  if(g==='baseball'){const r=C.turnLog.reduce((a,d)=>a+(d.delta||0),0);big=r?'+'+r:'0';lbl=`run${r===1?'':'s'} · ${p.runs} total`}
+  if(g==='knockout'){const st=C.settle||{tot:0};big=String(st.tot);lbl=st.opening?'sets the score to beat':st.ok?'safe · new score to beat':p.out?'knocked out':`short of ${st.target} · ${p.lives} ${p.lives===1?'life':'lives'} left`}
   if(g==='killer'){big=p.out?'OUT':(p.killer?'☠':String(p.lives));lbl=p.out?'knocked out':(p.killer?`killer · ${p.lives} ${p.lives===1?'life':'lives'}`:`${p.lives} ${p.lives===1?'life':'lives'}`)}
   return`<div class="pending-card" role="dialog" aria-label="Turn recap" style="--tc:var(--t${C.turn});--tink:var(--t${C.turn}-ink)">
     <div class="turnhead"><div><div class="eyebrow">Turn over · pull your darts</div>
     <div class="headline" style="margin-top:6px;color:var(--t${C.turn})">${esc(p.name)}</div></div>
-    <div class="turngain ${(g==='x01'&&p.bust)||(g==='bounty'&&C.settle&&C.settle.bust)?'neg':'pos'}"><div class="v">${big}</div><div class="l">${esc(lbl)}</div></div></div>
+    <div class="turngain ${(g==='x01'&&p.bust)||(g==='bounty'&&C.settle&&C.settle.bust)||(g==='knockout'&&C.settle&&C.settle.lost)?'neg':'pos'}"><div class="v">${big}</div><div class="l">${esc(lbl)}</div></div></div>
     <ul class="recaplist">${C.turnLog.map(d=>`<li class="${/closed|KILLER|out!|checked|took|stole|bounty shot/.test(d.text)?'hot':''}"><span class="lbl">${d.label}</span><span class="txt">${esc(d.text)}</span><span class="dd"></span></li>`).join('')}</ul>
     <div class="nextrow"><div><div class="eyebrow">Up next</div><div class="who" style="color:var(--t${ni})">${esc(nx.name)}</div></div>
     <div style="display:flex;gap:8px;flex-wrap:wrap"><button class="btn big" data-act="c-undo">↶ Undo last dart</button><button class="btn primary big" data-act="c-next">Start ${esc(nx.name)}'s turn</button></div></div></div>`}
 
 function cMiniHTML(){const g=C.game,over=C.phase==='over';
-  const val=p=>g==='x01'?p.rem:g==='cricket'?p.pts:g==='atw'?(p.ti>=atwTargets().length?'✓':numName(atwTargets()[p.ti])):g==='killer'?(p.out?'out':'♥'+p.lives):g==='bingo'?p.claims+'□':'$'+p.score;
+  const val=p=>g==='x01'?p.rem:g==='cricket'?p.pts:g==='atw'?(p.ti>=atwTargets().length?'✓':numName(atwTargets()[p.ti])):g==='killer'||g==='knockout'?(p.out?'out':'♥'+p.lives):g==='bingo'?p.claims+'□':g==='baseball'?p.runs+'R':'$'+p.score;
   return C.players.map((p,i)=>`<span class="mchip${!over&&C.turn===i?' on':''}" style="--tc:var(--t${i})">${esc(p.name)} <b>${val(p)}</b></span>`).join('')}
 function cScoreHTML(){const g=C.game,over=C.phase==='over';
   const row=(i,rank,mid,right,extra='')=>{const p=C.players[i],act=!over&&C.turn===i;
@@ -1326,6 +1368,13 @@ function cScoreHTML(){const g=C.game,over=C.phase==='over';
   if(g==='bounty'){const t=C.targets[Math.min(C.round,C.rounds)-1];idx.sort((a,b)=>C.players[b].score-C.players[a].score);
     return`<div class="bposter"><span class="r">Round ${Math.min(C.round,C.rounds)}/${C.rounds}</span>${t===25?'<span class="noon">High Noon</span>':''}<div class="w">Wanted</div><div class="tgt">${t===25?'BULL':t}</div><div class="pay">$${t===25?25:t} per mark${C.wanted!=null?` · leader: <b style="color:var(--t${C.wanted})">${esc(C.players[C.wanted].name)}</b>`:''}</div></div>
     <div class="teams">${idx.map(i=>{const p=C.players[i];return row(i,idx.findIndex(j=>C.players[j].score===p.score)+1,`<div class="stats">${i===C.wanted?'<span class="kchip">WANTED</span> ':''}${p.marks} marks · ${p.tops} ${'triples'} · ${p.steals} robberies${p.busts?` · ${p.busts} busts`:''}</div>`,`<div class="score">$${p.score}</div>`)}).join('')}</div>`}
+  if(g==='baseball'){const N=Math.max(C.opts.bbInn,C.round),cols=[...Array(N).keys()];const lead=Math.max(...C.players.map(p=>p.runs));
+    return`<div class="card" style="padding:10px 8px;overflow-x:auto"><table class="ctable"><thead><tr><th></th>${cols.map(k=>`<th class="${k+1===C.round&&!over?'cur':''}" style="${k+1===C.round&&!over?'color:var(--chalk)':''}">${bbT(k+1)===25?'B':k+1}</th>`).join('')}<th>R</th></tr></thead>
+      <tbody>${C.players.map((p,i)=>`<tr class="${!over&&C.turn===i?'act':''}" style="--tc:var(--t${i});${p.out&&!over?'opacity:.45':''}"><td class="pn">${esc(p.name)}</td>${cols.map(k=>`<td style="color:var(--tc)">${p.inn[k]!=null?p.inn[k]:''}</td>`).join('')}<td class="pts${p.runs===lead&&lead>0?' lead':''}">${p.runs}</td></tr>`).join('')}</tbody></table></div>`}
+  if(g==='knockout'){const t=C.koTarget;idx.sort((a,b)=>(C.players[a].out-C.players[b].out)||(C.players[b].lives-C.players[a].lives));
+    return`<div class="bposter"><span class="r">Round ${C.round}</span><div class="w">Score to beat</div><div class="tgt">${t==null?'–':t}</div><div class="pay">${t==null?'The first throw sets it':`set by <b style="color:var(--t${C.koBy})">${esc(C.players[C.koBy].name)}</b> · ${C.opts.koTie==='strike'?'beat it':'match or beat it'}`}</div></div>
+    <div class="teams">${idx.map(i=>{const p=C.players[i];const hearts='♥'.repeat(p.lives)+'<span style="opacity:.25">'+'♥'.repeat(Math.max(0,C.opts.koLives-p.lives))+'</span>';
+      return row(i,p.out?'–':idx.filter(j=>!C.players[j].out).indexOf(i)+1,`<div class="stats"><span class="hearts" style="color:var(--tc)">${hearts}</span>${p.out?' · out':''}${p.best?` · best ${p.best}`:''}</div>`,`<div class="score">${p.last==null?'–':p.last}</div><div class="gap">last turn</div>`)}).join('')}</div>`}
   if(g==='cricket'){
     const cell=k=>k>=3?'<span class="cmk c3">✕</span>':k===2?'<span class="cmk">✕</span>':k===1?'<span class="cmk">╱</span>':'';
     const dead=n=>C.players.every(p=>p.marks[n]>=3);
@@ -1357,18 +1406,20 @@ function cPaint(){const svg=$('#board');if(!svg)return;const g=C.game,p=cP(),ove
       const cell=C.card.find(c=>c.k===(n===25?'BULL':n));const k=cell?cell.marks[C.turn]:0;const mg=$('#mk-'+n);
       if(mg&&!over){[1,2,3].forEach(j=>mg.querySelectorAll('.X'+j).forEach(e=>e.style.opacity=k>=j?1:0));mg.querySelectorAll('.c').forEach(e=>e.style.stroke=`var(--t${C.turn})`)}}}
   if(g==='bounty'){const t=C.targets[Math.min(C.round,C.rounds)-1];for(const n of all){if(n!==t)dim(n)}if(!over){glow(t);badge(t,`var(--t${C.turn})`,true)}}
+  if(g==='baseball'){const t=bbT(C.round);for(const n of all){if(n!==t)dim(n)}if(!over){glow(t);badge(t,`var(--t${C.turn})`,true)}}
   if(g==='killer'){const owned={};C.players.forEach((q,i)=>{if(!q.out)owned[q.num]=i});
     for(const n of all){if(owned[n]==null){dim(n);continue}const i=owned[n];const o=$('#ov-'+n);o.style.fill=`var(--t${i})`;o.setAttribute('fill-opacity',.32);badge(n,`var(--t${i})`,true)}
     if(!over&&!p.out){if(!p.killer)glow(p.num);else Object.keys(owned).forEach(n=>{if(+n!==p.num)glow(+n)})}}
 }
 
 function cResultHTML(){const g=C.game,w=C.winner,W=w==null?null:C.players[w];
-  const rows=C.players.map((p,i)=>({p,i})).sort(g==='bounty'?(a,b)=>b.p.score-a.p.score:(a,b)=>a.i===w?-1:b.i===w?1:0);
-  const head={x01:['Left','Darts','3-dart avg','Best turn'],cricket:['Points','Closed','Darts','Marks/round'],atw:['Reached','Darts'],killer:['Lives','KOs','Darts'],bounty:['Cash','Marks','Triples','Robberies','Busts'],bingo:['Squares','Best line','Darts']}[g];
+  const rows=C.players.map((p,i)=>({p,i})).sort(g==='bounty'?(a,b)=>b.p.score-a.p.score:g==='baseball'?(a,b)=>b.p.runs-a.p.runs:(a,b)=>a.i===w?-1:b.i===w?1:0);
+  const head={x01:['Left','Darts','3-dart avg','Best turn'],cricket:['Points','Closed','Darts','Marks/round'],atw:['Reached','Darts'],killer:['Lives','KOs','Darts'],bounty:['Cash','Marks','Triples','Robberies','Busts'],bingo:['Squares','Best line','Darts'],baseball:['Runs','Best inning','Darts'],knockout:['Lives','Best turn','Lives lost']}[g];
   const cells=p=>({x01:()=>[p.rem,p.darts,p.darts?(p.scored/p.darts*3).toFixed(1):'–',p.best||0],
     cricket:()=>[p.pts,CRICK.filter(k=>p.marks[k]>=3).length+' of 7',p.darts,p.darts?(p.mpr/p.darts*3).toFixed(2):'–'],
     atw:()=>[p.ti>=atwTargets().length?'Finished':numName(atwTargets()[p.ti]),p.darts],
-    killer:()=>[p.out?'Out':p.lives,p.kills,p.darts],bounty:()=>['$'+p.score,p.marks,p.tops,p.steals,p.busts],bingo:()=>[p.claims,bingoBest(C.players.indexOf(p))+' of 5',p.darts]})[g]();
+    killer:()=>[p.out?'Out':p.lives,p.kills,p.darts],bounty:()=>['$'+p.score,p.marks,p.tops,p.steals,p.busts],bingo:()=>[p.claims,bingoBest(C.players.indexOf(p))+' of 5',p.darts],
+    baseball:()=>[p.runs,Math.max(0,...p.inn.map(v=>v||0)),p.darts],knockout:()=>[p.out?'Out':p.lives,p.best||0,p.strikes]})[g]();
   return`<div class="overlay"><div class="result wide">
     <div><div style="font-size:12px;letter-spacing:.14em;text-transform:uppercase;color:var(--muted);font-weight:600">${esc(GAMES[g].name)} · ${C.round} round${C.round>1?'s':''} · ${fmtDur(C.endedAt-C.startedAt)}</div>
     ${W?`<h2 class="winner" style="color:var(--t${w})">${esc(W.name)} wins</h2>${g==='bounty'?`<div style="color:var(--muted)">$${W.score} in the saddlebag</div>`:''}`:`<h2 class="winner">Tied at $${C.players[C.tied[0]].score}</h2><div style="color:var(--muted)">${C.tied.map(i=>esc(C.players[i].name)).join(' & ')}: shoot for the bull, closest takes it.</div>`}</div>
