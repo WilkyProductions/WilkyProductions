@@ -1436,7 +1436,7 @@ function bindClassic(){
   $('#app').addEventListener('click',e=>{const b=e.target.closest('[data-act]');if(!b||b.disabled)return;const a=b.dataset.act;
     if(a==='g-assist'){setAssist(!assistOn());render();return}
     if(a==='g-menu'){appMode='menu';ui.cconfirm=false;csave();render();return}
-    if(a==='g-turf'){appMode='turf';csave();render();return}
+    if(a==='g-turf'){if(S&&S.phase==='over'){S=null;history=[];ui.confirm=false;ui.review=false;save()}appMode='turf';csave();render();return}
     if(a==='g-classic'){appMode='classic';cdraft.game=b.dataset.game;if(cdraft.n<GAMES[cdraft.game].min)cdraft.n=GAMES[cdraft.game].min;if(cdraft.n>gMax(cdraft.game))cdraft.n=gMax(cdraft.game);cview='setup';csave();render();return}
     if(a==='g-cresume'){appMode='classic';cview='game';csave();render();return}
     if(!a.startsWith('c-'))return;
