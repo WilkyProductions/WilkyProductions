@@ -396,6 +396,22 @@ button:focus-visible,input:focus-visible{outline:2px solid var(--chalk);outline-
 .pickrow .btn small{font-family:var(--font-body);font-size:11px;letter-spacing:.1em;text-transform:uppercase;color:var(--muted)}
 .pickrow .btn.d{border-color:#1F7A42}.pickrow .btn.t{border-color:#C8352B}
 .pickback{position:fixed;inset:0;z-index:39;background:rgba(0,0,0,.35)}
+/* hit confirmation pop */
+.hitpop{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;pointer-events:none;z-index:6}
+.hitpop span{font-family:var(--font-display);font-weight:700;font-size:clamp(84px,24cqw,210px);line-height:.8;padding-top:.08em;color:var(--c);letter-spacing:.02em;text-shadow:0 0 0 #000,0 6px 30px rgba(0,0,0,.75),0 0 4px rgba(0,0,0,.9);animation:hitpop .6s ease-out forwards}
+@keyframes hitpop{0%{opacity:1;transform:scale(.8)}18%{opacity:1;transform:scale(1.08)}100%{opacity:0;transform:scale(1)}}
+@media (prefers-reduced-motion:reduce){.hitpop span{animation:hitpopfade .5s linear forwards}@keyframes hitpopfade{0%{opacity:1}100%{opacity:0}}}
+/* bingo: pick animation and everyone's marks on the card */
+.aopt.just{animation:pickpop .38s ease-out}
+@keyframes pickpop{0%{transform:scale(.92)}45%{transform:scale(1.07)}100%{transform:scale(1)}}
+.bcell .bo i{font-style:normal;font-family:var(--font-display);font-size:15px;font-weight:600;line-height:1;background:none!important;padding:0;color:var(--oc)}
+/* cricket: bigger scoreboard */
+.g-cricket .ctable th{font-size:26px;padding:4px 2px}
+.g-cricket .ctable td{font-size:26px;padding:10px 2px}
+.g-cricket .ctable td.pn{font-size:17px;max-width:130px}
+.g-cricket .ctable td.pts{font-size:32px}
+.g-cricket .ctable .cmk.c3{border-width:3px}
+@media (min-width:900px){.g-cricket.game{grid-template-columns:minmax(0,1fr) 440px}}
 /* tablet portrait (iPad): board on top, scoreboard + feed side by side below */
 @media (min-width:701px) and (min-aspect-ratio:5/8) and (max-aspect-ratio:1/1){
   .game{grid-template-columns:minmax(0,1fr)!important}
@@ -404,6 +420,11 @@ button:focus-visible,input:focus-visible{outline:2px solid var(--chalk);outline-
   .dartbar{justify-content:center}
   .side{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);align-items:start}
   .side>details{grid-column:1/-1}
+  .g-cricket .side{display:flex;flex-direction:column;align-items:stretch}
+  .thrower{flex-direction:row;flex-wrap:wrap;align-items:baseline;column-gap:12px;row-gap:2px}
+  .ondeck{flex-direction:row;flex-wrap:wrap;justify-content:flex-end;align-items:baseline;column-gap:10px;row-gap:2px}
+  .thrower .tname{font-size:50px}
+  .boardrow{gap:6px}
 }
 @media (max-width:700px){
   body{padding-block:8px}
@@ -459,6 +480,11 @@ const NT=()=>S.teams.length;const PP=()=>S.teams[0].players.length;const TPR=()=
 function current(){const N=NT();const team=S.turnIdx%N;const p=Math.floor(S.turnIdx/N);return{team,player:p,name:S.teams[team].players[p]}}
 function nextUp(){const N=NT();let t=S.turnIdx+1,r=S.round;if(t===TPR()){t=0;r++}if(r>S.rounds)return null;const team=t%N;return{team,name:S.teams[team].players[Math.floor(t/N)]}}
 function numName(n){return n===25?'Bull':String(n)}
+function hitPop(n,m,col){const bb=document.getElementById('boardbox');if(!bb||n<0)return;
+  const t=n===0?'MISS':n===25?(m===2?'BULL':'25'):(['','S','D','T'][m])+n;
+  const old=bb.querySelector('.hitpop');if(old)old.remove();
+  const el=document.createElement('div');el.className='hitpop';el.setAttribute('aria-hidden','true');
+  el.innerHTML=`<span style="--c:${n===0?'var(--muted)':col}">${t}</span>`;bb.appendChild(el);setTimeout(()=>el.remove(),650)}
 function hitLabel(n,m){if(n===25)return m===2?'BULL':'OB';return(['','S','D','T'][m])+n}
 
 function applyHit(team,n,mult){
@@ -488,7 +514,7 @@ function tally(team){
 
 function throwDart(n,mult){buzz(n);
   if(!S||S.phase!=='play'||S.pending)return;
-  snap();const c=current();const before=S.teams.map((_,i)=>tally(i).total);
+  snap();const c=current();setTimeout(()=>hitPop(n,mult,`var(--t${c.team})`),0);const before=S.teams.map((_,i)=>tally(i).total);
   let r,label;
   let offboard=false;
   if(n===-1){offboard=true;const pen=S.penalty==null?0.5:S.penalty;S.off=S.off||S.teams.map(()=>0);S.off[c.team]=(S.off[c.team]||0)+1;S.shame=S.shame||{};S.shame[c.name]=(S.shame[c.name]||0)+1;
@@ -733,7 +759,7 @@ function topTied(){const T=S.teams.map((_,i)=>({i,v:tally(i).total}));const lead
 function pickTarget(prev){const opts=[...ORDER,25].filter(n=>n!==prev);return opts[Math.floor(Math.random()*opts.length)]}
 function startTB(){snap();const sides=topTied();S.tb={sides,target:pickTarget(),cycle:1,idx:0,cycleHits:[],log:[],msg:''};S.phase='tb';S.pending=false;S.endedAt=null;ui.review=false;save();render()}
 function tbWho(side){const pl=S.teams[side].players;return pl[(S.tb.cycle-1)%pl.length]}
-function tbThrow(n,mult){if(!S||S.phase!=='tb')return;buzz(n);snap();const tb=S.tb,side=tb.sides[tb.idx],who=tbWho(side);
+function tbThrow(n,mult){if(!S||S.phase!=='tb')return;buzz(n);snap();const tb=S.tb,side=tb.sides[tb.idx],who=tbWho(side);setTimeout(()=>hitPop(n,mult,`var(--t${side})`),0);
   const hit=n===tb.target;const label=n<=0?(n===-1?'OFF':'Miss'):hitLabel(n,mult);
   tb.log.push({team:side,who,hit,label,cycle:tb.cycle});if(hit)tb.cycleHits.push(side);
   S.feed.unshift({team:side,who,label,text:hit?`hit ${numName(tb.target)}`:`missed ${numName(tb.target)}`,kind:hit?'tbhit':'tbmiss',r:'TB',tb:1});
@@ -1070,7 +1096,7 @@ function cAlive(){return C.players.filter(p=>!p.out)}
 
 function cThrow(n,m){buzz(n);
   if(!C||C.phase!=='play'||C.pending)return;
-  cSnap();const p=cP(),o=C.opts,g=C.game;
+  cSnap();const p=cP(),o=C.opts,g=C.game;const popCol=`var(--t${C.turn})`;setTimeout(()=>hitPop(n,m,popCol),0);
   const label=n===-1?'OFF':n===0?'Miss':hitLabel(n,m);
   let text='',delta=null,endTurn=false,win=false,atwHit=false;p.darts++;
   if(g==='bingo'){C.darts.push(label);C.bDarts=C.bDarts||[];C.bDarts.push({n,m,label});
@@ -1172,7 +1198,7 @@ function bingoAllocHTML(){const a=C.alloc;if(!a)return'';const proj=bingoProj();
   const closing=Object.keys(proj).filter(i=>C.card[i].marks[C.turn]+proj[i]>=3).map(i=>bingoLabel(C.card[i].k));
   const rows=C.bDarts.map((d,di)=>{const opts=a.opts[di];
     return`<div class="arow"><div class="alab">${d.label}</div><div class="aopts">${opts.length?opts.map((o,oi)=>{const cell=C.card[o.i];const sel=a.sel[di]===oi;const tot=Math.min(3,cell.marks[C.turn]+(proj[o.i]||0)+(sel?0:o.gain));
-      return`<button type="button" class="btn aopt${sel?' on':''}${sel&&tot>=3?' closes':''}" data-act="c-pick" data-d="${di}" data-i="${oi}" style="--tc:var(--t${C.turn})"><span class="bcl">${typeof o.k==='number'?o.k:bingoLabel(o.k)}</span><span class="bcs">+${o.gain} → ${tot>=3?'closes':tot+'/3'}</span></button>`}).join(''):`<span class="anone">${d.n>0?'No open square':'Missed'}</span>`}</div></div>`}).join('');
+      return`<button type="button" class="btn aopt${sel?' on':''}${sel&&tot>=3?' closes':''}${ui.justPick===di+'-'+oi?' just':''}" data-act="c-pick" data-d="${di}" data-i="${oi}" style="--tc:var(--t${C.turn})"><span class="bcl">${typeof o.k==='number'?o.k:bingoLabel(o.k)}</span><span class="bcs">+${o.gain} → ${tot>=3?'closes':tot+'/3'}</span></button>`}).join(''):`<span class="anone">${d.n>0?'No open square':'Missed'}</span>`}</div></div>`}).join('');
   return`<div class="overlay" style="z-index:26"><div class="result" role="dialog" aria-label="Choose where your darts go" style="max-width:760px;gap:14px">
     <div><div style="font-size:12px;letter-spacing:.14em;text-transform:uppercase;color:var(--muted);font-weight:600">${esc(cP().name)} · turn over</div>
     <h2 class="winner" style="font-size:46px;color:var(--t${C.turn})">Pick where each dart goes</h2>
@@ -1267,7 +1293,7 @@ function cShell(){const G=GAMES[C.game];return`
   </header>
   <div class="mini" id="mini"></div>
   <div id="cconfirm"></div>
-  <div class="game cgame">
+  <div class="game cgame g-${C.game}">
     <div class="boardcol">
       <div class="boardrow"><div class="thrower" id="thrower"></div><div class="boardbox" id="boardbox"><div class="pending" id="cpending" hidden></div></div><div class="ondeck" id="ondeck"></div></div>
       <div class="dartbar" id="dartbar"></div>
@@ -1291,7 +1317,7 @@ function renderClassic(){
 function cAim(p){const g=C.game,o=C.opts;
   if(g==='x01'){if(!p.opened)return'Need a double to start';const co=checkout(p.rem,3-C.darts.length,o.dout);return`${p.rem} left${co?' · '+co.join(' '):''}`}
   if(g==='atw'){const T=atwTargets();return`Aim for ${numName(T[p.ti])}`}
-  if(g==='killer')return p.killer?'Killer · hit their numbers':`Hit ${o.kmode==='double'?'D':''}${p.num} to become a killer`;
+  if(g==='killer')return p.killer?'Killer · hit their numbers':o.kmode==='double'?`Hit D${p.num} to become a killer`:`Hit ${p.num} to become a killer · ${p.hits||0} of 3`;
   if(g==='bingo'){const b=bingoBest(C.turn);return b?`Best line ${b} of 5 · claim 3 marks per square`:'Claim squares: 3 marks each'}
   if(g==='bounty'){const t=C.targets[C.round-1];const w=C.wanted;return`Aim ${t===25?'Bull':t} · $${t===25?25:t}/mark${w!=null&&w!==C.turn?` · ${t===25?'bullseye':'triple'} robs ${C.players[w].name}`:w===C.turn?' · you\'re Wanted':''}`}
   if(g==='baseball'){const t=bbT(C.round);return`Inning ${C.round} · aim ${numName(t)} · ${p.runs} run${p.runs===1?'':'s'}`}
@@ -1358,13 +1384,13 @@ function cScoreHTML(){const g=C.game,over=C.phase==='over';
       return row(i,idx.findIndex(j=>C.players[j].ti===p.ti)+1,`<div class="bar"><span style="width:${pct}%"></span></div><div class="stats">${p.ti} of ${T.length} done · ${p.darts} darts</div>`,`<div class="score">${p.ti>=T.length?'✓':numName(T[p.ti])}</div><div class="gap">${p.ti>=T.length?'finished':'target'}</div>`)}).join('')}</div>`}
   if(g==='killer'){idx.sort((a,b)=>(C.players[a].out-C.players[b].out)||(C.players[b].lives-C.players[a].lives));
     return`<div class="teams">${idx.map(i=>{const p=C.players[i];const hearts='♥'.repeat(p.lives)+'<span style="opacity:.25">'+'♥'.repeat(Math.max(0,C.opts.lives-p.lives))+'</span>';
-      return row(i,p.out?'–':idx.filter(j=>!C.players[j].out).indexOf(i)+1,`<div class="stats"><span class="hearts" style="color:var(--tc)">${hearts}</span>${p.killer?' <span class="kchip">KILLER</span>':''}${p.out?' · out':''}${p.kills?` · ${p.kills} KO`:''}</div>`,`<div class="score knum">${p.num}</div><div class="gap">${C.opts.kmode==='double'?'hit D'+p.num:'number'}</div>`)}).join('')}</div>`}
+      return row(i,p.out?'–':idx.filter(j=>!C.players[j].out).indexOf(i)+1,`<div class="stats"><span class="hearts" style="color:var(--tc)">${hearts}</span>${p.killer?' <span class="kchip">KILLER</span>':(C.opts.kmode!=='double'&&!p.out?` <span style="color:var(--tc);font-family:var(--font-display);font-size:17px">${'╱'.repeat(p.hits||0)}<span style="opacity:.25">${'╱'.repeat(Math.max(0,3-(p.hits||0)))}</span></span>`:'')}${p.out?' · out':''}${p.kills?` · ${p.kills} KO`:''}</div>`,`<div class="score knum">${p.num}</div><div class="gap">${C.opts.kmode==='double'?'hit D'+p.num:'number'}</div>`)}).join('')}</div>`}
   if(g==='bingo'){const me=over?-1:C.turn;
     const cellHTML=(cell,i)=>{const own=cell.owner;const win=C.winLine&&C.winLine.includes(i);
       const myM=me>=0?cell.marks[me]:0;const others=cell.marks.map((v,j)=>({v,j})).filter(x=>x.j!==me&&x.v>0&&own==null);
       const glyph=own!=null?'':myM>=2?'✕':myM===1?'╱':'';
       const lab=typeof cell.k==='number'?cell.k:cell.k==='BULL'?'BULL':cell.k==='OE'?'ODD/<br>EVEN':bingoLabel(cell.k).toUpperCase();
-      return`<div class="bcell${own!=null?' own':''}${win?' win':''}${typeof cell.k==='number'?'':' spec'}" style="${own!=null?`--tc:var(--t${own})`:me>=0?`--tc:var(--t${me})`:''}"><span class="bl">${lab}</span>${glyph?`<span class="bg">${glyph}</span>`:''}${others.length?`<span class="bo">${others.map(x=>`<i style="background:var(--t${x.j})">${x.v}</i>`).join('')}</span>`:''}</div>`};
+      return`<div class="bcell${own!=null?' own':''}${win?' win':''}${typeof cell.k==='number'?'':' spec'}" style="${own!=null?`--tc:var(--t${own})`:me>=0?`--tc:var(--t${me})`:''}"><span class="bl">${lab}</span>${glyph?`<span class="bg">${glyph}</span>`:''}${others.length?`<span class="bo">${others.map(x=>`<i style="--oc:var(--t${x.j})" title="${esc(C.players[x.j].name)}: ${x.v} of 3">${x.v>=2?'✕':'╱'}</i>`).join('')}</span>`:''}</div>`};
     idx.sort((a,b)=>C.players[b].claims-C.players[a].claims);
     return`<div class="card" style="padding:10px"><div class="bcard">${C.card.map(cellHTML).join('')}</div></div>
       <div class="teams">${idx.map(i=>{const p=C.players[i];return row(i,idx.findIndex(j=>C.players[j].claims===p.claims)+1,`<div class="stats">best line ${bingoBest(i)} of 5</div>`,`<div class="score">${p.claims}</div><div class="gap">squares</div>`)}).join('')}</div>`}
@@ -1386,7 +1412,7 @@ function cScoreHTML(){const g=C.game,over=C.phase==='over';
       <tbody>${C.players.map((p,i)=>`<tr class="${!over&&C.turn===i?'act':''}" style="--tc:var(--t${i})"><td class="pn">${esc(p.name)}</td>${CRICK.map(n=>`<td class="${dead(n)?'dead':''}" style="color:var(--tc)">${cell(p.marks[n])}</td>`).join('')}${C.opts.cpts?`<td class="pts${p.pts===lead&&lead>0?' lead':''}">${p.pts}</td>`:''}</tr>`).join('')}</tbody></table></div>`}
   return''}
 
-function cPaint(){const svg=$('#board');if(!svg)return;const g=C.game,p=cP(),over=C.phase==='over';
+function cPaint(){const svg=$('#board');if(!svg)return;const g=C.game,p=cP(),over=C.phase==='over',o=C.opts;oppMarks(null);
   svg.classList.toggle('locked',over||C.pending||!!C.alloc);
   const all=[...ORDER,25];
   for(const n of all){const o=$('#ov-'+n);o.style.fill='transparent';o.setAttribute('fill-opacity',0);
@@ -1401,20 +1427,31 @@ function cPaint(){const svg=$('#board');if(!svg)return;const g=C.game,p=cP(),ove
     for(const n of all){if(!CRICK.includes(n)){dim(n);continue}
       const k=p.marks[n],mg=$('#mk-'+n);if(mg){[1,2,3].forEach(j=>mg.querySelectorAll('.X'+j).forEach(e=>e.style.opacity=k>=j?1:0));mg.querySelectorAll('.c').forEach(e=>e.style.stroke=`var(--t${C.turn})`)}
       if(C.players.every(q=>q.marks[n]>=3)){const o=$('#ov-'+n);o.style.fill='#000';o.setAttribute('fill-opacity',.55)}
-      else badge(n,`var(--t${C.turn})`,k>=3)}}
+      else badge(n,`var(--t${C.turn})`,k>=3)}
+    const om={};for(const n of CRICK){om[n]=C.players.map((q,j)=>({j,v:q.marks[n]})).filter(x=>x.j!==C.turn&&x.v>0&&!C.players.every(q=>q.marks[n]>=3))}if(!over)oppMarks(om)}
   if(g==='atw'){const T=atwTargets(),t=T[Math.min(p.ti,T.length-1)];
     for(const n of all){if(n!==t)dim(n)}if(!over){glow(t);badge(t,`var(--t${C.turn})`,true)}}
   if(g==='bingo'){const owned={};C.card.forEach(c=>{if(typeof c.k==='number'&&c.owner!=null)owned[c.k]=c.owner;if(c.k==='BULL'&&c.owner!=null)owned[25]=c.owner});
     for(const n of all){if(owned[n]!=null){const o=$('#ov-'+n);o.style.fill=`var(--t${owned[n]})`;o.setAttribute('fill-opacity',.4);badge(n,`var(--t${owned[n]})`,true);continue}
       const cell=C.card.find(c=>c.k===(n===25?'BULL':n));const k=cell?cell.marks[C.turn]:0;const mg=$('#mk-'+n);
-      if(mg&&!over){[1,2,3].forEach(j=>mg.querySelectorAll('.X'+j).forEach(e=>e.style.opacity=k>=j?1:0));mg.querySelectorAll('.c').forEach(e=>e.style.stroke=`var(--t${C.turn})`)}}}
+      if(mg&&!over){[1,2,3].forEach(j=>mg.querySelectorAll('.X'+j).forEach(e=>e.style.opacity=k>=j?1:0));mg.querySelectorAll('.c').forEach(e=>e.style.stroke=`var(--t${C.turn})`)}}
+    if(!over){const om={};C.card.forEach(c=>{if(typeof c.k==='number'&&c.owner==null)om[c.k]=c.marks.map((v,j)=>({j,v})).filter(x=>x.j!==C.turn&&x.v>0)});oppMarks(om)}}
   if(g==='bounty'){const t=C.targets[Math.min(C.round,C.rounds)-1];for(const n of all){if(n!==t)dim(n)}if(!over){glow(t);badge(t,`var(--t${C.turn})`,true)}}
   if(g==='baseball'){const t=bbT(C.round);for(const n of all){if(n!==t)dim(n)}if(!over){glow(t);badge(t,`var(--t${C.turn})`,true)}}
   if(g==='killer'){const owned={};C.players.forEach((q,i)=>{if(!q.out)owned[q.num]=i});
     for(const n of all){if(owned[n]==null){dim(n);continue}const i=owned[n];const o=$('#ov-'+n);o.style.fill=`var(--t${i})`;o.setAttribute('fill-opacity',.32);badge(n,`var(--t${i})`,true)}
-    if(!over&&!p.out){if(!p.killer)glow(p.num);else Object.keys(owned).forEach(n=>{if(+n!==p.num)glow(+n)})}}
+    if(!over&&!p.out){if(!p.killer)glow(p.num);else Object.keys(owned).forEach(n=>{if(+n!==p.num)glow(+n)})}
+    if(!over&&!p.out&&!p.killer&&o.kmode!=='double'){const mg=$('#mk-'+p.num),k=p.hits||0;if(mg){[1,2,3].forEach(j=>mg.querySelectorAll('.X'+j).forEach(e=>e.style.opacity=k>=j?1:0));mg.querySelectorAll('.c').forEach(e=>e.style.stroke=`var(--t${C.turn})`)}}}
 }
 
+function oppMarks(map){const svg=$('#board');if(!svg)return;let gEl=svg.querySelector('#oppmarks');
+  if(!gEl){gEl=document.createElementNS('http://www.w3.org/2000/svg','g');gEl.id='oppmarks';gEl.setAttribute('pointer-events','none');const firstBadge=svg.querySelector('.badge');svg.insertBefore(gEl,firstBadge)}
+  if(!map){gEl.innerHTML='';return}
+  let out='';for(const n of Object.keys(map)){const list=map[n];if(!list.length||+n===25)continue;const c=-90+ORDER.indexOf(+n)*18;
+    const step=list.length>1?Math.min(17,52/(list.length-1)):0;const sc=list.length>3?.42:.5;
+    list.forEach((x,k)=>{const[px,py]=pt(84-k*step,c);const col=`var(--t${x.j})`;
+      out+=`<g transform="translate(${px} ${py}) scale(${sc})" stroke="${col}" stroke-width="5" stroke-linecap="round" fill="none"><g stroke="#000" stroke-width="9" opacity=".55"><path d="M-8 8L8 -8"/>${x.v>=2?'<path d="M-8 -8L8 8"/>':''}${x.v>=3?'<circle r="14"/>':''}</g><path d="M-8 8L8 -8"/>${x.v>=2?'<path d="M-8 -8L8 8"/>':''}${x.v>=3?'<circle r="14"/>':''}</g>`})}
+  gEl.innerHTML=out}
 function cResultHTML(){const g=C.game,w=C.winner,W=w==null?null:C.players[w];
   const rows=C.players.map((p,i)=>({p,i})).sort(g==='bounty'?(a,b)=>b.p.score-a.p.score:g==='baseball'?(a,b)=>b.p.runs-a.p.runs:(a,b)=>a.i===w?-1:b.i===w?1:0);
   const head={x01:['Left','Darts','3-dart avg','Best turn'],cricket:['Points','Closed','Darts','Marks/round'],atw:['Reached','Darts'],killer:['Lives','KOs','Darts'],bounty:['Cash','Marks','Triples','Robberies','Busts'],bingo:['Squares','Best line','Darts'],baseball:['Runs','Best inning','Darts'],knockout:['Lives','Best turn','Lives lost']}[g];
@@ -1446,7 +1483,7 @@ function bindClassic(){
     if(a==='c-color'){readC();cdraft.players[+b.dataset.p].color=b.dataset.color;csave();renderClassic()}
     if(a==='c-shuffle'){readC();const part=shuffle(cdraft.players.slice(0,cdraft.n));cdraft.players.splice(0,cdraft.n,...part);csave();renderClassic()}
     if(a==='c-start'){readC();ui.creview=false;cNew()}
-    if(a==='c-pick'&&C&&C.alloc){C.alloc.sel[+b.dataset.d]=+b.dataset.i;csave();cFill()}
+    if(a==='c-pick'&&C&&C.alloc){C.alloc.sel[+b.dataset.d]=+b.dataset.i;ui.justPick=b.dataset.d+'-'+b.dataset.i;csave();cFill();ui.justPick=null;buzz(1)}
     if(a==='c-alloc')bingoCommit();
     if(a==='c-combo'&&C&&C.alloc){C.alloc.combo=b.dataset.k||null;csave();cFill()}
     if(a==='c-miss')cThrow(0,0);
