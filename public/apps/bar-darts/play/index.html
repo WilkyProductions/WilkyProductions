@@ -412,6 +412,22 @@ button:focus-visible,input:focus-visible{outline:2px solid var(--chalk);outline-
 .alloclegend span{display:inline-flex;align-items:center;gap:6px}
 .alloclegend i{width:12px;height:12px;border-radius:3px;background:var(--tc)}
 .alloclegend b{color:var(--chalk)}
+/* bingo: shrink the board so the card can be big */
+.g-bingo.bcollapsed .boardbox{width:min(46cqw,calc(100dvh - 560px),440px)!important;min-width:220px}
+.g-bingo.bcollapsed .side{display:flex!important;flex-direction:column;align-items:stretch}
+.g-bingo.bcollapsed #cscore>.card{max-width:max(340px,min(780px,calc(100dvh - 720px)));width:100%;margin:0 auto}
+@media (orientation:landscape){.g-bingo.bcollapsed #cscore>.card{max-width:780px}}
+.g-bingo.bcollapsed #cscore .bcell .bl{font-size:clamp(26px,4.4vw,44px)}
+.g-bingo.bcollapsed #cscore .bcell.spec .bl{font-size:clamp(13px,1.8vw,18px)}
+.g-bingo.bcollapsed #cscore .bcell .bg{font-size:24px}
+.g-bingo.bcollapsed #cscore .bcell .bo i{font-size:20px}
+@media (min-width:900px) and (orientation:landscape){.g-bingo.bcollapsed.game{grid-template-columns:minmax(0,.85fr) minmax(0,1fr)!important}.g-bingo.bcollapsed .boardbox{width:min(100cqw,calc(100dvh - 140px))!important}}
+.btog{font-size:15px!important}
+.aopt.steal{border-color:var(--tc)}
+.aopt.steal .bcl{color:var(--tc)}
+.bcell.projsteal{box-shadow:0 0 0 4px var(--sc) inset;animation:stealpulse 1s ease-in-out infinite}
+.bcell.projsteal .bp{color:var(--chalk);background:var(--sc);padding:2px 4px;border-radius:3px}
+@keyframes stealpulse{50%{box-shadow:0 0 0 7px var(--sc) inset}}
 /* saved players */
 .roster{border:1px dashed var(--line);border-radius:12px;padding:12px;display:flex;flex-direction:column;gap:10px;background:color-mix(in srgb,var(--panel) 60%,transparent)}
 .roster .rhead{display:flex;justify-content:space-between;align-items:baseline;gap:8px;flex-wrap:wrap}
@@ -1029,7 +1045,7 @@ const gMax=g=>GAMES[g].max||8;
 const CRICK=[20,19,18,17,16,15,25];
 let appMode='menu',cview='setup',C=null,chist=[];
 let cdraft={game:'x01',n:2,players:DEF_TEAMS.map(t=>({name:t.solo,color:t.color})).concat([{name:'Player 9',color:'silver'},{name:'Player 10',color:'olive'}]),
-  opts:{start:501,dout:true,din:false,cpts:true,atwBull:true,atwSkip:false,atwLast:true,bdiag:true,lives:3,kmode:'double',brounds:7,bbInn:9,koLives:3,koTie:'survive'}};
+  opts:{start:501,dout:true,din:false,cpts:true,atwBull:true,atwSkip:false,atwLast:true,bdiag:true,bsteal:false,lives:3,kmode:'double',brounds:7,bbInn:9,koLives:3,koTie:'survive'}};
 function csave(){try{localStorage.setItem(CSTORE,JSON.stringify({C,chist:chist.slice(-60),cdraft,appMode,cview}))}catch(e){}}
 function cload(){try{const d=JSON.parse(localStorage.getItem(CSTORE)||'null');if(!d)return;
   if(d.cdraft){cdraft.game=d.cdraft.game||cdraft.game;cdraft.n=d.cdraft.n||cdraft.n;Object.assign(cdraft.opts,d.cdraft.opts||{});
@@ -1098,7 +1114,9 @@ function cRules(g){const o=C?C.opts:cdraft.opts;return({
     <li><b>ODD/EVEN and B/W are 3-dart combos:</b> all 3 darts on odd numbers, or all on even numbers, earns 1 mark on ODD/EVEN. All 3 in black segments, or all in white, earns 1 mark on B/W. A combo uses up all 3 darts that turn.</li>
     <li><b>Each dart counts once, and you choose after your 3 darts.</b> At the end of the turn, pick which square each dart goes to. A T5 can close 5 or add 1 mark to TRIPLE. Stack darts on one square to close it faster.</li>
     <li>Once someone claims a square it's theirs. Nobody else can mark it.</li>
-    <li><b>Win:</b> first to claim a full row across, down${o.bdiag!==false?' or diagonal':''}.</li>`,
+    ${o.bsteal?`<li><b>Pirate rules:</b> a <b>triple</b> of a number steals that square if someone else owns it, and a <b>bullseye</b> steals the BULL square. The corner squares can't be stolen.</li>`:''}
+    <li><b>Win:</b> first to claim a full row across, down${o.bdiag!==false?' or diagonal':''}.</li>
+    <li><b>Cat's game:</b> if every row is blocked so nobody can finish one, the game ends in a draw${o.bsteal?' (with pirate rules this only happens when the corners block every row)':''}.</li>`,
   baseball:`<li><b>${o.bbInn} innings.</b> In inning 1 everyone aims at 1, in inning 2 at 2, and so on.</li>
     <li><b>Runs:</b> single = 1, double = 2, triple = 3. Only the inning's number counts.</li>
     <li>Your target glows on the board. Most runs after ${o.bbInn} innings wins.</li>
@@ -1131,7 +1149,8 @@ function cSetupView(){
     baseball:`<div><span class="fieldlabel">Innings</span>${seg('bbInn',[[7,'7'],[9,'9']])}<div style="font-size:13px;color:var(--muted);margin-top:6px">${d.n} ${d.n===1?'player':'players'} × ${o.bbInn} innings ≈ ${Math.max(5,Math.round(d.n*o.bbInn*25/60/5)*5)} minutes.</div></div>`,
     knockout:`<div class="pair"><div><span class="fieldlabel">Lives</span>${seg('koLives',[[3,'3'],[5,'5']])}</div>
       <div><span class="fieldlabel">Tie with the score to beat</span>${seg('koTie',[['survive','Survives'],['strike','Loses a life']])}</div></div>`,
-    bingo:`<div><span class="fieldlabel">Diagonals count</span>${seg('bdiag',[[true,'Yes'],[false,'No']])}<div style="font-size:13px;color:var(--muted);margin-top:6px">Each new game shuffles the numbers on the card.</div></div>`
+    bingo:`<div><span class="fieldlabel">Rules</span>${seg('bsteal',[[false,'Classic'],[true,'☠ Pirate Bingo']])}<div style="font-size:13px;color:var(--muted);margin-top:6px">${o.bsteal?'Pirate Bingo: steal a claimed square with a triple of its number (bullseye for the BULL).':'Classic: once a square is claimed, it stays claimed.'}</div></div>
+      <div><span class="fieldlabel">Diagonals count</span>${seg('bdiag',[[true,'Yes'],[false,'No']])}<div style="font-size:13px;color:var(--muted);margin-top:6px">Each new game shuffles the numbers on the card.</div></div>`
   }[g];
   const pf=i=>{const p=d.players[i];return`<div class="teamform" style="--tc:var(--t${i})">
     <label for="cp${i}">Player ${i+1}</label>${nameSelect('cp'+i,p.name,'tname')}
@@ -1264,9 +1283,16 @@ function bingoGain(k,n,m){if(n<=0)return 0;
   if(k==='TRIPLE')return m===3?1:0;
   if(k==='BW'||k==='OE')return 0;
   return 0}
-function bingoOpts(n,m){const out=[];C.card.forEach((cell,i)=>{if(cell.owner!=null)return;const gn=bingoGain(cell.k,n,m);if(!gn)return;
+const bStealable=k=>typeof k==='number'||k==='BULL';
+function bStealHit(k,n,m){return C.opts.bsteal&&((typeof k==='number'&&n===k&&m===3)||(k==='BULL'&&n===25&&m===2))}
+function bingoAlive(pi){const lines=C.opts.bdiag===false?BINGO_LINES.slice(0,10):BINGO_LINES;
+  return lines.some(l=>l.every(i=>{const c=C.card[i];return c.owner==null||c.owner===pi||(C.opts.bsteal&&bStealable(c.k))}))}
+function bingoCats(){return !C.players.some((_,pi)=>bingoAlive(pi))}
+function bingoOpts(n,m){const out=[];C.card.forEach((cell,i)=>{
+    if(cell.owner!=null){if(cell.owner!==C.turn&&bStealHit(cell.k,n,m))out.push({i,k:cell.k,gain:0,steal:true,from:cell.owner,after:3});return}
+    const gn=bingoGain(cell.k,n,m);if(!gn)return;
     out.push({i,k:cell.k,gain:gn,after:Math.min(3,cell.marks[C.turn]+gn)})});
-  return out.sort((a,b)=>(typeof b.k==='number'||b.k==='BULL')-(typeof a.k==='number'||a.k==='BULL')||b.after-a.after)}
+  return out.sort((a,b)=>(!!b.steal)-(!!a.steal)||(typeof b.k==='number'||b.k==='BULL')-(typeof a.k==='number'||a.k==='BULL')||b.after-a.after)}
 function bingoApply(o){const cell=C.card[o.i],p=cP();cell.marks[C.turn]=o.after;let text,delta=null,win=false;
   if(o.after>=3){cell.owner=C.turn;p.claims++;delta=1;text=`closed ${bingoLabel(o.k)}`}else text=`${bingoLabel(o.k)} ${o.after}/3`;
   const line=bingoWinLine(C.turn);if(line){win=true;C.winLine=line;text+=' · BINGO!'}
@@ -1280,11 +1306,11 @@ function bingoCombos(ds){const out=[];if(ds.length!==3||!ds.every(d=>d.n>=1&&d.n
   if(ds.every(d=>d.n%2===1))add('OE','All odd');else if(ds.every(d=>d.n%2===0))add('OE','All even');
   if(ds.every(d=>isRedNum(d.n)))add('BW','All black');else if(ds.every(d=>!isRedNum(d.n)))add('BW','All white');
   return out}
-function bingoProj(){const a=C.alloc,proj={};if(a.combo){const c=a.combos.find(x=>x.k===a.combo);if(c)proj[c.i]=1;return proj}a.sel.forEach((si,d)=>{if(si<0)return;const o=a.opts[d][si];proj[o.i]=(proj[o.i]||0)+o.gain});return proj}
+function bingoProj(){const a=C.alloc,proj={};if(a.combo){const c=a.combos.find(x=>x.k===a.combo);if(c)proj[c.i]=1;return proj}a.sel.forEach((si,d)=>{if(si<0)return;const o=a.opts[d][si];proj[o.i]=o.steal?'S':(proj[o.i]==='S'?'S':(proj[o.i]||0)+o.gain)});return proj}
 function bingoAllocHTML(){const a=C.alloc;if(!a)return'';const proj=bingoProj();
-  const closing=Object.keys(proj).filter(i=>C.card[i].marks[C.turn]+proj[i]>=3).map(i=>bingoLabel(C.card[i].k));
+  const closing=Object.keys(proj).filter(i=>proj[i]==='S'||C.card[i].marks[C.turn]+proj[i]>=3).map(i=>(proj[i]==='S'?'steal ':'')+bingoLabel(C.card[i].k));
   const rows=C.bDarts.map((d,di)=>{const opts=a.opts[di];
-    return`<div class="arow"><div class="alab">${d.label}</div><div class="aopts">${opts.length?opts.map((o,oi)=>{const cell=C.card[o.i];const sel=a.sel[di]===oi;const tot=Math.min(3,cell.marks[C.turn]+(proj[o.i]||0)+(sel?0:o.gain));
+    return`<div class="arow"><div class="alab">${d.label}</div><div class="aopts">${opts.length?opts.map((o,oi)=>{const cell=C.card[o.i];const sel=a.sel[di]===oi;if(o.steal)return`<button type="button" class="btn aopt steal${sel?' on closes':''}${ui.justPick===di+'-'+oi?' just':''}" data-act="c-pick" data-d="${di}" data-i="${oi}" style="--tc:var(--t${C.turn})"><span class="bcl">☠ Steal ${typeof o.k==='number'?o.k:'Bull'}</span><span class="bcs">from ${esc(C.players[o.from].name)}</span></button>`;const tot=Math.min(3,cell.marks[C.turn]+(typeof proj[o.i]==='number'?proj[o.i]:0)+(sel?0:o.gain));
       return`<button type="button" class="btn aopt${sel?' on':''}${sel&&tot>=3?' closes':''}${ui.justPick===di+'-'+oi?' just':''}" data-act="c-pick" data-d="${di}" data-i="${oi}" style="--tc:var(--t${C.turn})"><span class="bcl">${typeof o.k==='number'?o.k:bingoLabel(o.k)}</span><span class="bcs">+${o.gain} → ${tot>=3?'closes':tot+'/3'}</span></button>`}).join(''):`<span class="anone">${d.n>0?'No open square':'Missed'}</span>`}</div></div>`}).join('');
   return`<div class="overlay" style="z-index:26"><div class="result" role="dialog" aria-label="Choose where your darts go" style="max-width:1180px;gap:14px">
     <div><div style="font-size:12px;letter-spacing:.14em;text-transform:uppercase;color:var(--muted);font-weight:600">${esc(cP().name)} · turn over</div>
@@ -1309,13 +1335,16 @@ function bingoCommit(){if(!C||!C.alloc)return;cSnap();const a=C.alloc,p=cP();
   else C.bDarts.forEach((d,di)=>{const si=a.sel[di];let text,delta=null;
     if(si<0)text=d.n>0?'no open square':'missed';
     else{const o=a.opts[di][si],cell=C.card[o.i];
-      if(cell.owner!=null)text=`${bingoLabel(o.k)} already closed`;
+      if(o.steal&&cell.owner!=null&&cell.owner!==C.turn){const prev=cell.owner;C.players[prev].claims--;cell.owner=C.turn;cell.marks[C.turn]=3;p.claims++;delta=1;text=`stole ${bingoLabel(o.k)} from ${C.players[prev].name}!`}
+      else if(cell.owner!=null)text=`${bingoLabel(o.k)} already ${cell.owner===C.turn?'yours':'closed'}`;
       else{cell.marks[C.turn]=Math.min(3,cell.marks[C.turn]+o.gain);
         if(cell.marks[C.turn]>=3){cell.owner=C.turn;p.claims++;delta=1;text=`closed ${bingoLabel(o.k)}`}else text=`${bingoLabel(o.k)} ${cell.marks[C.turn]}/3`}}
     C.turnLog.push({label:d.label,text,delta});C.feed.unshift({pi:C.turn,who:p.name,label:d.label,text,delta,r:C.round})});
   C.alloc=null;C.bDarts=[];
   const line=bingoWinLine(C.turn);
-  if(line){C.winLine=line;C.phase='over';C.winner=C.turn;C.endedAt=Date.now();C.feed[0].text+=' · BINGO!'}else C.pending=true;
+  if(line){C.winLine=line;C.phase='over';C.winner=C.turn;C.endedAt=Date.now();C.feed[0].text+=' · BINGO!'}
+  else if(bingoCats()){C.cats=true;C.phase='over';C.winner=null;C.endedAt=Date.now();C.feed.unshift({pi:C.turn,who:'Game over',label:'CAT',text:"cat's game: nobody can finish a line",delta:null,r:C.round})}
+  else C.pending=true;
   csave();renderClassic()}
 function cChoose(i){if(!C||!C.choice)return;cSnap();const ch=C.choice;C.choice=null;bingoFinish(ch.label,bingoApply(ch.opts[i]))}
 function cFlash(n,m){const el=document.querySelector(`#board [data-n="${n}"][data-m="${m}"]`);if(el){el.classList.remove('flash');void el.getBBox();el.classList.add('flash')}}
@@ -1329,10 +1358,10 @@ function bingoChoiceHTML(){const ch=C.choice;if(!ch)return'';
 function bingoCardHTML(me,proj){
   const cellHTML=(cell,i)=>{const own=cell.owner;const win=C.winLine&&C.winLine.includes(i);
     const myM=me>=0?cell.marks[me]:0;const others=cell.marks.map((v,j)=>({v,j})).filter(x=>x.j!==me&&x.v>0&&own==null);
-    const add=proj&&proj[i]?proj[i]:0;const after=Math.min(3,myM+add);
+    const stealP=proj&&proj[i]==='S';const add=stealP?0:(proj&&proj[i]?proj[i]:0);const after=Math.min(3,myM+add);
     const glyph=own!=null?'':(add?after:myM)>=3?'⊗':(add?after:myM)>=2?'✕':(add?after:myM)===1?'╱':'';
     const lab=typeof cell.k==='number'?cell.k:cell.k==='BULL'?'BULL':cell.k==='OE'?'ODD/<br>EVEN':bingoLabel(cell.k).toUpperCase();
-    return`<div class="bcell${own!=null?' own':''}${win?' win':''}${typeof cell.k==='number'?'':' spec'}${add?' proj':''}${add&&after>=3?' projclose':''}" style="${own!=null?`--tc:var(--t${own})`:me>=0?`--tc:var(--t${me})`:''}"><span class="bl">${lab}</span>${glyph?`<span class="bg">${glyph}</span>`:''}${add?`<span class="bp">${after>=3?'CLOSES':'+'+add}</span>`:''}${others.length?`<span class="bo">${others.map(x=>`<i style="--oc:var(--t${x.j})" title="${esc(C.players[x.j].name)}: ${x.v} of 3">${x.v>=2?'✕':'╱'}</i>`).join('')}</span>`:''}</div>`};
+    return`<div class="bcell${own!=null?' own':''}${win?' win':''}${typeof cell.k==='number'?'':' spec'}${add||stealP?' proj':''}${add&&after>=3?' projclose':''}${stealP?' projsteal':''}" style="${own!=null?`--tc:var(--t${own})`:me>=0?`--tc:var(--t${me})`:''}${stealP?`;--sc:var(--t${me})`:''}"><span class="bl">${lab}</span>${glyph?`<span class="bg">${glyph}</span>`:''}${add?`<span class="bp">${after>=3?'CLOSES':'+'+add}</span>`:''}${stealP?'<span class="bp">☠ STEAL</span>':''}${others.length?`<span class="bo">${others.map(x=>`<i style="--oc:var(--t${x.j})" title="${esc(C.players[x.j].name)}: ${x.v} of 3">${x.v>=2?'✕':'╱'}</i>`).join('')}</span>`:''}</div>`};
   return`<div class="bcard">${C.card.map(cellHTML).join('')}</div>`}
 function bingoWinLine(pi){const lines=C.opts.bdiag===false?BINGO_LINES.slice(0,10):BINGO_LINES;return lines.find(l=>l.every(i=>C.card[i].owner===pi))||null}
 function bingoBest(pi){const lines=C.opts.bdiag===false?BINGO_LINES.slice(0,10):BINGO_LINES;let b=0;for(const l of lines){if(l.some(i=>C.card[i].owner!=null&&C.card[i].owner!==pi))continue;b=Math.max(b,l.filter(i=>C.card[i].owner===pi).length)}return b}
@@ -1384,7 +1413,7 @@ function checkout(rem,darts,dout){if(rem<=0||rem>170||darts<1)return null;const 
 /* ---------- game screen ---------- */
 function cShell(){const G=GAMES[C.game];return`
   <header class="top">
-    <div class="titleblock"><h1 class="brand"><span>${esc(G.name)}</span></h1><div class="round" id="cround"></div><div class="timer" id="ctimer"></div></div>
+    <div class="titleblock"><h1 class="brand"><span>${C.game==='bingo'&&C.opts.bsteal?'☠ Pirate Bingo':esc(G.name)}</span></h1><div class="round" id="cround"></div><div class="timer" id="ctimer"></div></div>
     <div class="spacer"></div>
     <button class="btn" data-act="c-undo" id="cundo">↶ Undo</button>
     <button class="btn" data-act="g-menu">All games</button>
@@ -1414,6 +1443,7 @@ function renderClassic(){
   cFill();cPaint();
 }
 function coBigHTML(p){if(C.game!=='x01'||!p.opened)return'';const co=checkout(p.rem,3-C.darts.length,C.opts.dout);return co?`<span class="coBig"><small>OUT</small>${co.join(' ')}</span>`:''}
+function bingoBoardSmall(){try{return localStorage.getItem('darts.bingoSmall')==='1'}catch(e){return false}}
 function cAim(p){const g=C.game,o=C.opts;
   if(g==='x01'){if(!p.opened)return'Need a double to start';const co=checkout(p.rem,3-C.darts.length,o.dout);const best=Math.min(...C.players.map(q=>q.rem));const gap=p.rem-best;return`${p.rem} left${C.players.length>1?(gap?` · ${gap} behind`:' · leader'):''}${co?'':p.rem<=170?' · no checkout this turn':''}`}
   if(g==='atw'){const T=atwTargets();return`Aim for ${numName(T[p.ti])}`}
@@ -1438,7 +1468,9 @@ function cFill(){
     out+=`<li><span class="who" style="color:var(--t${f.pi})">${esc(f.who)}</span><span class="hit">${f.label}</span><span class="what">${esc(f.text)}</span><span class="delta ${cls}">${dv}</span></li>`}
   fd.innerHTML=out||`<li class="empty">Every dart shows up here. Tap the board where ${esc(p.name)}'s first dart landed.</li>`;if(atTop)fd.scrollTop=0;
   const slots=[0,1,2].map(i=>`<div class="slot${C.darts[i]?' filled':''}">${C.darts[i]||'·'}</div>`).join('');
-  $('#dartbar').innerHTML=over?'':(C.pending||C.alloc)?`<div class="slots">${slots}</div>`:`<div class="slots">${slots}</div><button class="btn missbtn" data-act="c-miss">Miss</button><button class="btn missbtn offbtn" data-act="c-off">Off board</button>`;
+  const cg=$('.cgame');if(cg)cg.classList.toggle('bcollapsed',g==='bingo'&&bingoBoardSmall());
+  const bTog=g==='bingo'&&!over&&!C.pending&&!C.alloc?`<button class="btn missbtn btog" data-act="c-bcol" aria-pressed="${bingoBoardSmall()}" title="${bingoBoardSmall()?'Make the dartboard bigger':'Shrink the dartboard to see the bingo card bigger'}">${bingoBoardSmall()?'▴ Board':'▾ Board'}</button>`:'';
+  $('#dartbar').innerHTML=over?'':(C.pending||C.alloc)?`<div class="slots">${slots}</div>`:`<div class="slots">${slots}</div><button class="btn missbtn" data-act="c-miss">Miss</button><button class="btn missbtn offbtn" data-act="c-off">Off board</button>${bTog}`;
   const th=$('#thrower'),od=$('#ondeck');
   th.style.setProperty('--tc',`var(--t${C.turn})`);
   th.innerHTML=over||C.pending||C.alloc?'':`<span class="dartn">Throwing</span><span class="tname">${esc(p.name)}</span>${C.bonus?`<span class="dartn" style="color:var(--tc)">Bonus round${C.bonus>1?' ×'+C.bonus:''}</span>`:''}<span class="dartn">Dart ${C.darts.length+1} of 3</span>${coBigHTML(p)}<span class="dartn aim">${esc(cAim(p))}</span>`;
@@ -1557,7 +1589,7 @@ function cResultHTML(){const g=C.game,w=C.winner,W=w==null?null:C.players[w];
     baseball:()=>[p.runs,Math.max(0,...p.inn.map(v=>v||0)),p.darts],knockout:()=>[p.out?'Out':p.lives,p.best||0,p.strikes]})[g]();
   return`<div class="overlay"><div class="result wide">
     <div><div style="font-size:12px;letter-spacing:.14em;text-transform:uppercase;color:var(--muted);font-weight:600">${esc(GAMES[g].name)} · ${C.round} round${C.round>1?'s':''} · ${fmtDur(C.endedAt-C.startedAt)}</div>
-    ${W?`<h2 class="winner" style="color:var(--t${w})">${esc(W.name)} wins</h2>${g==='bounty'?`<div style="color:var(--muted)">$${W.score} in the saddlebag</div>`:''}`:`<h2 class="winner">Tied at $${C.players[C.tied[0]].score}</h2><div style="color:var(--muted)">${C.tied.map(i=>esc(C.players[i].name)).join(' & ')}: shoot for the bull, closest takes it.</div>`}</div>
+    ${g==='bingo'&&C.cats?`<h2 class="winner">Cat's game</h2><div style="color:var(--muted)">Every row is blocked, so nobody can make a line. ${(()=>{const mx=Math.max(...C.players.map(q=>q.claims));const top=C.players.filter(q=>q.claims===mx);return mx?`Most squares: ${top.map(q=>esc(q.name)).join(' & ')} (${mx}).`:''})()}</div>`:W?`<h2 class="winner" style="color:var(--t${w})">${esc(W.name)} wins</h2>${g==='bounty'?`<div style="color:var(--muted)">$${W.score} in the saddlebag</div>`:''}`:`<h2 class="winner">Tied at $${C.players[C.tied[0]].score}</h2><div style="color:var(--muted)">${C.tied.map(i=>esc(C.players[i].name)).join(' & ')}: shoot for the bull, closest takes it.</div>`}</div>
     <div style="overflow-x:auto"><table class="pstats"><thead><tr><th>Player</th>${head.map(h=>`<th>${h}</th>`).join('')}</tr></thead>
     <tbody>${rows.map(({p,i})=>`<tr><td><span style="color:var(--t${i})">${esc(p.name)}</span>${i===w?' 🏆':''}${C.tied&&C.tied.length>1&&C.tied.includes(i)?' (tied)':''}</td>${cells(p).map(c=>`<td>${c}</td>`).join('')}</tr>`).join('')}</tbody></table></div>
     <div class="actions"><button class="btn primary big" data-act="c-rematch">Rematch</button><button class="btn big" data-act="c-setup">Change players</button><button class="btn big" data-act="g-menu">All games</button><button class="btn big" data-act="c-review">View board</button><button class="btn big" data-act="c-undo">↶ Undo last dart</button></div>
@@ -1578,6 +1610,7 @@ function bindClassic(){
     if(a==='c-color'){readC();cdraft.players[+b.dataset.p].color=b.dataset.color;csave();renderClassic()}
     if(a==='c-shuffle'){readC();const part=shuffle(cdraft.players.slice(0,cdraft.n));cdraft.players.splice(0,cdraft.n,...part);csave();renderClassic()}
     if(a==='c-start'){readC();ui.creview=false;cNew()}
+    if(a==='c-bcol'){try{localStorage.setItem('darts.bingoSmall',bingoBoardSmall()?'0':'1')}catch(e){}cFill();return}
     if(a==='c-pick'&&C&&C.alloc){C.alloc.sel[+b.dataset.d]=+b.dataset.i;ui.justPick=b.dataset.d+'-'+b.dataset.i;csave();cFill();ui.justPick=null;buzz(1)}
     if(a==='c-alloc')bingoCommit();
     if(a==='c-combo'&&C&&C.alloc){C.alloc.combo=b.dataset.k||null;csave();cFill()}
