@@ -432,6 +432,14 @@ button:focus-visible,input:focus-visible{outline:2px solid var(--chalk);outline-
 .g-cricket .ctable td.pts{font-size:32px}
 .g-cricket .ctable .cmk.c3{border-width:3px}
 @media (min-width:900px){.g-cricket.game{grid-template-columns:minmax(0,1fr) 440px}}
+/* tablet landscape (iPad sideways): one-line header so the board sits high and the dart bar stays on screen */
+@media (orientation:landscape) and (min-width:900px) and (max-height:1100px){
+  body{padding-block:8px}
+  .wrap{gap:4px}
+  .top .titleblock{flex-direction:row;flex-wrap:wrap;align-items:baseline;gap:2px 14px}
+  .brand{font-size:40px!important}
+  .boardbox{width:min(calc(100dvh - 140px),78cqw)!important}
+}
 /* tablet portrait (iPad): board on top, scoreboard + feed side by side below */
 @media (min-width:701px) and (min-aspect-ratio:5/8) and (max-aspect-ratio:1/1){
   .game{grid-template-columns:minmax(0,1fr)!important}
@@ -490,18 +498,27 @@ let S=null; let history=[]; let ui={confirm:false};
 const COLORS={orange:{c:'#ff8a3d',ink:'#2a1606',label:'Orange'},blue:{c:'#3fb4e6',ink:'#06202b',label:'Blue'},purple:{c:'#c08cff',ink:'#1f0d38',label:'Purple'},lime:{c:'#a6e04a',ink:'#1a2606',label:'Lime'},red:{c:'#ff5a5f',ink:'#2e0709',label:'Red'},yellow:{c:'#ffd23f',ink:'#2b2104',label:'Yellow'},pink:{c:'#ff6fb5',ink:'#33081d',label:'Pink'},teal:{c:'#2fd4b0',ink:'#052a22',label:'Teal'},silver:{c:'#c9d1d9',ink:'#1b2126',label:'Silver'},olive:{c:'#a3a83a',ink:'#22240a',label:'Olive'}};
 const DEF_TEAMS=['Home','Away','Wild','Rogue','Storm','Ace','Blaze','Comet'].map((name,i)=>({name,color:['orange','blue','purple','lime','red','teal','yellow','pink'][i],solo:`Player ${i+1}`,players:[`Player ${2*i+1}`,`Player ${2*i+2}`]}));
 function applyColors(teams){const r=document.documentElement.style;teams.forEach((t,i)=>{let k=COLORS[t.color]?t.color:(DEF_TEAMS[i]||DEF_TEAMS[0]).color;if(teams.slice(0,i).some(o=>o.color===k))k=Object.keys(COLORS).find(c=>!teams.slice(0,i).some(o=>o.color===c));t.color=k;r.setProperty('--t'+i,COLORS[k].c);r.setProperty('--t'+i+'-ink',COLORS[k].ink)})}
-let setupDraft={teams:JSON.parse(JSON.stringify(DEF_TEAMS)),numTeams:3,perTeam:2,rounds:8,penalty:0.5};
+let setupDraft={teams:JSON.parse(JSON.stringify(DEF_TEAMS)),numTeams:3,perTeam:2,rounds:8,penalty:0.5,mode:'rounds',minutes:40};
 function normDraft(){const d=setupDraft;d.teams=d.teams||[];for(let i=0;i<8;i++){d.teams[i]=Object.assign({},JSON.parse(JSON.stringify(DEF_TEAMS[i])),d.teams[i]||{})}d.perTeam=d.perTeam||2;if(d.penalty==null||!d.penV2){d.penalty=0.5;d.penV2=1}d.numTeams=d.numTeams||2;if(d.perTeam===2&&d.numTeams>5)d.numTeams=5}
 
 function freshTerr(){const t={};[...ORDER,25].forEach(n=>t[n]={owner:null,s:0});return t}
 function newGame(cfg){const P=cfg.perTeam||cfg.teams[0].players.length;const teams=cfg.teams.slice(0,cfg.numTeams||cfg.teams.length).map(t=>P===1?{name:t.solo||t.name,color:t.color,players:[t.solo||t.players[0]]}:{name:t.name,color:t.color,players:t.players.slice(0,2)});
-  return{phase:'play',teams,rounds:cfg.rounds,penalty:cfg.penalty==null?0.5:cfg.penalty,penV2:1,startedAt:Date.now(),roundStartedAt:Date.now(),roundTimes:[],off:teams.map(()=>0),shame:{},round:1,turnIdx:0,darts:[],pending:false,lastTurn:null,terr:freshTerr(),feed:[]}}
+  const mode=cfg.mode||'rounds';
+  return{phase:'play',teams,mode,timeLimit:cfg.minutes||40,baseRounds:cfg.rounds,finalRound:false,rounds:mode==='rounds'?cfg.rounds:999,penalty:cfg.penalty==null?0.5:cfg.penalty,penV2:1,startedAt:Date.now(),roundStartedAt:Date.now(),roundTimes:[],off:teams.map(()=>0),shame:{},round:1,turnIdx:0,darts:[],pending:false,lastTurn:null,terr:freshTerr(),feed:[]}}
 function save(){try{localStorage.setItem(STORE,JSON.stringify({S,history:history.slice(-40),setupDraft}))}catch(e){}}
 function load(){try{const d=JSON.parse(localStorage.getItem(STORE)||'null');if(d){if(d.setupDraft)setupDraft=d.setupDraft;normDraft();if(d.S&&d.S.phase!=='setup'){S=d.S;history=d.history||[]}}}catch(e){}}
 function snap(){history.push(JSON.stringify(S))}
 
 const NT=()=>S.teams.length;const PP=()=>S.teams[0].players.length;const TPR=()=>NT()*PP();
 function current(){const N=NT();const team=S.turnIdx%N;const p=Math.floor(S.turnIdx/N);return{team,player:p,name:S.teams[team].players[p]}}
+const TURF_ALL=()=>[...ORDER,25].filter(n=>S.terr[n].owner!=null).length;
+function timeLeftMs(){return S.timeLimit*60000-((S.endedAt||Date.now())-S.startedAt)}
+// time/claim modes: once the end condition hits, finish the current round so everyone gets the same turns
+function checkFinal(){if(!S||S.phase!=='play'||S.finalRound||!S.mode||S.mode==='rounds')return false;
+  const hit=S.mode==='time'?timeLeftMs()<=0:TURF_ALL()===21;if(!hit)return false;S.finalRound=true;S.rounds=S.round;return true}
+function roundLabel(){if(!S.mode||S.mode==='rounds')return`Round <b>${Math.min(S.round,S.rounds)}</b> of ${S.rounds}`;
+  if(S.finalRound)return`<b>Final round</b>${S.mode==='claim'?' · all turf claimed':' · time is up'}`;
+  return S.mode==='time'?`Round <b>${S.round}</b> · ${S.timeLimit} min game`:`Round <b>${S.round}</b> · <b>${TURF_ALL()}</b>/21 claimed`}
 function nextUp(){const N=NT();let t=S.turnIdx+1,r=S.round;if(t===TPR()){t=0;r++}if(r>S.rounds)return null;const team=t%N;return{team,name:S.teams[team].players[Math.floor(t/N)]}}
 function numName(n){return n===25?'Bull':String(n)}
 const RSTORE='darts.roster.v1';
@@ -571,7 +588,7 @@ function throwDart(n,mult){buzz(n);
   const after=S.teams.map((_,i)=>tally(i).total);const dl=after.map((v,i)=>+(v-before[i]).toFixed(2));
   {const tl=S.turn[S.turn.length-1];tl.d=dl[c.team];tl.opp=dl.map((v,i)=>[i,v]).filter(([i,v])=>i!==c.team&&v!==0)}
   S.feed.unshift({team:c.team,who:c.name,label,text,kind:r.kind,r:S.round,d:dl[c.team],opp:dl.map((v,i)=>[i,v]).filter(([i,v])=>i!==c.team&&v!==0)});
-  if(S.darts.length===3){S.pending=true;S.lastTurn={team:c.team,who:c.name,darts:S.darts.slice(),turn:S.turn.slice()};if(!nextUp()){S.phase='over';S.endedAt=Date.now()}}
+  if(S.darts.length===3){S.pending=true;S.lastTurn={team:c.team,who:c.name,darts:S.darts.slice(),turn:S.turn.slice()};checkFinal();if(!nextUp()){S.phase='over';S.endedAt=Date.now()}}
   save();render();
   if(offboard)showOff(c.name);
   if(n>0){const el=document.querySelector(`[data-n="${n}"][data-m="${mult}"]`);if(el){el.classList.remove('flash');void el.getBBox();el.classList.add('flash')}}
@@ -664,8 +681,10 @@ function setupView(){
       <div class="shufflebar">${P===2?'<button type="button" class="btn" id="shuf-teams">Random teams</button>':''}<button type="button" class="btn" id="shuf-order">Random order</button></div>
       ${[...Array(N).keys()].map(tf).join('')}
       <div class="order"><span class="fieldlabel" style="margin:0 6px 0 0">Throwing order</span>${throwOrder(d).map((x,k)=>`${k?'<span>→</span>':''}<b style="color:var(--t${x.t})">${esc(x.n)}</b>`).join('')}</div>
-      <div><span class="fieldlabel">Rounds</span><div class="seg-ctl" id="rounds">${[6,8,10,12].map(r=>`<button type="button" data-r="${r}" aria-pressed="${r===d.rounds}">${r}</button>`).join('')}</div>
-      <div style="font-size:13px;color:var(--muted);margin-top:6px">Each round, every player throws 3 darts. ${d.rounds} rounds with ${N*P} players runs about ${mins} minutes.</div></div>
+      <div><span class="fieldlabel">Game length</span><div class="seg-ctl" id="glen">${[['rounds','Rounds'],['time','Timed'],['claim','Until all claimed']].map(([k,l])=>`<button type="button" data-k="${k}" aria-pressed="${k===(d.mode||'rounds')}">${l}</button>`).join('')}</div></div>
+      ${(d.mode||'rounds')==='rounds'?`<div><span class="fieldlabel">Rounds</span><div class="seg-ctl" id="rounds">${[6,8,10,12].map(r=>`<button type="button" data-r="${r}" aria-pressed="${r===d.rounds}">${r}</button>`).join('')}</div>
+      <div style="font-size:13px;color:var(--muted);margin-top:6px">Each round, every player throws 3 darts. ${d.rounds} rounds with ${N*P} players runs about ${mins} minutes.</div></div>`:d.mode==='time'?`<div><span class="fieldlabel">Minutes</span><div class="seg-ctl" id="gmins">${[20,40,60].map(m=>`<button type="button" data-m="${m}" aria-pressed="${m===(d.minutes||40)}">${m} min</button>`).join('')}</div>
+      <div style="font-size:13px;color:var(--muted);margin-top:6px">A countdown runs at the top. When it hits zero, the current round is finished so everyone gets the same number of turns, then the game ends.</div></div>`:`<div style="font-size:13px;color:var(--muted)">No time limit. Once every number and the Bull has an owner, that round is played out and the game ends. Locks that get broken back to neutral can stretch it out.</div>`}
       <div><span class="fieldlabel">Off-the-board penalty</span><div class="seg-ctl" id="pen">${[[0,'None'],[0.5,'−0.5 point'],[1,'−1 point']].map(([k,l])=>`<button type="button" data-k="${k}" aria-pressed="${k===d.penalty}">${l}</button>`).join('')}</div>
       <div style="font-size:13px;color:var(--muted);margin-top:6px">Tap Off board when a dart misses the whole board. Tap Miss for darts that land on the board but outside the scoring rings.</div></div>
       <button class="btn primary big" id="start">Start game</button>
@@ -699,7 +718,9 @@ function bindSetup(){
   $('#fmt').addEventListener('click',e=>{const b=e.target.closest('button');if(!b)return;readSetup();setupDraft.perTeam=+b.dataset.k;if(setupDraft.perTeam===2&&setupDraft.numTeams>5)setupDraft.numTeams=5;render()});
   $('#nteams').addEventListener('click',e=>{const b=e.target.closest('button');if(!b)return;readSetup();setupDraft.numTeams=+b.dataset.k;render()});
   document.querySelectorAll('.swatches').forEach(g=>g.addEventListener('click',e=>{const b=e.target.closest('.sw');if(!b||b.disabled)return;readSetup();setupDraft.teams[+b.dataset.team].color=b.dataset.color;render()}));
-  $('#rounds').addEventListener('click',e=>{const b=e.target.closest('button');if(!b)return;setupDraft.rounds=+b.dataset.r;readSetup();render()});
+  const rEl=$('#rounds');if(rEl)rEl.addEventListener('click',e=>{const b=e.target.closest('button');if(!b)return;setupDraft.rounds=+b.dataset.r;readSetup();render()});
+  $('#glen').addEventListener('click',e=>{const b=e.target.closest('button');if(!b)return;readSetup();setupDraft.mode=b.dataset.k;render()});
+  const mEl=$('#gmins');if(mEl)mEl.addEventListener('click',e=>{const b=e.target.closest('button');if(!b)return;readSetup();setupDraft.minutes=+b.dataset.m;render()});
   $('#start').addEventListener('click',()=>{readSetup();setupDraft.teams.slice(0,setupDraft.numTeams).forEach(t=>{if(setupDraft.perTeam===1)rosterAdd(t.solo);else t.players.forEach(rosterAdd)});S=newGame(setupDraft);history=[];ui.confirm=false;save();render()});
 }
 function readSetup(){
@@ -755,11 +776,11 @@ function bindApp(){
     if(a==='offboard'){if(S.phase==='tb')tbThrow(-1,0);else throwDart(-1,0)}
     if(a==='tb-start')startTB();
     if(a==='tb-reroll'){snap();S.tb.target=pickTarget(S.tb.target);save();render()}
-    if(a==='extend'){snap();S.rounds+=+b.dataset.k;S.phase='play';S.endedAt=null;S.tbWinner=null;S.tb=null;S.pending=true;ui.review=false;save();render()}
+    if(a==='extend'){snap();S.finalRound=true;S.rounds+=+b.dataset.k;S.phase='play';S.endedAt=null;S.tbWinner=null;S.tb=null;S.pending=true;ui.review=false;save();render()}
     if(a==='next')advance();
     if(a==='keep'){ui.confirm=false;fillGame()}
     if(a==='end'||a==='setup'){S=null;history=[];ui.confirm=false;save();render()}
-    if(a==='rematch'){const cfg={teams:S.teams,numTeams:S.teams.length,rounds:S.rounds,penalty:S.penalty};S=newGame(cfg);history=[];save();render()}
+    if(a==='rematch'){const cfg={teams:S.teams,numTeams:S.teams.length,rounds:S.mode&&S.mode!=='rounds'?(S.baseRounds||8):S.rounds,penalty:S.penalty,mode:S.mode||'rounds',minutes:S.timeLimit};S=newGame(cfg);history=[];save();render()}
     if(a==='settings-open'){ui.settings={teams:JSON.parse(JSON.stringify(S.teams)),rounds:S.rounds,penalty:S.penalty==null?0.5:S.penalty};renderSettings()}
     if(a==='set-cancel'){ui.settings=null;renderSettings();render()}
     if(a==='set-rminus'||a==='set-rplus'){readSettings();const d=ui.settings;d.rounds=Math.max(S.round,Math.min(30,d.rounds+(a==='set-rplus'?1:-1)));renderSettings()}
@@ -779,6 +800,8 @@ window.addEventListener('resize',()=>{if(S&&$('#thrower'))fitNames()});
 try{document.fonts.ready.then(()=>{if(S&&$('#thrower'))fitNames()})}catch(e){}
 function fmtDur(ms){ms=Math.max(0,ms);const t=Math.floor(ms/1000),h=Math.floor(t/3600),m=Math.floor(t%3600/60),sec=t%60;const p=n=>String(n).padStart(2,'0');return h?`${h}:${p(m)}:${p(sec)}`:`${m}:${p(sec)}`}
 function tick(){const el=$('#timer');if(!el||!S||!S.startedAt)return;const now=S.phase==='over'&&S.endedAt?S.endedAt:Date.now();
+  if(S.mode==='time'&&S.phase==='play'&&checkFinal()){if(S.pending&&!nextUp()){S.phase='over';S.endedAt=Date.now()}save();render();return}
+  if(S.mode==='time'&&S.phase!=='over'){const l=Math.max(0,S.timeLimit*60000-(now-S.startedAt));el.innerHTML=l>0?`Time left <b>${fmtDur(l)}</b>`:`<b>Time is up</b> · finish the round`;return}
   el.innerHTML=`Game <b>${fmtDur(now-S.startedAt)}</b>${S.phase==='over'?'':` · Round <b>${fmtDur(now-(S.roundStartedAt||S.startedAt))}</b>`}`;
   el.title=S.timerJoined?'Timer started when it was added mid-game':''}
 setInterval(tick,1000);
@@ -796,9 +819,9 @@ function playerStats(){const m=new Map();
     if(f.kind==='lock')p.lock++;if(f.kind==='steal')p.steal++;if(f.kind==='break')p.brk++;if(f.kind==='off'||f.label==='OFF')p.off++}
   const arr=[...m.values()].map(p=>({...p,gain:+p.gain.toFixed(2),dmg:+p.dmg.toFixed(2),impact:+(p.gain+p.dmg).toFixed(2)}));
   return arr.sort((a,b)=>b.impact-a.impact||b.gain-a.gain)}
-function dartsLeft(i,k){if(!S||S.phase!=='play')return 0;const N=NT(),slot=k*N+i;
+function dartsLeft(i,k){if(!S||S.phase!=='play')return 0;if(S.mode&&S.mode!=='rounds'&&!S.finalRound)return null;const N=NT(),slot=k*N+i;
   let d=(S.rounds-S.round)*3;if(slot>S.turnIdx)d+=3;else if(slot===S.turnIdx&&!S.pending)d+=3-S.darts.length;return Math.max(0,d)}
-const leftBadge=n=>n?`<span class="left" title="Darts left in the game">${n} left</span>`:'<span class="left done">Done</span>';
+const leftBadge=n=>n==null?'':n?`<span class="left" title="Darts left in the game">${n} left</span>`:'<span class="left done">Done</span>';
 // 4 players x 6 rounds = about 30 minutes, so each turn is about 1.25 minutes
 function estMin(turns){return Math.max(5,Math.round(turns*1.25/5)*5)}
 function extendBtns(){const t=NT()*PP();return[1,2,3].map(k=>`<button class="btn big" data-act="extend" data-k="${k}">+${k} round${k>1?'s':''} <span style="color:var(--muted);font-weight:500">~${Math.max(1,Math.round(k*t*1.25))} min</span></button>`).join('')}
@@ -827,7 +850,7 @@ function tbHTML(){const tb=S.tb;const side=tb.sides[tb.idx];
     <div class="tbmeta">Pass ${tb.cycle}${tb.log.length?'':' · <button class="btn" data-act="tb-reroll">Pick a different number</button>'}</div></div></div>`}
 function fillGame(){
   const c=current();const over=S.phase!=='play',ended=S.phase==='over',inTB=S.phase==='tb';
-  $('#round').innerHTML=inTB?'<b>Tiebreaker</b>':`Round <b>${Math.min(S.round,S.rounds)}</b> of ${S.rounds}`;
+  $('#round').innerHTML=inTB?'<b>Tiebreaker</b>':roundLabel();
   $('#tbslot').innerHTML=inTB?tbHTML():'';
   $('#undo').disabled=!history.length;
   $('#confirmslot').innerHTML=ui.confirm?`<div class="confirm"><span>End this game and go back to setup? Scores will be cleared.</span><button class="btn" data-act="keep">Keep playing</button><button class="btn primary" data-act="end">End game</button></div>`:'';
@@ -844,7 +867,7 @@ function fillGame(){
     return`<div class="team${active?' active':''}${rank===1?' first':''}${allDone?' done':''}" data-t="${i}" style="--tc:var(--t${i})">
       <div class="rank">${rank}</div>
       <div class="mid"><div class="name">${esc(Tm.name)}</div>
-      ${Tm.players.length===1?'':`<div class="players">${Tm.players.map((p,k2)=>`<span class="${k2===upIdx&&!over?'up':''}${!over&&!dl[k2]?' isdone':''}">${esc(p)}${over?'':leftBadge(dl[k2])}</span>`).join('')}</div>`}
+      ${Tm.players.length===1?'':`<div class="players">${Tm.players.map((p,k2)=>`<span class="${k2===upIdx&&!over?'up':''}${!over&&dl[k2]===0?' isdone':''}">${esc(p)}${over?'':leftBadge(dl[k2])}</span>`).join('')}</div>`}
       <div class="stats">${t.held} numbers · ${t.locks} locked${t.chain?` · chain +${t.chain}`:''}${t.pen?` · <span style="color:#ff8f8f">−${t.pen} off</span>`:''}</div></div>
       <div class="right"><div class="score">${t.total}</div><div class="gap">${gap}</div>${Tm.players.length===1&&!over?leftBadge(dl[0]):''}</div></div>`}).join('');
   $('#mini').innerHTML=T.map(r=>`<span class="mchip${!over&&c.team===r.i?' on':''}" style="--tc:var(--t${r.i})">${esc(S.teams[r.i].name)} <b>${r.t.total}</b></span>`).join('');
@@ -925,11 +948,11 @@ function renderSettings(){
     <div><label for="st-p${i}b">Thrower 2</label><input id="st-p${i}b" maxlength="14" value="${esc(t.players[1])}"></div></div>`}</div>`;
   slot.innerHTML=`<div class="overlay" style="z-index:30"><div class="result" role="dialog" aria-label="Game settings">
     <h2 class="winner" style="font-size:40px">Settings</h2>
-    <div><span class="fieldlabel">Rounds</span><div class="stepper">
+    ${S.mode&&S.mode!=='rounds'?`<div><span class="fieldlabel">Game length</span><div style="color:var(--muted)">${S.mode==='time'?`${S.timeLimit} minutes. The game ends after the round where time runs out.`:'Until all turf is claimed. The game ends after that round.'}</div></div>`:`<div><span class="fieldlabel">Rounds</span><div class="stepper">
       <button class="btn" data-act="set-rminus" aria-label="Fewer rounds" ${d.rounds<=S.round?'disabled':''}>−</button>
       <span class="val">${d.rounds}</span>
       <button class="btn" data-act="set-rplus" aria-label="More rounds" ${d.rounds>=30?'disabled':''}>+</button>
-      <span style="color:var(--muted);font-size:13px">Now on round ${Math.min(S.round,S.rounds)}. Can't go below it.</span></div></div>
+      <span style="color:var(--muted);font-size:13px">Now on round ${Math.min(S.round,S.rounds)}. Can't go below it.</span></div></div>`}
     <div><span class="fieldlabel">Off-the-board penalty</span><div class="seg-ctl">${[[0,'None'],[0.5,'−0.5 point'],[1,'−1 point']].map(([k,l])=>`<button type="button" data-act="set-pen" data-k="${k}" aria-pressed="${k===d.penalty}">${l}</button>`).join('')}</div></div>
     <div class="settings-teams">${d.teams.map(tf).join('')}</div>
     <div style="color:var(--muted);font-size:13px">Changes keep the board, scores and turn order as they are. Undo reverses them.</div>
@@ -954,7 +977,7 @@ function resultView(){
   const row=(l,f)=>`<tr><td>${l}</td>${T.map(t=>`<td>${f(t)}</td>`).join('')}</tr>`;
   const ps=playerStats();const mvp=ps[0]&&ps[0].darts?ps[0]:null;
   return`<div class="overlay"><div class="result wide">
-    <div><div style="font-size:12px;letter-spacing:.14em;text-transform:uppercase;color:var(--muted);font-weight:600">Final after ${S.rounds} rounds</div>
+    <div><div style="font-size:12px;letter-spacing:.14em;text-transform:uppercase;color:var(--muted);font-weight:600">Final after ${S.rounds} round${S.rounds===1?'':'s'}${S.mode==='time'?` · ${S.timeLimit} min game`:S.mode==='claim'?' · all turf claimed':''}</div>
     <h2 class="winner" style="color:${w===null?'var(--chalk)':`var(--t${w})`}">${head}</h2><div style="color:var(--muted)">${sub}</div></div>
     <div style="overflow-x:auto"><table><thead><tr><th></th>${S.teams.map((t,i)=>`<th style="color:var(--t${i})">${esc(t.name)}<div style="font-family:var(--font-body);font-size:11.5px;font-weight:500;color:var(--muted);letter-spacing:0;text-transform:none;margin-top:2px">${T[i].held} held · ${T[i].locks} locked</div></th>`).join('')}</tr></thead>
     <tbody>${row('Held numbers <small style="opacity:.7">1 pt each</small>',t=>t.heldPts)}${row('Locked numbers <small style="opacity:.7">2 pts each</small>',t=>t.lockPts?'+'+t.lockPts:'0')}${row('Bull <small style="opacity:.7">counts double</small>',t=>t.bull?'+'+t.bull:'0')}${row('Chain bonus',t=>t.chain?'+'+t.chain:'0')}${row('Off the board',t=>t.pen?'−'+t.pen:'0')}</tbody>
@@ -1008,7 +1031,7 @@ function menuView(){
   const card=(act,extra,title,tag,meta,cls='')=>`<button type="button" class="gcard ${cls}" data-act="${act}" ${extra}><span class="gname">${title}</span><span class="gtag">${tag}</span><span class="gmeta">${meta}</span></button>`;
   return`<div class="menu">
     <div class="menuhead"><div><div class="eyebrow">Tap a game to start</div><h1 class="menutitle">Pick your game</h1></div></div>
-    ${turfLive||cLive?`<div class="resume">${turfLive?`<button class="btn big primary" data-act="g-turf">Resume Turf War · round ${Math.min(S.round,S.rounds)} of ${S.rounds}</button>`:''}${cLive?`<button class="btn big primary" data-act="g-cresume">Resume ${esc(GAMES[C.game].name)} · round ${C.round}</button>`:''}</div>`:''}
+    ${turfLive||cLive?`<div class="resume">${turfLive?`<button class="btn big primary" data-act="g-turf">Resume Turf War · ${roundLabel().replace(/<[^>]+>/g,'')}</button>`:''}${cLive?`<button class="btn big primary" data-act="g-cresume">Resume ${esc(GAMES[C.game].name)} · round ${C.round}</button>`:''}</div>`:''}
     <div class="menugrid">
       ${card('g-turf','','<span style="color:var(--t0)">Turf</span> <span style="color:var(--t1)">War</span>','Claim numbers, lock them, steal them, and chain neighbors for bonus points. Our house game.','2–10 players · solo or teams','feature')}
       ${card('g-classic','data-game="x01"','301 / 501',GAMES.x01.tag,'1–8 players · double-out optional')}
