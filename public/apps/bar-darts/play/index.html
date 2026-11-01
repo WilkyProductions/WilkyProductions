@@ -396,6 +396,26 @@ button:focus-visible,input:focus-visible{outline:2px solid var(--chalk);outline-
 .pickrow .btn small{font-family:var(--font-body);font-size:11px;letter-spacing:.1em;text-transform:uppercase;color:var(--muted)}
 .pickrow .btn.d{border-color:#1F7A42}.pickrow .btn.t{border-color:#C8352B}
 .pickback{position:fixed;inset:0;z-index:39;background:rgba(0,0,0,.35)}
+/* saved players */
+.roster{border:1px dashed var(--line);border-radius:12px;padding:12px;display:flex;flex-direction:column;gap:10px;background:color-mix(in srgb,var(--panel) 60%,transparent)}
+.roster .rhead{display:flex;justify-content:space-between;align-items:baseline;gap:8px;flex-wrap:wrap}
+.roster .rnote{font-size:12.5px;color:var(--muted)}
+.roster .radd{display:flex;gap:8px}
+.roster .radd input{flex:1;min-width:0;background:var(--bg);border:1px solid var(--line);border-radius:8px;padding:10px 12px;color:var(--chalk);font:inherit;font-size:16px}
+.roster .rchips{display:flex;flex-wrap:wrap;gap:6px}
+.roster .rchip{display:inline-flex;align-items:center;gap:2px;border:1px solid var(--line);border-radius:999px;padding:2px 2px 2px 12px;font-weight:600;font-size:14px;background:var(--bg)}
+.roster .rchip button{width:32px;height:32px;border-radius:50%;color:var(--muted);font-size:18px;line-height:1;display:inline-flex;align-items:center;justify-content:center}
+.roster .rchip button:hover{color:#ff8a8a;background:color-mix(in srgb,#ff5a5f 15%,transparent)}
+.roster .rempty{font-size:13.5px;color:var(--muted)}
+.teamform select{width:100%;background:var(--bg) url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='14' height='9' viewBox='0 0 14 9'%3E%3Cpath d='M1 1l6 6 6-6' fill='none' stroke='%23a9b3ac' stroke-width='2'/%3E%3C/svg%3E") no-repeat right 12px center;border:1px solid var(--line);border-radius:8px;padding:9px 34px 9px 10px;color:var(--chalk);font:inherit;-webkit-appearance:none;appearance:none}
+.teamform select.tname{font-family:var(--font-display);font-size:24px;padding:4px 34px 4px 10px;color:var(--tc);text-transform:uppercase}
+/* 301/501 checkout + gap */
+.thrower .coBig{font-family:var(--font-display);font-weight:700;font-size:clamp(30px,4.4vw,52px);line-height:.9;color:var(--tc);letter-spacing:.02em;white-space:nowrap}
+.thrower .coBig small{font-size:.45em;color:var(--muted);letter-spacing:.12em;margin-right:6px}
+.team .coRow{font-family:var(--font-display);font-size:26px;line-height:1;color:var(--tc);margin-top:3px;letter-spacing:.02em}
+.team .coRow small{font-size:13px;color:var(--muted);letter-spacing:.12em;margin-right:6px}
+.team .behind{font-family:var(--font-display);font-size:19px;line-height:1;color:var(--muted);white-space:nowrap}
+.team .behind.lead{color:var(--tc)}
 /* hit confirmation pop */
 .hitpop{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;pointer-events:none;z-index:6}
 .hitpop span{font-family:var(--font-display);font-weight:700;font-size:clamp(84px,24cqw,210px);line-height:.8;padding-top:.08em;color:var(--c);letter-spacing:.02em;text-shadow:0 0 0 #000,0 6px 30px rgba(0,0,0,.75),0 0 4px rgba(0,0,0,.9);animation:hitpop .6s ease-out forwards}
@@ -484,6 +504,28 @@ const NT=()=>S.teams.length;const PP=()=>S.teams[0].players.length;const TPR=()=
 function current(){const N=NT();const team=S.turnIdx%N;const p=Math.floor(S.turnIdx/N);return{team,player:p,name:S.teams[team].players[p]}}
 function nextUp(){const N=NT();let t=S.turnIdx+1,r=S.round;if(t===TPR()){t=0;r++}if(r>S.rounds)return null;const team=t%N;return{team,name:S.teams[team].players[Math.floor(t/N)]}}
 function numName(n){return n===25?'Bull':String(n)}
+const RSTORE='darts.roster.v1';
+function rosterGet(){try{const r=JSON.parse(localStorage.getItem(RSTORE)||'[]');return Array.isArray(r)?r:[]}catch(e){return[]}}
+function rosterSet(r){try{localStorage.setItem(RSTORE,JSON.stringify(r))}catch(e){}}
+const isDefName=n=>!n||/^(player|thrower) \d+$/i.test(n.trim());
+function rosterAdd(name){name=String(name||'').trim().slice(0,14);if(isDefName(name))return null;const r=rosterGet();const hit=r.find(x=>x.toLowerCase()===name.toLowerCase());if(hit)return hit;r.push(name);r.sort((a,b)=>a.localeCompare(b,undefined,{sensitivity:'base'}));rosterSet(r);return name}
+function rosterDel(name){rosterSet(rosterGet().filter(x=>x!==name))}
+function nameSelect(id,value,cls){const r=rosterGet();const opts=(value&&!r.includes(value)?[value]:[]).concat(r);
+  return`<select id="${id}"${cls?` class="${cls}"`:''} data-prev="${esc(value)}">${opts.map(n=>`<option value="${esc(n)}"${n===value?' selected':''}>${esc(n)}</option>`).join('')}<option value="__new">＋ Add new player…</option></select>`}
+function rosterHTML(){const r=rosterGet();
+  return`<div class="roster"><div class="rhead"><span class="fieldlabel" style="margin:0">Saved players</span><span class="rnote">Saved on this device. Pick them from each player's list.</span></div>
+    <div class="radd"><input id="rosterNew" maxlength="14" placeholder="New player name" autocomplete="off" aria-label="New player name"><button type="button" class="btn primary" data-act="r-add">＋ Add new player</button></div>
+    <div class="rchips">${r.length?r.map(n=>`<span class="rchip">${esc(n)}<button type="button" data-act="r-del" data-name="${esc(n)}" aria-label="Delete ${esc(n)}" title="Delete ${esc(n)}">×</button></span>`).join(''):'<span class="rempty">No saved players yet. Add your crew once and they stay here.</span>'}</div></div>`}
+function rosterRerender(target,name){if(appMode==='classic'){readC();renderClassic()}else{readSetup();render()}
+  if(target&&name){const el=document.getElementById(target);if(el){el.value=name;el.dataset.prev=name;if(appMode==='classic'){readC();csave()}else readSetup()}}}
+document.addEventListener('click',e=>{const b=e.target.closest&&e.target.closest('[data-act^="r-"]');if(!b)return;
+  if(b.dataset.act==='r-add'){const inp=$('#rosterNew');const v=inp?inp.value.trim():'';if(!v){if(inp)inp.focus();return}
+    const nm=rosterAdd(v);const tgt=ui.rosterTarget;ui.rosterTarget=null;rosterRerender(tgt,nm);if(!nm){const i2=$('#rosterNew');if(i2){i2.value=v;i2.focus()}}}
+  if(b.dataset.act==='r-del'){rosterDel(b.dataset.name);rosterRerender()}});
+document.addEventListener('change',e=>{const el=e.target;if(!el||el.tagName!=='SELECT'||!el.closest('.teamform'))return;
+  if(el.value==='__new'){el.value=el.dataset.prev||el.options[0].value;ui.rosterTarget=el.id;const inp=$('#rosterNew');if(inp){inp.focus();inp.scrollIntoView({block:'center',behavior:'smooth'})}}
+  else el.dataset.prev=el.value});
+document.addEventListener('keydown',e=>{if(e.key==='Enter'&&document.activeElement&&document.activeElement.id==='rosterNew'){e.preventDefault();e.stopImmediatePropagation();const b=document.querySelector('[data-act="r-add"]');if(b)b.click()}},true);
 function hitPop(n,m,col){const bb=document.getElementById('boardbox');if(!bb||n<0)return;
   const t=n===0?'MISS':n===25?(m===2?'BULL':'25'):(['','S','D','T'][m])+n;
   const old=bb.querySelector('.hitpop');if(old)old.remove();
@@ -606,11 +648,11 @@ function setupView(){
   const d=setupDraft,P=d.perTeam,N=d.numTeams;
   const mins=estMin(d.rounds*N*P);
   const tf=(i)=>`<div class="teamform" style="--tc:var(--t${i})">
-    ${P===1?`<label for="tn${i}">Player ${i+1}</label><input class="tname" id="tn${i}" maxlength="14" value="${esc(d.teams[i].solo)}">`
+    ${P===1?`<label for="tn${i}">Player ${i+1}</label>${nameSelect('tn'+i,d.teams[i].solo,'tname')}`
     :`<label for="tn${i}">Team ${i+1}</label><input class="tname" id="tn${i}" maxlength="16" value="${esc(d.teams[i].name)}">`}
     <div class="swatches" role="group" aria-label="Team ${i+1} color">${Object.entries(COLORS).map(([k,v])=>{const taken=d.teams.slice(0,d.numTeams).some((t,j)=>j!==i&&t.color===k);return`<button type="button" class="sw" data-team="${i}" data-color="${k}" style="--c:${v.c}" aria-label="${v.label}" title="${v.label}${taken?' (taken)':''}" aria-pressed="${d.teams[i].color===k}" ${taken?'disabled':''}></button>`}).join('')}</div>
-    ${P===1?'':`<div class="pair"><div><label for="p${i}a">Thrower 1</label><input id="p${i}a" maxlength="14" value="${esc(d.teams[i].players[0])}"></div>
-    <div><label for="p${i}b">Thrower 2</label><input id="p${i}b" maxlength="14" value="${esc(d.teams[i].players[1])}"></div></div>`}</div>`;
+    ${P===1?'':`<div class="pair"><div><label for="p${i}a">Thrower 1</label>${nameSelect('p'+i+'a',d.teams[i].players[0])}</div>
+    <div><label for="p${i}b">Thrower 2</label>${nameSelect('p'+i+'b',d.teams[i].players[1])}</div></div>`}</div>`;
   return`<div class="setup">
     <div class="form">
       <button type="button" class="btn" data-act="g-menu" style="align-self:flex-start">← All games</button>
@@ -618,6 +660,7 @@ function setupView(){
       ${gamePicker('turf')}
       <div><span class="fieldlabel">Format</span><div class="seg-ctl" id="fmt">${[[1,'Solo'],[2,'Pairs']].map(([k,l])=>`<button type="button" data-k="${k}" aria-pressed="${k===P}">${l}</button>`).join('')}</div></div>
       <div><span class="fieldlabel">${P===1?'Players':'Teams'}</span><div class="seg-ctl" id="nteams">${(P===1?[2,3,4,5,6,7,8]:[2,3,4,5]).map(k=>`<button type="button" data-k="${k}" aria-pressed="${k===N}">${P===1?(k===2?'1 vs 1':k):(k===2?'2 vs 2':k+' teams')}</button>`).join('')}</div></div>
+      ${rosterHTML()}
       <div class="shufflebar">${P===2?'<button type="button" class="btn" id="shuf-teams">Random teams</button>':''}<button type="button" class="btn" id="shuf-order">Random order</button></div>
       ${[...Array(N).keys()].map(tf).join('')}
       <div class="order"><span class="fieldlabel" style="margin:0 6px 0 0">Throwing order</span>${throwOrder(d).map((x,k)=>`${k?'<span>→</span>':''}<b style="color:var(--t${x.t})">${esc(x.n)}</b>`).join('')}</div>
@@ -657,7 +700,7 @@ function bindSetup(){
   $('#nteams').addEventListener('click',e=>{const b=e.target.closest('button');if(!b)return;readSetup();setupDraft.numTeams=+b.dataset.k;render()});
   document.querySelectorAll('.swatches').forEach(g=>g.addEventListener('click',e=>{const b=e.target.closest('.sw');if(!b||b.disabled)return;readSetup();setupDraft.teams[+b.dataset.team].color=b.dataset.color;render()}));
   $('#rounds').addEventListener('click',e=>{const b=e.target.closest('button');if(!b)return;setupDraft.rounds=+b.dataset.r;readSetup();render()});
-  $('#start').addEventListener('click',()=>{readSetup();S=newGame(setupDraft);history=[];ui.confirm=false;save();render()});
+  $('#start').addEventListener('click',()=>{readSetup();setupDraft.teams.slice(0,setupDraft.numTeams).forEach(t=>{if(setupDraft.perTeam===1)rosterAdd(t.solo);else t.players.forEach(rosterAdd)});S=newGame(setupDraft);history=[];ui.confirm=false;save();render()});
 }
 function readSetup(){
   for(let i=0;i<setupDraft.numTeams;i++){const T=setupDraft.teams[i],D=DEF_TEAMS[i];
@@ -1052,7 +1095,7 @@ function cSetupView(){
     bingo:`<div><span class="fieldlabel">Diagonals count</span>${seg('bdiag',[[true,'Yes'],[false,'No']])}<div style="font-size:13px;color:var(--muted);margin-top:6px">Each new game shuffles the numbers on the card.</div></div>`
   }[g];
   const pf=i=>{const p=d.players[i];return`<div class="teamform" style="--tc:var(--t${i})">
-    <label for="cp${i}">Player ${i+1}</label><input class="tname" id="cp${i}" maxlength="14" value="${esc(p.name)}">
+    <label for="cp${i}">Player ${i+1}</label>${nameSelect('cp'+i,p.name,'tname')}
     <div class="swatches" role="group" aria-label="Player ${i+1} color">${Object.entries(COLORS).map(([k,v])=>{const taken=d.players.slice(0,d.n).some((q,j)=>j!==i&&q.color===k);
       return`<button type="button" class="sw" data-act="c-color" data-p="${i}" data-color="${k}" style="--c:${v.c}" aria-label="${v.label}" aria-pressed="${p.color===k}" ${taken?'disabled':''}></button>`}).join('')}</div></div>`};
   const counts=[];for(let k=G.min;k<=gMax(g);k++)counts.push(k);
@@ -1063,6 +1106,7 @@ function cSetupView(){
       ${gamePicker(g)}
       <div><span class="fieldlabel">Players</span><div class="seg-ctl">${counts.map(k=>`<button type="button" data-act="c-n" data-v="${k}" aria-pressed="${k===d.n}">${k}</button>`).join('')}</div></div>
       ${opts}
+      ${rosterHTML()}
       <div class="shufflebar"><button type="button" class="btn" data-act="c-shuffle">Random order</button></div>
       ${[...Array(d.n).keys()].map(pf).join('')}
       <button class="btn primary big" id="start" data-act="c-start">Start ${esc(G.name)}</button>
@@ -1074,7 +1118,7 @@ function readC(){for(let i=0;i<cdraft.n;i++){const el=$('#cp'+i);if(el)cdraft.pl
 
 /* ---------- game state ---------- */
 function cNew(){
-  const d=cdraft,o=JSON.parse(JSON.stringify(d.opts));
+  const d=cdraft,o=JSON.parse(JSON.stringify(d.opts));d.players.slice(0,d.n).forEach(p=>rosterAdd(p.name));
   const players=d.players.slice(0,d.n).map(p=>({name:p.name,color:p.color}));
   const nums=shuffle([...Array(20)].map((_,i)=>i+1));
   players.forEach((p,i)=>{
@@ -1318,8 +1362,9 @@ function renderClassic(){
     $('#board').addEventListener('click',e=>{const s=e.target.closest('.seg');if(s){cThrow(+s.dataset.n,+s.dataset.m);return}if(e.target.id==='missring')cThrow(0,0)})}
   cFill();cPaint();
 }
+function coBigHTML(p){if(C.game!=='x01'||!p.opened)return'';const co=checkout(p.rem,3-C.darts.length,C.opts.dout);return co?`<span class="coBig"><small>OUT</small>${co.join(' ')}</span>`:''}
 function cAim(p){const g=C.game,o=C.opts;
-  if(g==='x01'){if(!p.opened)return'Need a double to start';const co=checkout(p.rem,3-C.darts.length,o.dout);return`${p.rem} left${co?' · '+co.join(' '):''}`}
+  if(g==='x01'){if(!p.opened)return'Need a double to start';const co=checkout(p.rem,3-C.darts.length,o.dout);const best=Math.min(...C.players.map(q=>q.rem));const gap=p.rem-best;return`${p.rem} left${C.players.length>1?(gap?` · ${gap} behind`:' · leader'):''}${co?'':p.rem<=170?' · no checkout this turn':''}`}
   if(g==='atw'){const T=atwTargets();return`Aim for ${numName(T[p.ti])}`}
   if(g==='killer')return p.killer?'Killer · hit their numbers':o.kmode==='double'?`Hit D${p.num} to become a killer`:`Hit ${p.num} to become a killer · ${p.hits||0} of 3`;
   if(g==='bingo'){const b=bingoBest(C.turn);return b?`Best line ${b} of 5 · claim 3 marks per square`:'Claim squares: 3 marks each'}
@@ -1345,7 +1390,7 @@ function cFill(){
   $('#dartbar').innerHTML=over?'':(C.pending||C.alloc)?`<div class="slots">${slots}</div>`:`<div class="slots">${slots}</div><button class="btn missbtn" data-act="c-miss">Miss</button><button class="btn missbtn offbtn" data-act="c-off">Off board</button>`;
   const th=$('#thrower'),od=$('#ondeck');
   th.style.setProperty('--tc',`var(--t${C.turn})`);
-  th.innerHTML=over||C.pending||C.alloc?'':`<span class="dartn">Throwing</span><span class="tname">${esc(p.name)}</span>${C.bonus?`<span class="dartn" style="color:var(--tc)">Bonus round${C.bonus>1?' ×'+C.bonus:''}</span>`:''}<span class="dartn">Dart ${C.darts.length+1} of 3</span><span class="dartn aim">${esc(cAim(p))}</span>`;
+  th.innerHTML=over||C.pending||C.alloc?'':`<span class="dartn">Throwing</span><span class="tname">${esc(p.name)}</span>${C.bonus?`<span class="dartn" style="color:var(--tc)">Bonus round${C.bonus>1?' ×'+C.bonus:''}</span>`:''}<span class="dartn">Dart ${C.darts.length+1} of 3</span>${coBigHTML(p)}<span class="dartn aim">${esc(cAim(p))}</span>`;
   const ni=cNextIdx(C.turn);
   if(!over&&!C.pending&&!C.alloc&&ni!==C.turn){od.style.setProperty('--tc',`var(--t${ni})`);od.innerHTML=`<span class="lbl">On deck</span><span class="dname">${esc(C.players[ni].name)}</span>`}else od.innerHTML='';
   fitNames();
@@ -1379,10 +1424,10 @@ function cScoreHTML(){const g=C.game,over=C.phase==='over';
   const row=(i,rank,mid,right,extra='')=>{const p=C.players[i],act=!over&&C.turn===i;
     return`<div class="team${act?' active':''}${rank===1?' first':''}${p.out?' done':''}" style="--tc:var(--t${i})"><div class="rank">${rank}</div><div class="mid"><div class="name">${esc(p.name)}</div>${mid}</div><div class="right">${right}</div>${extra}</div>`};
   const idx=C.players.map((_,i)=>i);
-  if(g==='x01'){idx.sort((a,b)=>C.players[a].rem-C.players[b].rem);
+  if(g==='x01'){idx.sort((a,b)=>C.players[a].rem-C.players[b].rem);const best=Math.min(...C.players.map(q=>q.rem));const multi=C.players.length>1;
     return`<div class="teams">${idx.map((i,k)=>{const p=C.players[i];const avg=p.darts?(p.scored/p.darts*3).toFixed(1):'–';
-      const co=p.rem<=170?checkout(p.rem,3,C.opts.dout):null;
-      return row(i,idx.findIndex(j=>C.players[j].rem===p.rem)+1,`<div class="stats">3-dart avg ${avg}${p.best?` · best ${p.best}`:''}${!p.opened?' · needs a double':''}${co?` · out: ${co.join(' ')}`:''}</div>`,`<div class="score">${p.rem}</div><div class="gap">left</div>`)}).join('')}</div>`}
+      const co=p.rem<=170?checkout(p.rem,3,C.opts.dout):null;const gap=p.rem-best;
+      return row(i,idx.findIndex(j=>C.players[j].rem===p.rem)+1,`<div class="stats">3-dart avg ${avg}${p.best?` · best ${p.best}`:''}${!p.opened?' · needs a double':''}</div>${co?`<div class="coRow"><small>OUT</small>${co.join(' ')}</div>`:''}`,`<div class="score">${p.rem}</div><div class="gap">left</div>${multi?`<div class="behind${gap===0?' lead':''}">${gap===0?'Leader':gap+' behind'}</div>`:''}`)}).join('')}</div>`}
   if(g==='atw'){const T=atwTargets();idx.sort((a,b)=>C.players[b].ti-C.players[a].ti);
     return`<div class="teams">${idx.map(i=>{const p=C.players[i];const pct=Math.round(p.ti/T.length*100);
       return row(i,idx.findIndex(j=>C.players[j].ti===p.ti)+1,`<div class="bar"><span style="width:${pct}%"></span></div><div class="stats">${p.ti} of ${T.length} done · ${p.darts} darts</div>`,`<div class="score">${p.ti>=T.length?'✓':numName(T[p.ti])}</div><div class="gap">${p.ti>=T.length?'finished':'target'}</div>`)}).join('')}</div>`}
@@ -1554,7 +1599,7 @@ document.addEventListener('keydown',e=>{
   // tie: Enter starts the tiebreaker
   const tb=document.querySelector('#resultslot [data-act="tb-start"]');if(tb){e.preventDefault();tb.click()}
 });
-load();normDraft();if(S&&!S.startedAt){S.startedAt=S.roundStartedAt=Date.now();S.roundTimes=[];S.timerJoined=1;save()}if(S&&!S.penV2){S.penalty=0.5;S.penV2=1;save()}cload();bindApp();bindClassic();render();
+load();normDraft();if(S&&!S.startedAt){S.startedAt=S.roundStartedAt=Date.now();S.roundTimes=[];S.timerJoined=1;save()}if(S&&!S.penV2){S.penalty=0.5;S.penV2=1;save()}cload();try{if(!localStorage.getItem(RSTORE)){cdraft.players.forEach(p=>rosterAdd(p.name));setupDraft.teams.forEach(t=>{rosterAdd(t.solo);(t.players||[]).forEach(rosterAdd)})}}catch(e){}bindApp();bindClassic();render();
 })();
 </script>
 <script>if('serviceWorker' in navigator){window.addEventListener('load',function(){navigator.serviceWorker.register('sw.js',{scope:'/apps/bar-darts/play/'}).catch(function(){})})}</script>
