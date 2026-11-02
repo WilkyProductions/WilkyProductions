@@ -1093,6 +1093,7 @@ function cRules(g){const o=C?C.opts:cdraft.opts;return({
     <li><b>To win,</b> close all seven and have the most points (or be tied for most).</li>`:'<li><b>No-points game:</b> first to close all seven wins.</li>'}
     <li>A number closed by everyone is dead and shows dark on the board.</li>`,
   atw:`<li><b>Hit 1, then 2, then 3,</b> all the way to 20${o.atwBull?', then the Bull':''}.</li>
+    ${o.atwBull?'<li><b>The Bull takes 3 bulls to finish.</b> Outer bull counts as 1, bullseye counts as 2.</li>':''}
     <li>Any single, double or triple of your number counts.</li>
     ${o.atwSkip?'<li><b>Doubles skip ahead 2, triples skip ahead 3.</b></li>':''}
     ${o.atwLast!==false?'<li><b>Last dart bonus:</b> hit your target with your third dart and you throw another three darts right away.</li>':''}
@@ -1234,7 +1235,9 @@ function cThrow(n,m){buzz(n);
   }
   else if(g==='atw'){
     const T=atwTargets(),t=T[p.ti];
-    if(n===t){atwHit=true;const adv=o.atwSkip?m:1;let ni=p.ti+adv;if(ni>=T.length)ni=(p.ti===T.length-1)?T.length:T.length-1;p.ti=ni;
+    if(n===t&&t===25){atwHit=true;p.bulls=Math.min(3,(p.bulls||0)+(m===2?2:1));
+      if(p.bulls>=3){p.ti=T.length;win=true;text='hit the third bull and made it all the way around!'}else text=`${m===2?'bullseye':'bull'}, ${p.bulls} of 3 bulls`}
+    else if(n===t){atwHit=true;const adv=o.atwSkip?m:1;let ni=p.ti+adv;if(ni>=T.length)ni=(p.ti===T.length-1)?T.length:T.length-1;p.ti=ni;
       if(p.ti>=T.length){win=true;text='made it all the way around!'}else text=`hit ${numName(t)}${adv>1?` (+${adv})`:''}, next: ${numName(T[p.ti])}`}
     else text=`needed ${numName(t)}`;
   }
@@ -1446,7 +1449,7 @@ function coBigHTML(p){if(C.game!=='x01'||!p.opened)return'';const co=checkout(p.
 function bingoBoardSmall(){try{return localStorage.getItem('darts.bingoSmall')==='1'}catch(e){return false}}
 function cAim(p){const g=C.game,o=C.opts;
   if(g==='x01'){if(!p.opened)return'Need a double to start';const co=checkout(p.rem,3-C.darts.length,o.dout);const best=Math.min(...C.players.map(q=>q.rem));const gap=p.rem-best;return`${p.rem} left${C.players.length>1?(gap?` · ${gap} behind`:' · leader'):''}${co?'':p.rem<=170?' · no checkout this turn':''}`}
-  if(g==='atw'){const T=atwTargets();return`Aim for ${numName(T[p.ti])}`}
+  if(g==='atw'){const T=atwTargets();return T[p.ti]===25?`Aim for the Bull · ${p.bulls||0} of 3`:`Aim for ${numName(T[p.ti])}`}
   if(g==='killer')return p.killer?'Killer · hit their numbers':o.kmode==='double'?`Hit D${p.num} to become a killer`:`Hit ${p.num} to become a killer · ${p.hits||0} of 3`;
   if(g==='bingo'){const b=bingoBest(C.turn);return b?`Best line ${b} of 5 · claim 3 marks per square`:'Claim squares: 3 marks each'}
   if(g==='bounty'){const t=C.targets[C.round-1];const w=C.wanted;return`Aim ${t===25?'Bull':t} · $${t===25?25:t}/mark${w!=null&&w!==C.turn?` · ${t===25?'bullseye':'triple'} robs ${C.players[w].name}`:w===C.turn?' · you\'re Wanted':''}`}
@@ -1486,7 +1489,7 @@ function cRecapHTML(){const p=cP(),g=C.game,ni=cNextIdx(C.turn),nx=C.players[ni]
   let big='',lbl='';
   if(g==='x01'){const s=p.bust?0:p.turnStart-p.rem;big=p.bust?'BUST':String(s);lbl=p.bust?`back to ${p.rem}`:`scored · ${p.rem} left`}
   if(g==='cricket'){const pts=C.turnLog.reduce((a,d)=>a+(d.delta||0),0);big=pts?'+'+pts:'0';lbl='points this turn'}
-  if(g==='atw'){big=numName(atwTargets()[Math.min(p.ti,atwTargets().length-1)]);lbl='next target'}
+  if(g==='atw'){const T=atwTargets();big=numName(T[Math.min(p.ti,T.length-1)]);lbl=T[p.ti]===25?`next target · ${p.bulls||0} of 3 bulls`:'next target'}
   if(g==='bingo'){const c=C.turnLog.reduce((a,d)=>a+(d.delta||0),0);big=String(c);lbl=c===1?'square claimed':'squares claimed'}
   if(g==='bounty'){const st=C.settle||{pts:0};big=st.pts<0?'−$'+(-st.pts):'+$'+st.pts;lbl=st.bust?'went bust':st.stole?`incl. $${st.stole} robbed from ${C.players[st.from].name}`:'this turn';if(st.stole){big='+$'+(st.pts+st.stole)}}
   if(g==='baseball'){const r=C.turnLog.reduce((a,d)=>a+(d.delta||0),0);big=r?'+'+r:'0';lbl=`run${r===1?'':'s'} · ${p.runs} total`}
@@ -1513,7 +1516,7 @@ function cScoreHTML(){const g=C.game,over=C.phase==='over';
       return row(i,idx.findIndex(j=>C.players[j].rem===p.rem)+1,`<div class="stats">3-dart avg ${avg}${p.best?` · best ${p.best}`:''}${!p.opened?' · needs a double':''}</div>${co?`<div class="coRow"><small>OUT</small>${co.join(' ')}</div>`:''}`,`<div class="score">${p.rem}</div><div class="gap">left</div>${multi?`<div class="behind${gap===0?' lead':''}">${gap===0?'Leader':gap+' behind'}</div>`:''}`)}).join('')}</div>`}
   if(g==='atw'){const T=atwTargets();idx.sort((a,b)=>C.players[b].ti-C.players[a].ti);
     return`<div class="teams">${idx.map(i=>{const p=C.players[i];const pct=Math.round(p.ti/T.length*100);
-      return row(i,idx.findIndex(j=>C.players[j].ti===p.ti)+1,`<div class="bar"><span style="width:${pct}%"></span></div><div class="stats">${p.ti} of ${T.length} done · ${p.darts} darts</div>`,`<div class="score">${p.ti>=T.length?'✓':numName(T[p.ti])}</div><div class="gap">${p.ti>=T.length?'finished':'target'}</div>`)}).join('')}</div>`}
+      return row(i,idx.findIndex(j=>C.players[j].ti===p.ti)+1,`<div class="bar"><span style="width:${pct}%"></span></div><div class="stats">${p.ti} of ${T.length} done${T[p.ti]===25?` · <b style="color:var(--tc)">${p.bulls||0} of 3 bulls</b>`:''} · ${p.darts} darts</div>`,`<div class="score">${p.ti>=T.length?'✓':numName(T[p.ti])}</div><div class="gap">${p.ti>=T.length?'finished':'target'}</div>`)}).join('')}</div>`}
   if(g==='killer'){idx.sort((a,b)=>(C.players[a].out-C.players[b].out)||(C.players[b].lives-C.players[a].lives));
     return`<div class="teams">${idx.map(i=>{const p=C.players[i];const hearts='♥'.repeat(p.lives)+'<span style="opacity:.25">'+'♥'.repeat(Math.max(0,C.opts.lives-p.lives))+'</span>';
       return row(i,p.out?'–':idx.filter(j=>!C.players[j].out).indexOf(i)+1,`<div class="stats"><span class="hearts" style="color:var(--tc)">${hearts}</span>${p.killer?' <span class="kchip">KILLER</span>':(C.opts.kmode!=='double'&&!p.out?` <span style="color:var(--tc);font-family:var(--font-display);font-size:17px">${'╱'.repeat(p.hits||0)}<span style="opacity:.25">${'╱'.repeat(Math.max(0,3-(p.hits||0)))}</span></span>`:'')}${p.out?' · out':''}${p.kills?` · ${p.kills} KO`:''}</div>`,`<div class="score knum">${p.num}</div><div class="gap">${C.opts.kmode==='double'?'hit D'+p.num:'number'}</div>`)}).join('')}</div>`}
@@ -1557,7 +1560,8 @@ function cPaint(){const svg=$('#board');if(!svg)return;const g=C.game,p=cP(),ove
       else badge(n,`var(--t${C.turn})`,k>=3)}
     const om={};for(const n of CRICK){om[n]=C.players.map((q,j)=>({j,v:q.marks[n]})).filter(x=>x.j!==C.turn&&x.v>0&&!C.players.every(q=>q.marks[n]>=3))}if(!over)oppMarks(om)}
   if(g==='atw'){const T=atwTargets(),t=T[Math.min(p.ti,T.length-1)];
-    for(const n of all){if(n!==t)dim(n)}if(!over){glow(t);badge(t,`var(--t${C.turn})`,true)}}
+    for(const n of all){if(n!==t)dim(n)}if(!over){glow(t);badge(t,`var(--t${C.turn})`,true)}
+    if(!over&&t===25){const mg=$('#mk-25'),k=p.bulls||0;if(mg){[1,2,3].forEach(j=>mg.querySelectorAll('.X'+j).forEach(e=>e.style.opacity=k>=j?1:0));mg.querySelectorAll('.c').forEach(e=>e.style.stroke=`var(--t${C.turn})`)}}}
   if(g==='bingo'){const owned={};C.card.forEach(c=>{if(typeof c.k==='number'&&c.owner!=null)owned[c.k]=c.owner;if(c.k==='BULL'&&c.owner!=null)owned[25]=c.owner});
     for(const n of all){if(owned[n]!=null){const o=$('#ov-'+n);o.style.fill=`var(--t${owned[n]})`;o.setAttribute('fill-opacity',.4);badge(n,`var(--t${owned[n]})`,true);continue}
       const cell=C.card.find(c=>c.k===(n===25?'BULL':n));const k=cell?cell.marks[C.turn]:0;const mg=$('#mk-'+n);
