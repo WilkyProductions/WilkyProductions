@@ -339,7 +339,7 @@ export const apps: AppListing[] = [
       { src: "/apps/bar-darts/screenshots/06-cricket.png", width: 1284, height: 2778 },
       { src: "/apps/bar-darts/screenshots/07-x01.png", width: 1284, height: 2778 },
     ],
-    features: ["Turf War", "Bounty", "Dart Bingo", "Pirate Bingo", "Sniper (solo)", "X01", "Cricket", "Around the World", "Killer", "Baseball", "Knockout"],
+    features: ["Turf War", "Fog of War", "Land Grab", "Siege", "Heist", "King of the Hill", "Bounty", "Dart Bingo", "Pirate Bingo", "Sniper", "X01", "Cricket", "Around the World", "Killer", "Baseball", "Knockout"],
     appStoreUrl: undefined,
     webAppUrl: "/apps/bar-darts/play",
   },

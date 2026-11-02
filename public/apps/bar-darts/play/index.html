@@ -538,13 +538,13 @@ let S=null; let history=[]; let ui={confirm:false};
 const COLORS={orange:{c:'#ff8a3d',ink:'#2a1606',label:'Orange'},blue:{c:'#3fb4e6',ink:'#06202b',label:'Blue'},purple:{c:'#c08cff',ink:'#1f0d38',label:'Purple'},lime:{c:'#a6e04a',ink:'#1a2606',label:'Lime'},red:{c:'#ff5a5f',ink:'#2e0709',label:'Red'},yellow:{c:'#ffd23f',ink:'#2b2104',label:'Yellow'},pink:{c:'#ff6fb5',ink:'#33081d',label:'Pink'},teal:{c:'#2fd4b0',ink:'#052a22',label:'Teal'},silver:{c:'#c9d1d9',ink:'#1b2126',label:'Silver'},olive:{c:'#a3a83a',ink:'#22240a',label:'Olive'}};
 const DEF_TEAMS=['Home','Away','Wild','Rogue','Storm','Ace','Blaze','Comet'].map((name,i)=>({name,color:['orange','blue','purple','lime','red','teal','yellow','pink'][i],solo:`Player ${i+1}`,players:[`Player ${2*i+1}`,`Player ${2*i+2}`]}));
 function applyColors(teams){const r=document.documentElement.style;teams.forEach((t,i)=>{let k=COLORS[t.color]?t.color:(DEF_TEAMS[i]||DEF_TEAMS[0]).color;if(teams.slice(0,i).some(o=>o.color===k))k=Object.keys(COLORS).find(c=>!teams.slice(0,i).some(o=>o.color===c));t.color=k;r.setProperty('--t'+i,COLORS[k].c);r.setProperty('--t'+i+'-ink',COLORS[k].ink)})}
-let setupDraft={teams:JSON.parse(JSON.stringify(DEF_TEAMS)),numTeams:3,perTeam:2,rounds:8,penalty:0.5,mode:'rounds',minutes:40};
+let setupDraft={teams:JSON.parse(JSON.stringify(DEF_TEAMS)),numTeams:3,perTeam:2,rounds:8,penalty:0.5,mode:'rounds',minutes:40,fog:false};
 function normDraft(){const d=setupDraft;d.teams=d.teams||[];for(let i=0;i<8;i++){d.teams[i]=Object.assign({},JSON.parse(JSON.stringify(DEF_TEAMS[i])),d.teams[i]||{})}d.perTeam=d.perTeam||2;if(d.penalty==null||!d.penV2){d.penalty=0.5;d.penV2=1}d.numTeams=d.numTeams||2;if(d.perTeam===2&&d.numTeams>5)d.numTeams=5}
 
 function freshTerr(){const t={};[...ORDER,25].forEach(n=>t[n]={owner:null,s:0});return t}
 function newGame(cfg){const P=cfg.perTeam||cfg.teams[0].players.length;const teams=cfg.teams.slice(0,cfg.numTeams||cfg.teams.length).map(t=>P===1?{name:t.solo||t.name,color:t.color,players:[t.solo||t.players[0]]}:{name:t.name,color:t.color,players:t.players.slice(0,2)});
   const mode=cfg.mode||'rounds';
-  return{phase:'play',teams,mode,timeLimit:cfg.minutes||40,baseRounds:cfg.rounds,finalRound:false,rounds:mode==='rounds'?cfg.rounds:999,penalty:cfg.penalty==null?0.5:cfg.penalty,penV2:1,startedAt:Date.now(),roundStartedAt:Date.now(),roundTimes:[],off:teams.map(()=>0),shame:{},round:1,turnIdx:0,darts:[],pending:false,lastTurn:null,terr:freshTerr(),feed:[]}}
+  return{phase:'play',teams,mode,fog:!!cfg.fog,timeLimit:cfg.minutes||40,baseRounds:cfg.rounds,finalRound:false,rounds:mode==='rounds'?cfg.rounds:999,penalty:cfg.penalty==null?0.5:cfg.penalty,penV2:1,startedAt:Date.now(),roundStartedAt:Date.now(),roundTimes:[],off:teams.map(()=>0),shame:{},round:1,turnIdx:0,darts:[],pending:false,lastTurn:null,terr:freshTerr(),feed:[]}}
 function save(){try{localStorage.setItem(STORE,JSON.stringify({S,history:history.slice(-40),setupDraft}))}catch(e){}}
 function load(){try{const d=JSON.parse(localStorage.getItem(STORE)||'null');if(d){if(d.setupDraft)setupDraft=d.setupDraft;normDraft();if(d.S&&d.S.phase!=='setup'){S=d.S;history=d.history||[]}}}catch(e){}}
 function snap(){history.push(JSON.stringify(S))}
@@ -556,7 +556,8 @@ function timeLeftMs(){return S.timeLimit*60000-((S.endedAt||Date.now())-S.starte
 // time/claim modes: once the end condition hits, finish the current round so everyone gets the same turns
 function checkFinal(){if(!S||S.phase!=='play'||S.finalRound||!S.mode||S.mode==='rounds')return false;
   const hit=S.mode==='time'?timeLeftMs()<=0:TURF_ALL()===21;if(!hit)return false;S.finalRound=true;S.rounds=S.round;return true}
-function roundLabel(){if(!S.mode||S.mode==='rounds')return`Round <b>${Math.min(S.round,S.rounds)}</b> of ${S.rounds}`;
+function roundLabel(){return(S.fog?'<b>Fog of War</b> · ':'')+roundLabel0()}
+function roundLabel0(){if(!S.mode||S.mode==='rounds')return`Round <b>${Math.min(S.round,S.rounds)}</b> of ${S.rounds}`;
   if(S.finalRound)return`<b>Final round</b>${S.mode==='claim'?' · all turf claimed':' · time is up'}`;
   return S.mode==='time'?`Round <b>${S.round}</b> · ${S.timeLimit} min game`:`Round <b>${S.round}</b> · <b>${TURF_ALL()}</b>/21 claimed`}
 function nextUp(){const N=NT();let t=S.turnIdx+1,r=S.round;if(t===TPR()){t=0;r++}if(r>S.rounds)return null;const team=t%N;return{team,name:S.teams[team].players[Math.floor(t/N)]}}
@@ -617,7 +618,7 @@ function tally(team){
 
 function throwDart(n,mult){buzz(n);
   if(!S||S.phase!=='play'||S.pending)return;
-  snap();const c=current();setTimeout(()=>hitPop(n,mult,`var(--t${c.team})`),0);const before=S.teams.map((_,i)=>tally(i).total);
+  snap();const c=current();setTimeout(()=>hitPop(n,mult,`var(--t${c.team})`),0);if(S.fog&&n===25&&mult===2)S.scout={round:S.round,turnIdx:S.turnIdx,team:c.team};const before=S.teams.map((_,i)=>tally(i).total);
   let r,label;
   let offboard=false;
   if(n===-1){offboard=true;const pen=S.penalty==null?0.5:S.penalty;S.off=S.off||S.teams.map(()=>0);S.off[c.team]=(S.off[c.team]||0)+1;S.shame=S.shame||{};S.shame[c.name]=(S.shame[c.name]||0)+1;
@@ -675,17 +676,18 @@ function paintBoard(){
   const svg=$('#board');if(!svg)return;
   svg.classList.toggle('locked',!(S.phase==='tb'||(S.phase==='play'&&!S.pending)));
   svg.querySelectorAll('.seg').forEach(e=>e.classList.toggle('tbt',S.phase==='tb'&&+e.dataset.n===S.tb.target));
+  const cur=S.phase==='play'?current().team:-1,scouting=S.scout&&S.scout.round===S.round&&S.scout.turnIdx===S.turnIdx;
   for(const n of [...ORDER,25]){
-    const t=S.terr[n],o=$('#ov-'+n);
-    o.style.fill=t.owner===null?'transparent':`var(--t${t.owner})`;o.setAttribute('fill-opacity',OPAC[t.s]);
-    const mg=$('#mk-'+n);[1,2,3].forEach(k=>mg.querySelectorAll('.X'+k).forEach(e=>e.style.opacity=t.s>=k?1:0));
+    const t0=S.terr[n],hide=S.fog&&S.phase==='play'&&!scouting&&t0.owner!==null&&t0.owner!==cur,t=hide?{owner:t0.owner,s:2,fog:true}:t0,o=$('#ov-'+n);
+    o.style.fill=t.owner===null?'transparent':`var(--t${t.owner})`;o.setAttribute('fill-opacity',hide?.3:OPAC[t.s]);
+    const mg=$('#mk-'+n);[1,2,3].forEach(k=>mg.querySelectorAll('.X'+k).forEach(e=>e.style.opacity=!hide&&t.s>=k?1:0));
     mg.querySelectorAll('.c').forEach(e=>e.style.stroke=t.owner===null?'transparent':`var(--t${t.owner})`);
     if(n===25){const ring=$('#bull-ring');ring.style.stroke=t.s===3?`var(--t${t.owner})`:'transparent';continue}
     const g=$('#bd-'+n),ci=g.querySelector('circle'),tx=g.querySelector('text');
     if(t.owner===null){ci.style.fill='transparent';ci.style.stroke='transparent';tx.style.fill='var(--chalk)'}
     else{const col=`var(--t${t.owner})`;ci.style.stroke=col;
-      ci.style.fill=t.s===3?col:t.s===2?`color-mix(in srgb, ${col} 30%, transparent)`:'transparent';
-      tx.style.fill=t.s===3?`var(--t${t.owner}-ink)`:col}
+      ci.style.fill=t.fog?'transparent':t.s===3?col:t.s===2?`color-mix(in srgb, ${col} 30%, transparent)`:'transparent';
+      tx.style.fill=t.fog?col:t.s===3?`var(--t${t.owner}-ink)`:col;if(t.fog)ci.style.strokeDasharray='4 3';else ci.style.strokeDasharray=''}
   }
 }
 
@@ -725,6 +727,8 @@ function setupView(){
       ${(d.mode||'rounds')==='rounds'?`<div><span class="fieldlabel">Rounds</span><div class="seg-ctl" id="rounds">${[6,8,10,12].map(r=>`<button type="button" data-r="${r}" aria-pressed="${r===d.rounds}">${r}</button>`).join('')}</div>
       <div style="font-size:13px;color:var(--muted);margin-top:6px">Each round, every player throws 3 darts. ${d.rounds} rounds with ${N*P} players runs about ${mins} minutes.</div></div>`:d.mode==='time'?`<div><span class="fieldlabel">Minutes</span><div class="seg-ctl" id="gmins">${[20,40,60].map(m=>`<button type="button" data-m="${m}" aria-pressed="${m===(d.minutes||40)}">${m} min</button>`).join('')}</div>
       <div style="font-size:13px;color:var(--muted);margin-top:6px">A countdown runs at the top. When it hits zero, the current round is finished so everyone gets the same number of turns, then the game ends.</div></div>`:`<div style="font-size:13px;color:var(--muted)">No time limit. Once every number and the Bull has an owner, that round is played out and the game ends. Locks that get broken back to neutral can stretch it out.</div>`}
+      <div><span class="fieldlabel">Fog of War</span><div class="seg-ctl" id="fog">${[[false,'Off'],[true,'On']].map(([k,l])=>`<button type="button" data-k="${k}" aria-pressed="${k===!!d.fog}">${l}</button>`).join('')}</div>
+      <div style="font-size:13px;color:var(--muted);margin-top:6px">${d.fog?'You see who owns each number, but not how strong anyone else\'s hold is. A bullseye scouts the whole board for the rest of that turn.':'Everyone can see every mark on the board.'}</div></div>
       <div><span class="fieldlabel">Off-the-board penalty</span><div class="seg-ctl" id="pen">${[[0,'None'],[0.5,'−0.5 point'],[1,'−1 point']].map(([k,l])=>`<button type="button" data-k="${k}" aria-pressed="${k===d.penalty}">${l}</button>`).join('')}</div>
       <div style="font-size:13px;color:var(--muted);margin-top:6px">Tap Off board when a dart misses the whole board. Tap Miss for darts that land on the board but outside the scoring rings.</div></div>
       <button class="btn primary big" id="start">Start game</button>
@@ -754,6 +758,7 @@ function bindSetup(){
   $('#shuf-order').addEventListener('click',()=>{readSetup();const d=setupDraft,N=d.numTeams;
     const part=shuffle(d.teams.slice(0,N));if(d.perTeam===2)part.forEach(t=>{if(Math.random()<.5)t.players=[t.players[1],t.players[0]]});
     d.teams.splice(0,N,...part);render()});
+  $('#fog').addEventListener('click',e=>{const b=e.target.closest('button');if(!b)return;readSetup();setupDraft.fog=b.dataset.k==='true';render()});
   $('#pen').addEventListener('click',e=>{const b=e.target.closest('button');if(!b)return;readSetup();setupDraft.penalty=+b.dataset.k;render()});
   $('#fmt').addEventListener('click',e=>{const b=e.target.closest('button');if(!b)return;readSetup();setupDraft.perTeam=+b.dataset.k;if(setupDraft.perTeam===2&&setupDraft.numTeams>5)setupDraft.numTeams=5;render()});
   $('#nteams').addEventListener('click',e=>{const b=e.target.closest('button');if(!b)return;readSetup();setupDraft.numTeams=+b.dataset.k;render()});
@@ -820,7 +825,7 @@ function bindApp(){
     if(a==='next')advance();
     if(a==='keep'){ui.confirm=false;fillGame()}
     if(a==='end'||a==='setup'){S=null;history=[];ui.confirm=false;save();render()}
-    if(a==='rematch'){const cfg={teams:S.teams,numTeams:S.teams.length,rounds:S.mode&&S.mode!=='rounds'?(S.baseRounds||8):S.rounds,penalty:S.penalty,mode:S.mode||'rounds',minutes:S.timeLimit};S=newGame(cfg);history=[];save();render()}
+    if(a==='rematch'){const cfg={fog:S.fog,teams:S.teams,numTeams:S.teams.length,rounds:S.mode&&S.mode!=='rounds'?(S.baseRounds||8):S.rounds,penalty:S.penalty,mode:S.mode||'rounds',minutes:S.timeLimit};S=newGame(cfg);history=[];save();render()}
     if(a==='settings-open'){ui.settings={teams:JSON.parse(JSON.stringify(S.teams)),rounds:S.rounds,penalty:S.penalty==null?0.5:S.penalty};renderSettings()}
     if(a==='set-cancel'){ui.settings=null;renderSettings();render()}
     if(a==='set-rminus'||a==='set-rplus'){readSettings();const d=ui.settings;d.rounds=Math.max(S.round,Math.min(30,d.rounds+(a==='set-rplus'?1:-1)));renderSettings()}
@@ -908,7 +913,7 @@ function fillGame(){
       <div class="rank">${rank}</div>
       <div class="mid"><div class="name">${esc(Tm.name)}</div>
       ${Tm.players.length===1?'':`<div class="players">${Tm.players.map((p,k2)=>`<span class="${k2===upIdx&&!over?'up':''}${!over&&dl[k2]===0?' isdone':''}">${esc(p)}${over?'':leftBadge(dl[k2])}</span>`).join('')}</div>`}
-      <div class="stats">${t.held} numbers · ${t.locks} locked${t.chain?` · chain +${t.chain}`:''}${t.pen?` · <span style="color:#ff8f8f">−${t.pen} off</span>`:''}</div></div>
+      <div class="stats">${t.held} numbers${S.fog&&!over&&i!==c.team?' · <span style="opacity:.6">strength hidden</span>':` · ${t.locks} locked`}${t.chain?` · chain +${t.chain}`:''}${t.pen?` · <span style="color:#ff8f8f">−${t.pen} off</span>`:''}</div></div>
       <div class="right"><div class="score">${t.total}</div><div class="gap">${gap}</div>${Tm.players.length===1&&!over?leftBadge(dl[0]):''}</div></div>`}).join('');
   $('#mini').innerHTML=T.map(r=>`<span class="mchip${!over&&c.team===r.i?' on':''}" style="--tc:var(--t${r.i})">${esc(S.teams[r.i].name)} <b>${r.t.total}</b></span>`).join('');
   if(!matchMedia('(prefers-reduced-motion: reduce)').matches)tm.querySelectorAll('.team').forEach(el=>{const p=prev[el.dataset.t];if(p==null)return;const d=p-el.getBoundingClientRect().top;
@@ -1047,14 +1052,18 @@ const GAMES={
   bingo:{name:'Dart Bingo',tag:'Close squares on a shared bingo card. First full row wins.',min:1},
   baseball:{name:'Baseball',tag:'Nine innings, one number per inning. Singles, doubles and triples score runs.',min:1},
   knockout:{name:'Knockout',tag:'Beat the score before you or lose a life. Last one standing wins.',min:2},
-  sniper:{name:'Sniper',tag:'Solo accuracy challenge. Hit the called shot, climb the levels, chase your best score.',min:1,max:1}
+  sniper:{name:'Sniper',tag:'Accuracy challenge. Hit the called shot, climb the levels, chase your best score.',min:1,max:8},
+  grab:{name:'Land Grab',tag:'Paint the rings in your color, steal them back, seal whole numbers.',min:2},
+  siege:{name:'Siege',tag:'Build walls around your castle. Knock down theirs, then storm the gates.',min:2,max:6},
+  heist:{name:'Heist',tag:'A pot of cash lands on a new number every round. Grab it, crack the vault, don\'t get caught empty-handed.',min:2},
+  king:{name:'King of the Hill',tag:'Take the throne, collect a point for every dart that misses you, hold on to win.',min:2}
 };
 const BSTEAL=25,BBUST=10;
 const gMax=g=>GAMES[g].max||8;
 const CRICK=[20,19,18,17,16,15,25];
 let appMode='menu',cview='setup',C=null,chist=[];
 let cdraft={game:'x01',n:2,players:DEF_TEAMS.map(t=>({name:t.solo,color:t.color})).concat([{name:'Player 9',color:'silver'},{name:'Player 10',color:'olive'}]),
-  opts:{start:501,dout:true,din:false,cpts:true,atwBull:true,atwSkip:false,atwLast:true,bdiag:true,bsteal:false,lives:3,kmode:'double',brounds:7,bbInn:9,koLives:3,koTie:'survive',snLives:3,snStart:1}};
+  opts:{start:501,dout:true,din:false,cpts:true,atwBull:true,atwSkip:false,atwLast:true,bdiag:true,bsteal:false,lives:3,kmode:'double',brounds:7,bbInn:9,koLives:3,koTie:'survive',snLives:3,snStart:1,gRounds:10,sHP:10,hRounds:8,kTarget:21}};
 function csave(){try{localStorage.setItem(CSTORE,JSON.stringify({C,chist:chist.slice(-60),cdraft,appMode,cview}))}catch(e){}}
 function cload(){try{const d=JSON.parse(localStorage.getItem(CSTORE)||'null');if(!d)return;
   if(d.cdraft){cdraft.game=d.cdraft.game||cdraft.game;cdraft.n=d.cdraft.n||cdraft.n;Object.assign(cdraft.opts,d.cdraft.opts||{});
@@ -1063,6 +1072,24 @@ function cload(){try{const d=JSON.parse(localStorage.getItem(CSTORE)||'null');if
 const pv=v=>{try{return JSON.parse(v)}catch(e){return v}};
 const cP=()=>C.players[C.turn];
 const bbT=r=>r>20?25:r;
+const nbrs=n=>{const i=ORDER.indexOf(n);return[ORDER[(i+19)%20],ORDER[(i+1)%20]]};
+const randNum=(not)=>{let n;do{n=1+Math.floor(Math.random()*20)}while(n===not);return n};
+/* ---------- Land Grab ---------- */
+function grabScore(i){let r=0,sl=0;for(const n of [...ORDER,25]){const R=C.rings[n];for(const k in R)if(R[k]===i)r++;if(C.sealed[n]===i)sl++}return{rings:r,sealed:sl,total:r+3*sl}}
+/* ---------- Siege ---------- */
+function siegeWallOwner(n){return C.players.findIndex(q=>!q.out&&q.walls&&q.walls[n]!=null)}
+function siegeCastleOwner(n){return C.players.findIndex(q=>!q.out&&q.num===n)}
+/* ---------- Heist ---------- */
+function heistRound(){const left=C.pot||0;C.potN=randNum(C.potN);C.pot=left+100}
+function heistSettle(){const p=cP(),took=C.turnLog.reduce((a,d)=>a+(d.delta>0?d.delta:0),0);const st={took,drop:0};
+  if(!took&&p.cash>0){const drop=Math.max(5,Math.round(p.cash*0.1/5)*5);st.drop=Math.min(drop,p.cash);p.cash-=st.drop;p.dropped+=st.drop;C.pot+=st.drop;
+    C.feed.unshift({pi:C.turn,who:p.name,label:'DROP',text:`came up empty and dropped $${st.drop} back in the pot`,delta:-st.drop,r:C.round})}
+  C.settle=st;
+  if(C.turn===C.players.length-1&&C.round>=C.rounds){C.pending=false;C.phase='over';C.endedAt=Date.now();
+    const mx=Math.max(...C.players.map(q=>q.cash));const top=C.players.map((q,i)=>i).filter(i=>C.players[i].cash===mx);C.winner=top.length===1?top[0]:null;C.tied=top}}
+/* ---------- rounds-based finish (Land Grab) ---------- */
+function grabSettle(){if(C.turn===C.players.length-1&&C.round>=C.rounds){C.pending=false;C.phase='over';C.endedAt=Date.now();
+  const sc=C.players.map((_,i)=>grabScore(i).total),mx=Math.max(...sc),top=sc.map((v,i)=>i).filter(i=>sc[i]===mx);C.winner=top.length===1?top[0]:null;C.tied=top}}
 /* ---------- Sniper (solo accuracy) ---------- */
 const SN_PER=5;
 const SN_RANKS=['Rookie','Plinker','Marksman','Sharpshooter','Bull Hunter','Sniper','Legend'];
@@ -1071,28 +1098,40 @@ const SN_BASE={num:1,S:2,D:4,T:6,B:5,BULL:10};
 function snLevelInfo(l){return l===1?{name:'Any part of the number',types:['num'],darts:3}:l===2?{name:'Singles only',types:['S'],darts:3}:l===3?{name:'Doubles',types:['D'],darts:3}:l===4?{name:'Triples',types:['T'],darts:3}:l===5?{name:'The Bull',types:['B','B','BULL'],darts:3}:l===6?{name:'Doubles & triples',types:['D','T'],darts:3}:{name:'Legend: 2 darts a shot',types:['D','T','BULL'],darts:2}}
 function snLabel(t){return t.type==='num'?String(t.n):t.type==='B'?'BULL':t.type==='BULL'?'BULLSEYE':t.type+t.n}
 function snHit(t,n,m){if(n<=0)return false;if(t.type==='B')return n===25;if(t.type==='BULL')return n===25&&m===2;if(n!==t.n)return false;return t.type==='num'||(t.type==='S'&&m===1)||(t.type==='D'&&m===2)||(t.type==='T'&&m===3)}
-function snNew(){const p=C.players[0],L=snLevelInfo(p.level);const type=L.types[Math.floor(Math.random()*L.types.length)];
+const snMulti=()=>C.players.length>1;
+const snLvl=()=>snMulti()?C.snLevel:C.players[0].level;
+function snNew(){const L=snLevelInfo(snLvl());const type=L.types[Math.floor(Math.random()*L.types.length)];
   let n=25;if(type!=='B'&&type!=='BULL'){do{n=1+Math.floor(Math.random()*20)}while(C.target&&n===C.target.n)}
-  C.target={type,n,darts:L.darts};C.target.label=snLabel(C.target);C.darts=[];C.turnLog=[];C.round++}
+  C.target={type,n,darts:L.darts};C.target.label=snLabel(C.target);C.darts=[];C.turnLog=[];if(!snMulti())C.round++}
+function snAfter(){/* multiplayer: pass to the next shooter; new shared shot each round */
+  if(!snMulti()){snNew();return}
+  const alive=C.players.filter(q=>!q.out);if(!alive.length){snOver();return}
+  const prev=C.turn,nx=cNextIdx(prev);C.darts=[];C.turnLog=[];
+  if(nx<=prev||C.players[prev].out&&nx===prev){C.round++;C.snCleared++;if(C.snCleared>=SN_PER){C.snLevel++;C.snCleared=0;C.players.forEach(q=>{if(!q.out)q.lives=Math.min(C.opts.snLives,q.lives+1)});C.snLvlUp=true}snNew()}
+  C.turn=C.players[nx].out?cNextIdx(nx):nx}
+function snOver(){C.phase='over';C.endedAt=Date.now();const best=snBestGet();C.newBests=[];
+  C.players.forEach((q,i)=>{const k=q.name.toLowerCase(),prev=best[k];if(!prev||q.score>prev.score){best[k]={score:q.score,level:snMulti()?C.snLevel:q.level,at:Date.now()};if(!isDefName(q.name)||!snMulti())C.newBests.push(i)}});
+  try{localStorage.setItem('darts.sniper.best',JSON.stringify(best))}catch(e){}
+  if(!snMulti()){C.winner=0;C.newBest=C.newBests.includes(0);return}
+  const mx=Math.max(...C.players.map(q=>q.score)),top=C.players.map((q,i)=>i).filter(i=>C.players[i].score===mx);C.winner=top.length===1?top[0]:null;C.tied=top}
 function snMult(st){return st>=6?3:st>=3?2:1}
 function snBestGet(){try{return JSON.parse(localStorage.getItem('darts.sniper.best')||'{}')||{}}catch(e){return{}}}
 function snToast(big,quip,i){let el=$('#offtoast');if(el)el.remove();el=document.createElement('div');el.id='offtoast';el.className='offtoast bonus';el.setAttribute('role','status');el.style.setProperty('--tc',`var(--t${i})`);
   el.innerHTML=`<div class="inner"><div class="big">${big}</div><div class="quip">${quip}</div></div>`;document.body.appendChild(el);setTimeout(()=>el.remove(),1900)}
-function snThrow(n,m,label){const p=C.players[0],t=C.target,di=C.darts.length,o=C.opts;C.darts.push(label);
+function snThrow(n,m,label){const p=cP(),pi=C.turn,t=C.target,di=C.darts.length,o=C.opts;C.darts.push(label);C.snLvlUp=false;
   if(snHit(t,n,m)){p.streak++;p.bestStreak=Math.max(p.bestStreak,p.streak);const mult=snMult(p.streak),bonus=t.darts-di,pts=SN_BASE[t.type]*bonus*mult;
     p.score+=pts;p.hits++;p.targetsHit++;p.cleared++;if(di===0)p.firstDart++;
-    C.feed.unshift({pi:0,who:p.name,label,text:`hit ${t.label}${di===0?' first dart':''}${mult>1?` · streak ×${mult}`:''}`,delta:pts,r:C.round});
-    let lvl=false;if(p.cleared>=SN_PER){p.level++;p.cleared=0;p.lives=Math.min(o.snLives,p.lives+1);lvl=true;
-      C.feed.unshift({pi:0,who:p.name,label:'LEVEL',text:`level ${p.level}: ${snLevelInfo(p.level).name}`,delta:null,r:C.round})}
-    snNew();csave();renderClassic();
-    if(lvl)snToast(`Level ${p.level}`,`${esc(snRank(p.level))} · ${esc(snLevelInfo(p.level).name)}`,0);else if(p.streak===3||p.streak===6)snToast(`Streak ×${mult}`,`${p.streak} in a row · ${mult}× points`,0);return}
-  C.feed.unshift({pi:0,who:p.name,label,text:`needed ${t.label}`,delta:null,r:C.round});
-  if(C.darts.length>=t.darts){p.streak=0;p.lives--;p.targetsMissed++;
-    C.feed.unshift({pi:0,who:p.name,label:'MISS',text:p.lives?`missed ${t.label}, ${p.lives} ${p.lives===1?'life':'lives'} left`:`missed ${t.label}, out of lives`,delta:null,r:C.round});
-    if(p.lives<=0){C.phase='over';C.winner=0;C.endedAt=Date.now();const best=snBestGet(),k=p.name.toLowerCase(),prev=best[k];
-      C.snPrev=prev?prev.score:0;C.newBest=!prev||p.score>prev.score;if(C.newBest){best[k]={score:p.score,level:p.level,at:Date.now()};try{localStorage.setItem('darts.sniper.best',JSON.stringify(best))}catch(e){}}
-      const tt=$('#offtoast');if(tt)tt.remove();csave();renderClassic();return}
-    snNew();csave();renderClassic();snToast('Missed!',`${p.lives} ${p.lives===1?'life':'lives'} left`,0);return}
+    C.feed.unshift({pi,who:p.name,label,text:`hit ${t.label}${di===0?' first dart':''}${mult>1?` · streak ×${mult}`:''}`,delta:pts,r:C.round});
+    let lvl=false;if(!snMulti()&&p.cleared>=SN_PER){p.level++;p.cleared=0;p.lives=Math.min(o.snLives,p.lives+1);lvl=true;
+      C.feed.unshift({pi,who:p.name,label:'LEVEL',text:`level ${p.level}: ${snLevelInfo(p.level).name}`,delta:null,r:C.round})}
+    snAfter();csave();renderClassic();
+    if(lvl||C.snLvlUp)snToast(`Level ${snLvl()}`,`${esc(snRank(snLvl()))} · ${esc(snLevelInfo(snLvl()).name)}`,C.snLvlUp?C.turn:pi);else if(p.streak===3||p.streak===6)snToast(`Streak ×${mult}`,`${snMulti()?esc(p.name)+' · ':''}${p.streak} in a row · ${mult}× points`,pi);return}
+  C.feed.unshift({pi,who:p.name,label,text:`needed ${t.label}`,delta:null,r:C.round});
+  if(C.darts.length>=t.darts){p.streak=0;p.lives--;p.targetsMissed++;if(p.lives<=0)p.out=true;
+    C.feed.unshift({pi,who:p.name,label:'MISS',text:p.lives?`missed ${t.label}, ${p.lives} ${p.lives===1?'life':'lives'} left`:`missed ${t.label}, out of lives`,delta:null,r:C.round});
+    if(C.players.every(q=>q.out)){const prev=snBestGet()[p.name.toLowerCase()];C.snPrev=prev?prev.score:0;snOver();const tt=$('#offtoast');if(tt)tt.remove();csave();renderClassic();return}
+    snAfter();csave();renderClassic();
+    if(C.snLvlUp)snToast(`Level ${snLvl()}`,`${esc(snRank(snLvl()))} · ${esc(snLevelInfo(snLvl()).name)}`,C.turn);else snToast(p.out?'Out!':'Missed!',`${snMulti()?esc(p.name)+' · ':''}${p.lives} ${p.lives===1?'life':'lives'} left`,pi);return}
   csave();renderClassic()}
 const koNeed=t=>C.opts.koTie==='strike'?`more than ${t}`:`${t} or more`;
 const atwTargets=()=>{const t=[];for(let i=1;i<=20;i++)t.push(i);if(C.opts.atwBull)t.push(25);return t};
@@ -1114,7 +1153,12 @@ function menuView(){
       ${card('g-classic','data-game="bingo"','Dart Bingo',GAMES.bingo.tag,'1–8 players · 5×5 card, Bullseye in the middle')}
       ${card('g-classic','data-game="baseball"','Baseball',GAMES.baseball.tag,'1–8 players · extra innings if tied')}
       ${card('g-classic','data-game="knockout"','Knockout',GAMES.knockout.tag,'2–8 players · lives, not points')}
-      ${card('g-classic','data-game="sniper"','<span style="color:var(--t0)">Sniper</span>',GAMES.sniper.tag,'Solo practice · saves your best score')}
+      ${card('g-classic','data-game="grab"','<span style="color:var(--t0)">Land</span> <span style="color:var(--t1)">Grab</span>',GAMES.grab.tag,'2–8 players · new house game')}
+      ${card('g-classic','data-game="siege"','<span style="color:var(--t0)">Siege</span>',GAMES.siege.tag,'2–6 players · new house game')}
+      ${card('g-classic','data-game="heist"','<span style="color:var(--t1)">Heist</span>',GAMES.heist.tag,'2–8 players · new house game')}
+      ${card('g-classic','data-game="king"','King <span style="color:var(--t0)">of the</span> Hill',GAMES.king.tag,'2–8 players · new house game')}
+      ${card('g-fog','','<span style="color:var(--muted)">Fog</span> <span style="color:var(--t0)">of</span> <span style="color:var(--t1)">War</span>','Turf War, but you can\'t see how strong anyone else\'s numbers are. A bullseye scouts the board.','2–10 players · Turf War variant')}
+      ${card('g-classic','data-game="sniper"','<span style="color:var(--t0)">Sniper</span>',GAMES.sniper.tag,'Solo or up to 8 · saves your best score')}
     </div>
     <div style="display:flex;align-items:center;gap:12px;flex-wrap:wrap;color:var(--muted);font-size:14px"><button type="button" class="btn" data-act="g-assist" aria-pressed="${assistOn()}">Tap assist: ${assistOn()?'On':'Off'}</button><span>Tap a number, then pick single, double or triple. Handy on phones.</span></div>
     </div>`;
@@ -1168,7 +1212,25 @@ function cRules(g){const o=C?C.opts:cdraft.opts;return({
     <li><b>Streaks:</b> hit 3 shots in a row for ×2 points, 6 in a row for ×3.</li>
     <li><b>Miss all your darts</b> and you lose a life. Start with ${o.snLives}. Every level you clear gives one back.</li>
     <li><b>Levels:</b> clear ${SN_PER} shots to move up. Any part of the number → singles only → doubles → triples → the Bull → doubles & triples → Legend (doubles, triples and bullseyes with only 2 darts).</li>
-    <li>Run out of lives and the game ends. Your best score is saved on this device.</li>`,
+    <li>Run out of lives and the game ends. Your best score is saved on this device.</li>
+    <li><b>With 2 or more players:</b> everyone gets the same called shot each round and takes turns at it. The level goes up for everyone every ${SN_PER} rounds. Run out of lives and you're out, but your score stands. Highest score wins once everyone is out.</li>`,
+  grab:`<li><b>Every number has 3 rings to own:</b> the single ring, the double ring and the treble ring. The Bull has 2: outer bull and bullseye.</li>
+    <li><b>Hit a ring to paint it your color.</b> Single paints the single ring, double paints the double ring, triple paints the treble ring. Paint over anyone.</li>
+    <li><b>Own every ring of a number and it's sealed:</b> nobody can paint it again.</li>
+    <li><b>Scoring:</b> 1 point per ring you own, plus 3 for every sealed number. Most points after ${o.gRounds} rounds wins.</li>`,
+  siege:`<li><b>Everyone gets a castle number</b> with ${o.sHP} strength, plus two <b>walls</b>: the numbers on either side of it. Walls start at 2 bricks (max 3).</li>
+    <li><b>Build:</b> hit your own walls to add bricks (single 1, double 2, triple 3). <b>Repair:</b> hit your own castle to restore strength.</li>
+    <li><b>Attack:</b> hit someone's walls to knock bricks off. Once <b>both</b> walls are down, hit their castle to damage it (single 1, double 2, triple 3).</li>
+    <li>A castle at 0 falls and that player is out. Last castle standing wins.</li>`,
+  heist:`<li>Every round the app puts <b>a pot of cash</b> on a random number: $100 plus anything left from last round.</li>
+    <li><b>Grab it:</b> single takes $10, double takes $25, a <b>triple takes the whole pot</b>.</li>
+    <li><b>Crack the vault:</b> a bullseye steals $25 from whoever has the most cash (not you).</li>
+    <li><b>Getaway rule:</b> come up empty in a turn and you drop 10% of your cash back into the pot.</li>
+    <li>Most cash after ${o.hRounds} rounds wins.</li>`,
+  king:`<li><b>The throne</b> is a random number. Hit it 3 times (single 1, double 2, triple 3) to claim the crown.</li>
+    <li><b>While you're King,</b> every dart a challenger throws that misses the throne earns you 1 point. Hit the throne on your own turn to collect taxes (1, 2 or 3 points).</li>
+    <li><b>Take the crown:</b> any challenger who gets 3 marks on the throne becomes King. The throne moves to a new number and everyone's marks reset.</li>
+    <li>First to ${o.kTarget} points wins.</li>`,
   knockout:`<li>Everyone starts with <b>${o.koLives} lives</b>.</li>
     <li><b>Opening throw:</b> the first player's 3-dart total sets the score to beat. Nobody loses a life on it.</li>
     <li><b>Stay alive:</b> your 3-dart total must ${o.koTie==='strike'?'beat':'match or beat'} the score to beat. Make it and your total becomes the new score to beat.</li>
@@ -1195,6 +1257,10 @@ function cSetupView(){
       <div style="font-size:13px;color:var(--muted);margin-top:6px">${d.n} shooters × ${o.brounds} rounds ≈ ${Math.max(5,Math.round(d.n*o.brounds*25/60/5)*5)} minutes. The last round is always High Noon on the Bull.</div></div>`
 ,
     baseball:`<div><span class="fieldlabel">Innings</span>${seg('bbInn',[[7,'7'],[9,'9']])}<div style="font-size:13px;color:var(--muted);margin-top:6px">${d.n} ${d.n===1?'player':'players'} × ${o.bbInn} innings ≈ ${Math.max(5,Math.round(d.n*o.bbInn*25/60/5)*5)} minutes.</div></div>`,
+    grab:`<div><span class="fieldlabel">Rounds</span>${seg('gRounds',[[8,'8'],[10,'10'],[12,'12']])}</div>`,
+    siege:`<div><span class="fieldlabel">Castle strength</span>${seg('sHP',[[10,'10'],[15,'15']])}</div>`,
+    heist:`<div><span class="fieldlabel">Rounds</span>${seg('hRounds',[[6,'6'],[8,'8'],[10,'10']])}</div>`,
+    king:`<div><span class="fieldlabel">Points to win</span>${seg('kTarget',[[15,'15'],[21,'21'],[30,'30']])}</div>`,
     sniper:`<div class="pair"><div><span class="fieldlabel">Lives</span>${seg('snLives',[[3,'3'],[5,'5']])}</div>
       <div><span class="fieldlabel">Start at</span>${seg('snStart',[[1,'Level 1'],[3,'Doubles'],[4,'Triples']])}</div></div>
       ${(()=>{const b=snBestGet(),k=(d.players[0].name||'').toLowerCase();return b[k]?`<div style="font-size:14px;color:var(--muted)">${esc(d.players[0].name)}'s best: <b style="color:var(--chalk)">${b[k].score}</b> (level ${b[k].level}, ${esc(snRank(b[k].level))})</div>`:''})()}`,
@@ -1238,14 +1304,22 @@ function cNew(){
     if(d.game==='bounty')Object.assign(p,{score:0,marks:0,tops:0,steals:0,busts:0,darts:0});
     if(d.game==='bingo')Object.assign(p,{claims:0,darts:0});
     if(d.game==='baseball')Object.assign(p,{runs:0,inn:[],darts:0,out:false});
-    if(d.game==='sniper')Object.assign(p,{score:0,lives:o.snLives,level:o.snStart||1,cleared:0,streak:0,bestStreak:0,hits:0,darts:0,targetsHit:0,targetsMissed:0,firstDart:0});
+    if(d.game==='grab')Object.assign(p,{darts:0,steals:0});
+    if(d.game==='heist')Object.assign(p,{cash:0,grabs:0,vaults:0,dropped:0,darts:0});
+    if(d.game==='king')Object.assign(p,{pts:0,crowns:0,darts:0});
+    if(d.game==='sniper')Object.assign(p,{out:false,score:0,lives:o.snLives,level:o.snStart||1,cleared:0,streak:0,bestStreak:0,hits:0,darts:0,targetsHit:0,targetsMissed:0,firstDart:0});
     if(d.game==='knockout')Object.assign(p,{lives:o.koLives,out:false,darts:0,last:null,best:0,strikes:0});
   });
   C={game:d.game,opts:o,players,turn:0,round:1,darts:[],turnLog:[],pending:false,phase:'play',winner:null,feed:[],startedAt:Date.now(),endedAt:null};
   if(d.game==='bingo'){const nn=shuffle([...Array(20)].map((_,i)=>i+1)),cs=shuffle(['DOUBLE','TRIPLE','BW','OE']);C.card=[];let ni=0,ci=0;
     for(let i=0;i<25;i++){const k=i===12?'BULL':[0,4,20,24].includes(i)?cs[ci++]:nn[ni++];C.card.push({k,owner:null,marks:players.map(()=>0)})}}
   if(d.game==='knockout'){C.koTarget=null;C.koBy=null}
-  if(d.game==='sniper'){C.round=0;C.target=null;snNew()}
+  if(d.game==='sniper'){C.target=null;C.snLevel=o.snStart||1;C.snCleared=0;if(players.length>1){C.round=1;snNew()}else{C.round=0;snNew()}}
+  if(d.game==='grab'){C.rounds=o.gRounds;C.rings={};C.sealed={};ORDER.forEach(n=>C.rings[n]={1:null,2:null,3:null});C.rings[25]={1:null,2:null}}
+  if(d.game==='siege'){const k=players.length,step=Math.floor(20/k),off=Math.floor(Math.random()*20),order=shuffle([...Array(k).keys()]);
+    players.forEach((p,i)=>{const num=ORDER[(off+order[i]*step)%20];const [a,b]=nbrs(num);Object.assign(p,{num,hp:o.sHP,walls:{[a]:2,[b]:2},out:false,darts:0,dmg:0,kos:0})})}
+  if(d.game==='heist'){C.rounds=o.hRounds;C.pot=0;C.potN=null;heistRound()}
+  if(d.game==='king'){C.throne=randNum();C.king=null;C.kmarks=players.map(()=>0)}
   if(d.game==='bounty'){C.rounds=o.brounds;C.targets=nums.slice(0,o.brounds-1).concat([25]);C.wanted=null}
   chist=[];cview='game';csave();renderClassic();
 }
@@ -1310,6 +1384,40 @@ function cThrow(n,m){buzz(n);
   if(g==='baseball'){const t=bbT(C.round);
     if(n===t){p.runs+=m;p.inn[C.round-1]=(p.inn[C.round-1]||0)+m;delta=m;text=`${m} run${m>1?'s':''} on ${numName(t)}`}
     else text=n>0?`needed ${numName(t)}`:'missed'}
+  if(g==='grab'){const before=grabScore(C.turn).total;
+    if(n<=0)text='missed';
+    else if(C.sealed[n]!=null)text=`${numName(n)} is sealed by ${C.sealed[n]===C.turn?'you':C.players[C.sealed[n]].name}`;
+    else{const R=C.rings[n],prev=R[m],ring=n===25?(m===2?'bullseye':'outer bull'):(m===1?'single':m===2?'double':'treble')+' ring';R[m]=C.turn;
+      if(prev!=null&&prev!==C.turn)p.steals++;
+      if(Object.values(R).every(v=>v===C.turn)){C.sealed[n]=C.turn;text=`sealed ${numName(n)}!`}
+      else text=prev===C.turn?`already had the ${ring} of ${numName(n)}`:prev!=null?`stole the ${ring} of ${numName(n)} from ${C.players[prev].name}`:`painted the ${ring} of ${numName(n)}`}
+    const after=grabScore(C.turn).total;delta=after-before||null}
+  if(g==='siege'){
+    if(n<=0||n===25)text=n===25?'the Bull is no-man\'s-land':'missed';
+    else{const co=siegeCastleOwner(n),wo=siegeWallOwner(n);
+      if(co>=0){const q=C.players[co];
+        if(co===C.turn){const old=q.hp;q.hp=Math.min(C.opts.sHP,q.hp+m);text=q.hp>old?`repaired the castle +${q.hp-old}`:'castle already at full strength'}
+        else{const up=Object.values(q.walls).some(v=>v>0);
+          if(up)text=`${q.name}'s walls are still up`;
+          else{const dmg=Math.min(m,q.hp);q.hp-=dmg;p.dmg+=dmg;delta=dmg;text=`hit ${q.name}'s castle for ${dmg}`;if(!q.hp){q.out=true;p.kos++;text+=`, ${q.name}'s castle falls!`}}}}
+      else if(wo>=0){const q=C.players[wo],old=q.walls[n];
+        if(wo===C.turn){q.walls[n]=Math.min(3,old+m);text=q.walls[n]>old?`built the ${numName(n)} wall to ${q.walls[n]}`:`${numName(n)} wall is already full`}
+        else{q.walls[n]=Math.max(0,old-m);text=old?`knocked ${q.name}'s ${numName(n)} wall down to ${q.walls[n]}`:`${q.name}'s ${numName(n)} wall is already down`;if(old&&!q.walls[n])text+=' · breach!'}}
+      else text=`${numName(n)} belongs to nobody`}
+    if(cAlive().length<=1)win=true}
+  if(g==='heist'){
+    if(n===C.potN){if(!C.pot)text='the pot is empty';else{const take=m===3?C.pot:Math.min(C.pot,m===2?25:10);C.pot-=take;p.cash+=take;p.grabs++;delta=take;text=m===3?`cleaned out the pot: $${take}!`:`grabbed $${take}`}}
+    else if(n===25&&m===2){let li=-1,mx=-1;C.players.forEach((q,i)=>{if(i!==C.turn&&q.cash>mx){mx=q.cash;li=i}});
+      if(li>=0&&mx>0){const take=Math.min(25,mx);C.players[li].cash-=take;p.cash+=take;p.vaults++;delta=take;text=`cracked the vault: $${take} from ${C.players[li].name}`}else text='cracked the vault, but it\'s empty'}
+    else text=n>0?`the score is on ${C.potN}`:'missed'}
+  if(g==='king'){const T=C.throne;
+    if(C.king===C.turn){if(n===T){p.pts+=m;delta=m;text=`collected ${m} in taxes`}else text='the King missed the throne'}
+    else if(n===T){C.kmarks[C.turn]+=m;
+      if(C.kmarks[C.turn]>=3){const old=C.king;C.king=C.turn;p.crowns++;C.throne=randNum(T);C.kmarks=C.players.map(()=>0);text=old==null?'claimed the crown!':`took the crown from ${C.players[old].name}!`;
+        C.feed.unshift({pi:C.turn,who:p.name,label:'CROWN',text:`new throne: ${C.throne}`,delta:null,r:C.round});endTurn=false}
+      else text=`${C.kmarks[C.turn]} of 3 on the throne`}
+    else{if(C.king!=null){C.players[C.king].pts++;text=`missed, +1 to ${C.players[C.king].name}`}else text=n>0?`the throne is ${T}`:'missed'}
+    if(C.players.some(q=>q.pts>=C.opts.kTarget)){win=true}}
   if(g==='knockout'){const v=n<=0?0:(n===25?(m===2?50:25):n*m);delta=v||null;text=v?`${v} points`:'missed'}
   let bm=0,btop=false;
   if(g==='bounty'){const t=C.targets[C.round-1],val=t===25?25:t;
@@ -1320,10 +1428,10 @@ function cThrow(n,m){buzz(n);
   let bonusNow=false;
   C.darts.push(label);C.turnLog.push({label,text,delta,bm,btop});
   C.feed.unshift({pi:C.turn,who:p.name,label,text,delta,r:C.round});
-  if(win){C.phase='over';C.winner=g==='killer'?C.players.findIndex(q=>!q.out):C.turn;C.endedAt=Date.now()}
+  if(win){C.phase='over';C.winner=g==='killer'||g==='siege'?C.players.findIndex(q=>!q.out):g==='king'?C.players.findIndex(q=>q.pts>=C.opts.kTarget):C.turn;C.endedAt=Date.now()}
   else if(g==='atw'&&o.atwLast!==false&&atwHit&&C.darts.length===3){C.darts=[];C.bonus=(C.bonus||0)+1;p.bonuses=(p.bonuses||0)+1;
     C.feed.unshift({pi:C.turn,who:p.name,label:'BONUS',text:'last dart hit, throws again',delta:null,r:C.round});bonusNow=true}
-  else if(endTurn||C.darts.length===3){C.pending=true;if(g==='bounty')bSettle();if(g==='baseball')bbSettle();if(g==='knockout')koSettle()}
+  else if(endTurn||C.darts.length===3){C.pending=true;if(g==='bounty')bSettle();if(g==='baseball')bbSettle();if(g==='knockout')koSettle();if(g==='heist')heistSettle();if(g==='grab')grabSettle()}
   csave();renderClassic();
   if(bonusNow)cBonus(p.name,C.turn);
   if(n===-1)cOff(p.name);
@@ -1448,7 +1556,7 @@ function koSettle(){const p=cP(),tot=C.turnLog.reduce((a,d)=>a+(d.delta||0),0),t
   if(C.players.filter(q=>!q.out).length<=1){C.pending=false;C.phase='over';C.endedAt=Date.now();C.winner=C.players.findIndex(q=>!q.out)}}
 function bSetWanted(){const mx=Math.max(...C.players.map(p=>p.score));const lead=C.players.map((p,i)=>i).filter(i=>C.players[i].score===mx);C.wanted=(mx>0&&lead.length===1)?lead[0]:null}
 function cNext(){cSnap();const prev=C.turn;const p=cP();if(C.game==='x01'){p.best=Math.max(p.best||0,p.turnStart-p.rem);p.bust=false}
-  C.pending=false;C.darts=[];C.turnLog=[];C.settle=null;C.bonus=0;C.turn=cNextIdx(prev);if(C.turn<=prev){C.round++;if(C.game==='bounty')bSetWanted()}
+  C.pending=false;C.darts=[];C.turnLog=[];C.settle=null;C.bonus=0;C.turn=cNextIdx(prev);if(C.turn<=prev){C.round++;if(C.game==='bounty')bSetWanted();if(C.game==='heist')heistRound()}
   if(C.game==='x01')cP().turnStart=cP().rem;csave();renderClassic()}
 function cUndo(){if(!chist.length)return;C=JSON.parse(chist.pop());csave();renderClassic()}
 function cBonus(name,i){let el=$('#offtoast');if(el)el.remove();el=document.createElement('div');el.id='offtoast';el.className='offtoast bonus';el.setAttribute('role','status');el.style.setProperty('--tc',`var(--t${i})`);
@@ -1506,14 +1614,18 @@ function cAim(p){const g=C.game,o=C.opts;
   if(g==='killer')return p.killer?'Killer · hit their numbers':o.kmode==='double'?`Hit D${p.num} to become a killer`:`Hit ${p.num} to become a killer · ${p.hits||0} of 3`;
   if(g==='bingo'){const b=bingoBest(C.turn);return b?`Best line ${b} of 5 · claim 3 marks per square`:'Claim squares: 3 marks each'}
   if(g==='bounty'){const t=C.targets[C.round-1];const w=C.wanted;return`Aim ${t===25?'Bull':t} · $${t===25?25:t}/mark${w!=null&&w!==C.turn?` · ${t===25?'bullseye':'triple'} robs ${C.players[w].name}`:w===C.turn?' · you\'re Wanted':''}`}
-  if(g==='sniper'){const t=C.target,pp=C.players[0],di=C.darts.length;return`Hit ${t.label} · worth ${SN_BASE[t.type]*(t.darts-di)*snMult(pp.streak+1)}`}
+  if(g==='grab'){const sc=grabScore(C.turn);return`${sc.total} pts · ${sc.rings} rings · ${sc.sealed} sealed`}
+  if(g==='siege'){const [a,b]=Object.keys(p.walls);return`Castle ${p.num} · walls ${a} (${p.walls[a]}) & ${b} (${p.walls[b]})`}
+  if(g==='heist')return`The score: $${C.pot} on ${C.potN} · triple takes it all`;
+  if(g==='king')return C.king===C.turn?`You're King · hit ${C.throne} for taxes`:`Hit ${C.throne} · ${C.kmarks[C.turn]} of 3 to ${C.king==null?'claim':'take'} the crown`;
+  if(g==='sniper'){const t=C.target,pp=cP(),di=C.darts.length;return`Hit ${t.label} · worth ${SN_BASE[t.type]*(t.darts-di)*snMult(pp.streak+1)}`}
   if(g==='baseball'){const t=bbT(C.round);return`Inning ${C.round} · aim ${numName(t)} · ${p.runs} run${p.runs===1?'':'s'}`}
   if(g==='knockout'){const sum=C.turnLog.reduce((a,d)=>a+(d.delta||0),0);return C.koTarget==null?`Opening throw sets the score${sum?` · ${sum} so far`:''}`:`Need ${koNeed(C.koTarget)}${sum?` · ${sum} so far`:''}`}
   if(g==='cricket'){const open=CRICK.filter(k=>p.marks[k]<3);return open.length?`${open.length} number${open.length>1?'s':''} to close`:'All closed'}
   return''}
 function cFill(){
   const over=C.phase==='over',p=cP(),g=C.game;
-  $('#cround').innerHTML=g==='sniper'?`Level <b>${C.players[0].level}</b> · shot ${C.round}`:g==='baseball'?(C.round>C.opts.bbInn?`Extra inning <b>${C.round}</b>`:`Inning <b>${C.round}</b> of ${C.opts.bbInn}`):g==='bounty'?`Round <b>${Math.min(C.round,C.rounds)}</b> of ${C.rounds}${C.targets[Math.min(C.round,C.rounds)-1]===25?' · High Noon':''}`:`Round <b>${C.round}</b>`;
+  $('#cround').innerHTML=g==='sniper'?(snMulti()?`Level <b>${C.snLevel}</b> · round ${C.round}`:`Level <b>${C.players[0].level}</b> · shot ${C.round}`):(g==='grab'||g==='heist')?`Round <b>${Math.min(C.round,C.rounds)}</b> of ${C.rounds}`:g==='king'?`Round <b>${C.round}</b> · first to ${C.opts.kTarget}`:g==='baseball'?(C.round>C.opts.bbInn?`Extra inning <b>${C.round}</b>`:`Inning <b>${C.round}</b> of ${C.opts.bbInn}`):g==='bounty'?`Round <b>${Math.min(C.round,C.rounds)}</b> of ${C.rounds}${C.targets[Math.min(C.round,C.rounds)-1]===25?' · High Noon':''}`:`Round <b>${C.round}</b>`;
   $('#cundo').disabled=!chist.length;
   $('#ctimer').innerHTML=`Game <b>${fmtDur((C.endedAt||Date.now())-C.startedAt)}</b>`;
   $('#cconfirm').innerHTML=ui.cconfirm?`<div class="confirm"><span>Start over with new players? This game will be cleared.</span><button class="btn" data-act="c-keep">Keep playing</button><button class="btn primary" data-act="c-setup">New game</button></div>`:'';
@@ -1546,19 +1658,23 @@ function cRecapHTML(){const p=cP(),g=C.game,ni=cNextIdx(C.turn),nx=C.players[ni]
   if(g==='atw'){const T=atwTargets();big=numName(T[Math.min(p.ti,T.length-1)]);lbl=T[p.ti]===25?`next target · ${p.bulls||0} of 3 bulls`:'next target'}
   if(g==='bingo'){const c=C.turnLog.reduce((a,d)=>a+(d.delta||0),0);big=String(c);lbl=c===1?'square claimed':'squares claimed'}
   if(g==='bounty'){const st=C.settle||{pts:0};big=st.pts<0?'−$'+(-st.pts):'+$'+st.pts;lbl=st.bust?'went bust':st.stole?`incl. $${st.stole} robbed from ${C.players[st.from].name}`:'this turn';if(st.stole){big='+$'+(st.pts+st.stole)}}
+  if(g==='grab'){const d2=C.turnLog.reduce((a,d)=>a+(d.delta||0),0);big=(d2>=0?'+':'')+d2;lbl=`points · ${grabScore(C.turn).total} total`}
+  if(g==='siege'){big=p.out?'OUT':String(p.hp);lbl=p.out?'castle fell':'castle strength'}
+  if(g==='heist'){const st=C.settle||{took:0,drop:0};big=st.drop?'−$'+st.drop:'+$'+st.took;lbl=st.drop?'dropped back in the pot':`grabbed · $${p.cash} total`}
+  if(g==='king'){big=String(p.pts);lbl=C.king===C.turn?'points · you are King':'points'}
   if(g==='baseball'){const r=C.turnLog.reduce((a,d)=>a+(d.delta||0),0);big=r?'+'+r:'0';lbl=`run${r===1?'':'s'} · ${p.runs} total`}
   if(g==='knockout'){const st=C.settle||{tot:0};big=String(st.tot);lbl=st.opening?'sets the score to beat':st.ok?'safe · new score to beat':p.out?'knocked out':`short of ${st.target} · ${p.lives} ${p.lives===1?'life':'lives'} left`}
   if(g==='killer'){big=p.out?'OUT':(p.killer?'☠':String(p.lives));lbl=p.out?'knocked out':(p.killer?`killer · ${p.lives} ${p.lives===1?'life':'lives'}`:`${p.lives} ${p.lives===1?'life':'lives'}`)}
   return`<div class="pending-card" role="dialog" aria-label="Turn recap" style="--tc:var(--t${C.turn});--tink:var(--t${C.turn}-ink)">
     <div class="turnhead"><div><div class="eyebrow">Turn over · pull your darts</div>
     <div class="headline" style="margin-top:6px;color:var(--t${C.turn})">${esc(p.name)}</div></div>
-    <div class="turngain ${(g==='x01'&&p.bust)||(g==='bounty'&&C.settle&&C.settle.bust)||(g==='knockout'&&C.settle&&C.settle.lost)?'neg':'pos'}"><div class="v">${big}</div><div class="l">${esc(lbl)}</div></div></div>
+    <div class="turngain ${(g==='x01'&&p.bust)||(g==='bounty'&&C.settle&&C.settle.bust)||(g==='knockout'&&C.settle&&C.settle.lost)||(g==='heist'&&C.settle&&C.settle.drop)||(g==='siege'&&p.out)?'neg':'pos'}"><div class="v">${big}</div><div class="l">${esc(lbl)}</div></div></div>
     <ul class="recaplist">${C.turnLog.map(d=>`<li class="${/closed|KILLER|out!|checked|took|stole|bounty shot/.test(d.text)?'hot':''}"><span class="lbl">${d.label}</span><span class="txt">${esc(d.text)}</span><span class="dd"></span></li>`).join('')}</ul>
     <div class="nextrow"><div><div class="eyebrow">Up next</div><div class="who" style="color:var(--t${ni})">${esc(nx.name)}</div></div>
     <div style="display:flex;gap:8px;flex-wrap:wrap"><button class="btn big" data-act="c-undo">↶ Undo last dart</button><button class="btn primary big" data-act="c-next">Start ${esc(nx.name)}'s turn</button></div></div></div>`}
 
 function cMiniHTML(){const g=C.game,over=C.phase==='over';
-  const val=p=>g==='x01'?p.rem:g==='cricket'?p.pts:g==='atw'?(p.ti>=atwTargets().length?'✓':numName(atwTargets()[p.ti])):g==='killer'||g==='knockout'?(p.out?'out':'♥'+p.lives):g==='bingo'?p.claims+'□':g==='baseball'?p.runs+'R':g==='sniper'?p.score+' pts':'$'+p.score;
+  const val=p=>g==='x01'?p.rem:g==='cricket'?p.pts:g==='atw'?(p.ti>=atwTargets().length?'✓':numName(atwTargets()[p.ti])):g==='killer'||g==='knockout'?(p.out?'out':'♥'+p.lives):g==='bingo'?p.claims+'□':g==='baseball'?p.runs+'R':g==='sniper'?p.score+' pts':g==='grab'?grabScore(C.players.indexOf(p)).total:g==='siege'?(p.out?'out':p.hp+'hp'):g==='heist'?'$'+p.cash:g==='king'?(C.king===C.players.indexOf(p)?'♛':'')+p.pts:'$'+p.score;
   return C.players.map((p,i)=>`<span class="mchip${!over&&C.turn===i?' on':''}" style="--tc:var(--t${i})">${esc(p.name)} <b>${val(p)}</b></span>`).join('')}
 function cScoreHTML(){const g=C.game,over=C.phase==='over';
   const row=(i,rank,mid,right,extra='')=>{const p=C.players[i],act=!over&&C.turn===i;
@@ -1581,6 +1697,23 @@ function cScoreHTML(){const g=C.game,over=C.phase==='over';
   if(g==='bounty'){const t=C.targets[Math.min(C.round,C.rounds)-1];idx.sort((a,b)=>C.players[b].score-C.players[a].score);
     return`<div class="bposter"><span class="r">Round ${Math.min(C.round,C.rounds)}/${C.rounds}</span>${t===25?'<span class="noon">High Noon</span>':''}<div class="w">Wanted</div><div class="tgt">${t===25?'BULL':t}</div><div class="pay">$${t===25?25:t} per mark${C.wanted!=null?` · leader: <b style="color:var(--t${C.wanted})">${esc(C.players[C.wanted].name)}</b>`:''}</div></div>
     <div class="teams">${idx.map(i=>{const p=C.players[i];return row(i,idx.findIndex(j=>C.players[j].score===p.score)+1,`<div class="stats">${i===C.wanted?'<span class="kchip">WANTED</span> ':''}${p.marks} marks · ${p.tops} ${'triples'} · ${p.steals} robberies${p.busts?` · ${p.busts} busts`:''}</div>`,`<div class="score">$${p.score}</div>`)}).join('')}</div>`}
+  if(g==='grab'){const sc=C.players.map((_,i)=>grabScore(i));idx.sort((a,b)=>sc[b].total-sc[a].total);
+    return`<div class="teams">${idx.map(i=>row(i,idx.findIndex(j=>sc[j].total===sc[i].total)+1,`<div class="stats">${sc[i].rings} rings · ${sc[i].sealed} sealed${C.players[i].steals?` · ${C.players[i].steals} steals`:''}</div>`,`<div class="score">${sc[i].total}</div><div class="gap">points</div>`)).join('')}</div>`}
+  if(g==='siege'){idx.sort((a,b)=>(C.players[a].out-C.players[b].out)||(C.players[b].hp-C.players[a].hp));
+    const bricks=v=>'■'.repeat(v)+'<span style="opacity:.25">'+'■'.repeat(3-v)+'</span>';
+    return`<div class="teams">${idx.map(i=>{const q=C.players[i],[a,b]=Object.keys(q.walls);
+      return row(i,q.out?'–':idx.filter(j=>!C.players[j].out).indexOf(i)+1,`<div class="stats">${q.out?'castle fell':`wall ${a} <span style="color:var(--tc)">${bricks(q.walls[a])}</span> · wall ${b} <span style="color:var(--tc)">${bricks(q.walls[b])}</span>${!q.walls[a]&&!q.walls[b]?' · <b style="color:#ff8f8f">open</b>':''}`}${q.kos?` · ${q.kos} KO`:''}</div>`,`<div class="score knum">${q.num}</div><div class="gap">${q.out?'fallen':q.hp+' / '+C.opts.sHP+' hp'}</div>`)}).join('')}</div>`}
+  if(g==='heist'){idx.sort((a,b)=>C.players[b].cash-C.players[a].cash);
+    return`<div class="bposter"><span class="r">Round ${Math.min(C.round,C.rounds)}/${C.rounds}</span><div class="w">The score</div><div class="tgt">$${C.pot}</div><div class="pay">on <b>${C.potN}</b> · single $10 · double $25 · triple takes it all · bullseye cracks the vault</div></div>
+    <div class="teams">${idx.map(i=>{const q=C.players[i];return row(i,idx.findIndex(j=>C.players[j].cash===q.cash)+1,`<div class="stats">${q.grabs} grabs${q.vaults?` · ${q.vaults} vaults`:''}${q.dropped?` · dropped $${q.dropped}`:''}</div>`,`<div class="score">$${q.cash}</div>`)}).join('')}</div>`}
+  if(g==='king'){idx.sort((a,b)=>C.players[b].pts-C.players[a].pts);const K=C.king;
+    return`<div class="bposter"><span class="r">First to ${C.opts.kTarget}</span><div class="w">The throne</div><div class="tgt">${C.throne}</div><div class="pay">${K==null?'Nobody holds the crown yet. 3 marks claims it.':`King: <b style="color:var(--t${K})">${esc(C.players[K].name)}</b> · 3 marks takes it`}</div></div>
+    <div class="teams">${idx.map(i=>{const q=C.players[i];return row(i,idx.findIndex(j=>C.players[j].pts===q.pts)+1,`<div class="stats">${i===K?'<span class="kchip">♛ KING</span> ':''}${i!==K?`${'╱'.repeat(C.kmarks[i])}<span style="opacity:.25">${'╱'.repeat(Math.max(0,3-C.kmarks[i]))}</span> on the throne`:'collecting'}${q.crowns?` · ${q.crowns} crowns`:''}</div>`,`<div class="score">${q.pts}</div><div class="gap">points</div>`)}).join('')}</div>`}
+  if(g==='sniper'&&snMulti()){const t=C.target,L=snLevelInfo(C.snLevel);idx.sort((a,b)=>(C.players[a].out-C.players[b].out)||(C.players[b].score-C.players[a].score));
+    return`<div class="bposter snposter"><span class="r">Level ${C.snLevel} · ${esc(snRank(C.snLevel))}</span><div class="w">Shot called</div><div class="tgt">${over?'–':t.label}</div><div class="pay">${esc(L.name)} · ${L.darts} darts · same shot for everyone</div>
+      <div class="snbar"><span style="width:${C.snCleared/SN_PER*100}%"></span></div><div class="pay" style="color:var(--muted)">${C.snCleared} of ${SN_PER} rounds to level ${C.snLevel+1}</div></div>
+    <div class="teams">${idx.map(i=>{const q=C.players[i];const hearts='♥'.repeat(Math.max(0,q.lives))+'<span style="opacity:.25">'+'♥'.repeat(Math.max(0,C.opts.snLives-q.lives))+'</span>';const acc=q.darts?Math.round(q.hits/q.darts*100):0;
+      return row(i,idx.findIndex(j=>C.players[j].score===q.score)+1,`<div class="stats"><span class="hearts" style="color:var(--tc)">${hearts}</span>${q.out?' · out':''}${snMult(q.streak)>1?` · streak ×${snMult(q.streak)}`:''} · ${acc}%</div>`,`<div class="score">${q.score}</div><div class="gap">points</div>`)}).join('')}</div>`}
   if(g==='sniper'){const p=C.players[0],t=C.target,L=snLevelInfo(p.level),b=snBestGet()[p.name.toLowerCase()];const acc=p.darts?Math.round(p.hits/p.darts*100):0;
     const hearts='♥'.repeat(Math.max(0,p.lives))+'<span style="opacity:.25">'+'♥'.repeat(Math.max(0,C.opts.snLives-p.lives))+'</span>';
     return`<div class="bposter snposter"><span class="r">Level ${p.level} · ${esc(snRank(p.level))}</span><div class="w">Shot called</div><div class="tgt">${over?'–':t.label}</div><div class="pay">${esc(L.name)} · ${L.darts} darts</div>
@@ -1633,8 +1766,20 @@ function cPaint(){const svg=$('#board');if(!svg)return;const g=C.game,p=cP(),ove
       if(mg&&!over){[1,2,3].forEach(j=>mg.querySelectorAll('.X'+j).forEach(e=>e.style.opacity=k>=j?1:0));mg.querySelectorAll('.c').forEach(e=>e.style.stroke=`var(--t${C.turn})`)}}
     if(!over){const om={};C.card.forEach(c=>{if(typeof c.k==='number'&&c.owner==null)om[c.k]=c.marks.map((v,j)=>({j,v})).filter(x=>x.j!==C.turn&&x.v>0)});oppMarks(om)}}
   if(g==='bounty'){const t=C.targets[Math.min(C.round,C.rounds)-1];for(const n of all){if(n!==t)dim(n)}if(!over){glow(t);badge(t,`var(--t${C.turn})`,true)}}
+  svg.querySelectorAll('.seg').forEach(e=>e.style.fill='');
+  if(g==='grab'){for(const n of all){const R=C.rings[n];
+      svg.querySelectorAll(`.seg[data-n="${n}"]`).forEach(e=>{const o2=R[+e.dataset.m];if(o2!=null)e.style.fill=C.sealed[n]!=null?`var(--t${o2})`:`color-mix(in srgb, var(--t${o2}) 62%, #111)`});
+      if(C.sealed[n]!=null)badge(n,`var(--t${C.sealed[n]})`,true)}}
+  if(g==='siege'){C.players.forEach((q,i)=>{if(q.out)return;const ov=$('#ov-'+q.num);ov.style.fill=`var(--t${i})`;ov.setAttribute('fill-opacity',.45);badge(q.num,`var(--t${i})`,true);
+      for(const w in q.walls){const v=q.walls[w],o3=$('#ov-'+w);o3.style.fill=`var(--t${i})`;o3.setAttribute('fill-opacity',[0.04,.16,.28,.4][v]);badge(+w,`var(--t${i})`,false);
+        const mg=$('#mk-'+w);if(mg){[1,2,3].forEach(j=>mg.querySelectorAll('.X'+j).forEach(e=>e.style.opacity=v>=j?1:0));mg.querySelectorAll('.c').forEach(e=>e.style.stroke=`var(--t${i})`)}}});
+    for(const n of all){if(siegeCastleOwner(n)<0&&siegeWallOwner(n)<0)dim(n)}}
+  if(g==='heist'){for(const n of all){if(n!==C.potN&&n!==25)dim(n)}if(!over){glow(C.potN);badge(C.potN,`var(--t${C.turn})`,true)}}
+  if(g==='king'){const T=C.throne;for(const n of all){if(n!==T)dim(n)}if(!over){glow(T);badge(T,C.king!=null?`var(--t${C.king})`:'var(--chalk)',true);
+      const k=C.king===C.turn?0:C.kmarks[C.turn],mg=$('#mk-'+T);if(mg&&k){[1,2,3].forEach(j=>mg.querySelectorAll('.X'+j).forEach(e=>e.style.opacity=k>=j?1:0));mg.querySelectorAll('.c').forEach(e=>e.style.stroke=`var(--t${C.turn})`)}
+      const om={};om[T]=C.kmarks.map((v,j)=>({j,v})).filter(x=>x.j!==C.turn&&x.v>0);oppMarks(om)}}
   if(g==='sniper'&&C.target){const t=C.target,tn=t.type==='B'||t.type==='BULL'?25:t.n;for(const n of all){if(n!==tn)dim(n)}
-    if(!over){const sel=t.type==='num'||t.type==='B'?`.seg[data-n="${tn}"]`:`.seg[data-n="${tn}"][data-m="${t.type==='S'?1:t.type==='D'?2:t.type==='T'?3:2}"]`;svg.querySelectorAll(sel).forEach(e=>e.classList.add('tbt'));badge(tn,'var(--t0)',true)}}
+    if(!over){const sel=t.type==='num'||t.type==='B'?`.seg[data-n="${tn}"]`:`.seg[data-n="${tn}"][data-m="${t.type==='S'?1:t.type==='D'?2:t.type==='T'?3:2}"]`;svg.querySelectorAll(sel).forEach(e=>e.classList.add('tbt'));badge(tn,`var(--t${C.turn})`,true)}}
   if(g==='baseball'){const t=bbT(C.round);for(const n of all){if(n!==t)dim(n)}if(!over){glow(t);badge(t,`var(--t${C.turn})`,true)}}
   if(g==='killer'){const owned={};C.players.forEach((q,i)=>{if(!q.out)owned[q.num]=i});
     for(const n of all){if(owned[n]==null){dim(n);continue}const i=owned[n];const o=$('#ov-'+n);o.style.fill=`var(--t${i})`;o.setAttribute('fill-opacity',.32);badge(n,`var(--t${i})`,true)}
@@ -1651,17 +1796,19 @@ function oppMarks(map){const svg=$('#board');if(!svg)return;let gEl=svg.querySel
       out+=`<g transform="translate(${px} ${py}) scale(${sc})" stroke="${col}" stroke-width="5" stroke-linecap="round" fill="none"><g stroke="#000" stroke-width="9" opacity=".55"><path d="M-8 8L8 -8"/>${x.v>=2?'<path d="M-8 -8L8 8"/>':''}${x.v>=3?'<circle r="14"/>':''}</g><path d="M-8 8L8 -8"/>${x.v>=2?'<path d="M-8 -8L8 8"/>':''}${x.v>=3?'<circle r="14"/>':''}</g>`})}
   gEl.innerHTML=out}
 function cResultHTML(){const g=C.game,w=C.winner,W=w==null?null:C.players[w];
-  const rows=C.players.map((p,i)=>({p,i})).sort(g==='bounty'?(a,b)=>b.p.score-a.p.score:g==='baseball'?(a,b)=>b.p.runs-a.p.runs:(a,b)=>a.i===w?-1:b.i===w?1:0);
-  const head={x01:['Left','Darts','3-dart avg','Best turn'],cricket:['Points','Closed','Darts','Marks/round'],atw:['Reached','Darts'],killer:['Lives','KOs','Darts'],bounty:['Cash','Marks','Triples','Robberies','Busts'],bingo:['Squares','Best line','Darts'],baseball:['Runs','Best inning','Darts'],sniper:['Score','Level','Shots hit','Accuracy','Best streak'],knockout:['Lives','Best turn','Lives lost']}[g];
+  const rows=C.players.map((p,i)=>({p,i})).sort(g==='bounty'||g==='sniper'?(a,b)=>b.p.score-a.p.score:g==='baseball'?(a,b)=>b.p.runs-a.p.runs:g==='heist'?(a,b)=>b.p.cash-a.p.cash:g==='king'?(a,b)=>b.p.pts-a.p.pts:g==='grab'?(a,b)=>grabScore(b.i).total-grabScore(a.i).total:(a,b)=>a.i===w?-1:b.i===w?1:0);
+  const head={x01:['Left','Darts','3-dart avg','Best turn'],cricket:['Points','Closed','Darts','Marks/round'],atw:['Reached','Darts'],killer:['Lives','KOs','Darts'],bounty:['Cash','Marks','Triples','Robberies','Busts'],bingo:['Squares','Best line','Darts'],baseball:['Runs','Best inning','Darts'],sniper:['Score','Level','Shots hit','Accuracy','Best streak'],grab:['Points','Rings','Sealed','Steals'],siege:['Castle','Damage dealt','KOs','Darts'],heist:['Cash','Grabs','Vaults','Dropped'],king:['Points','Crowns','Darts'],knockout:['Lives','Best turn','Lives lost']}[g];
   const cells=p=>({x01:()=>[p.rem,p.darts,p.darts?(p.scored/p.darts*3).toFixed(1):'–',p.best||0],
     cricket:()=>[p.pts,CRICK.filter(k=>p.marks[k]>=3).length+' of 7',p.darts,p.darts?(p.mpr/p.darts*3).toFixed(2):'–'],
     atw:()=>[p.ti>=atwTargets().length?'Finished':numName(atwTargets()[p.ti]),p.darts],
     killer:()=>[p.out?'Out':p.lives,p.kills,p.darts],bounty:()=>['$'+p.score,p.marks,p.tops,p.steals,p.busts],bingo:()=>[p.claims,bingoBest(C.players.indexOf(p))+' of 5',p.darts],
-    sniper:()=>[p.score,`${p.level} · ${snRank(p.level)}`,`${p.targetsHit} of ${p.targetsHit+p.targetsMissed}`,(p.darts?Math.round(p.hits/p.darts*100):0)+'%',p.bestStreak],
+    grab:()=>{const sc=grabScore(C.players.indexOf(p));return[sc.total,sc.rings,sc.sealed,p.steals]},
+    siege:()=>[p.out?'Fallen':p.hp+' hp',p.dmg,p.kos,p.darts],heist:()=>['$'+p.cash,p.grabs,p.vaults,'$'+p.dropped],king:()=>[p.pts,p.crowns,p.darts],
+    sniper:()=>[p.score,`${snMulti()?C.snLevel:p.level} · ${snRank(snMulti()?C.snLevel:p.level)}`,`${p.targetsHit} of ${p.targetsHit+p.targetsMissed}`,(p.darts?Math.round(p.hits/p.darts*100):0)+'%',p.bestStreak],
     baseball:()=>[p.runs,Math.max(0,...p.inn.map(v=>v||0)),p.darts],knockout:()=>[p.out?'Out':p.lives,p.best||0,p.strikes]})[g]();
   return`<div class="overlay"><div class="result wide">
     <div><div style="font-size:12px;letter-spacing:.14em;text-transform:uppercase;color:var(--muted);font-weight:600">${esc(GAMES[g].name)} · ${C.round} round${C.round>1?'s':''} · ${fmtDur(C.endedAt-C.startedAt)}</div>
-    ${g==='sniper'?`<h2 class="winner" style="color:var(--t0)">${C.players[0].score} points</h2><div style="color:var(--muted)">${C.newBest?`<b style="color:var(--chalk)">New personal best!</b>${C.snPrev?` Beat ${C.snPrev}.`:''}`:`Best is ${snBestGet()[C.players[0].name.toLowerCase()].score}.`} Reached level ${C.players[0].level}: ${esc(snRank(C.players[0].level))}.</div>`:g==='bingo'&&C.cats?`<h2 class="winner">Cat's game</h2><div style="color:var(--muted)">Every row is blocked, so nobody can make a line. ${(()=>{const mx=Math.max(...C.players.map(q=>q.claims));const top=C.players.filter(q=>q.claims===mx);return mx?`Most squares: ${top.map(q=>esc(q.name)).join(' & ')} (${mx}).`:''})()}</div>`:W?`<h2 class="winner" style="color:var(--t${w})">${esc(W.name)} wins</h2>${g==='bounty'?`<div style="color:var(--muted)">$${W.score} in the saddlebag</div>`:''}`:`<h2 class="winner">Tied at $${C.players[C.tied[0]].score}</h2><div style="color:var(--muted)">${C.tied.map(i=>esc(C.players[i].name)).join(' & ')}: shoot for the bull, closest takes it.</div>`}</div>
+    ${g==='sniper'&&!snMulti()?`<h2 class="winner" style="color:var(--t0)">${C.players[0].score} points</h2><div style="color:var(--muted)">${C.newBest?`<b style="color:var(--chalk)">New personal best!</b>${C.snPrev?` Beat ${C.snPrev}.`:''}`:`Best is ${snBestGet()[C.players[0].name.toLowerCase()].score}.`} Reached level ${C.players[0].level}: ${esc(snRank(C.players[0].level))}.</div>`:g==='bingo'&&C.cats?`<h2 class="winner">Cat's game</h2><div style="color:var(--muted)">Every row is blocked, so nobody can make a line. ${(()=>{const mx=Math.max(...C.players.map(q=>q.claims));const top=C.players.filter(q=>q.claims===mx);return mx?`Most squares: ${top.map(q=>esc(q.name)).join(' & ')} (${mx}).`:''})()}</div>`:W?`<h2 class="winner" style="color:var(--t${w})">${esc(W.name)} wins</h2>${g==='bounty'?`<div style="color:var(--muted)">$${W.score} in the saddlebag</div>`:''}`:`<h2 class="winner">It's a tie</h2><div style="color:var(--muted)">${(C.tied||[]).map(i=>esc(C.players[i].name)).join(' & ')} are level. Shoot for the bull, closest takes it.</div>`}${g==='sniper'&&snMulti()&&C.newBests&&C.newBests.length?`<div style="color:var(--chalk)">New personal best: ${C.newBests.map(i=>esc(C.players[i].name)).join(', ')}</div>`:''}</div>
     <div style="overflow-x:auto"><table class="pstats"><thead><tr><th>Player</th>${head.map(h=>`<th>${h}</th>`).join('')}</tr></thead>
     <tbody>${rows.map(({p,i})=>`<tr><td><span style="color:var(--t${i})">${esc(p.name)}</span>${i===w?' 🏆':''}${C.tied&&C.tied.length>1&&C.tied.includes(i)?' (tied)':''}</td>${cells(p).map(c=>`<td>${c}</td>`).join('')}</tr>`).join('')}</tbody></table></div>
     <div class="actions"><button class="btn primary big" data-act="c-rematch">Rematch</button><button class="btn big" data-act="c-setup">Change players</button><button class="btn big" data-act="g-menu">All games</button><button class="btn big" data-act="c-review">View board</button><button class="btn big" data-act="c-undo">↶ Undo last dart</button></div>
@@ -1672,6 +1819,7 @@ function bindClassic(){
   $('#app').addEventListener('click',e=>{const b=e.target.closest('[data-act]');if(!b||b.disabled)return;const a=b.dataset.act;
     if(a==='g-assist'){setAssist(!assistOn());render();return}
     if(a==='g-menu'){appMode='menu';ui.cconfirm=false;csave();render();return}
+    if(a==='g-fog'){if(S&&S.phase==='over'){S=null;history=[];save()}if(!S)setupDraft.fog=true;appMode='turf';csave();render();return}
     if(a==='g-turf'){if(S&&S.phase==='over'){S=null;history=[];ui.confirm=false;ui.review=false;save()}appMode='turf';csave();render();return}
     if(a==='g-classic'){appMode='classic';cdraft.game=b.dataset.game;if(cdraft.n<GAMES[cdraft.game].min)cdraft.n=GAMES[cdraft.game].min;if(cdraft.n>gMax(cdraft.game))cdraft.n=gMax(cdraft.game);cview='setup';csave();render();return}
     if(a==='g-cresume'){appMode='classic';cview='game';csave();render();return}
