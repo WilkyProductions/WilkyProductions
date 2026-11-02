@@ -436,7 +436,19 @@ button:focus-visible,input:focus-visible{outline:2px solid var(--chalk);outline-
 .sngrid>div{border:1px solid var(--line);border-radius:10px;background:var(--panel);padding:10px 12px;display:flex;flex-direction:column;gap:2px}
 .sngrid b{font-family:var(--font-display);font-size:34px;line-height:1;font-weight:600;color:var(--chalk)}
 .sngrid span{font-size:12px;letter-spacing:.08em;text-transform:uppercase;color:var(--muted)}
+/* game titles */
+.menusep{grid-column:1/-1;font-size:12px;font-weight:700;letter-spacing:.16em;text-transform:uppercase;color:var(--muted);margin-top:6px}
+.tO,.tB,.tW,.tG{font-weight:inherit}
+.tO{color:#ff8a3d!important}.tB{color:#3fb4e6!important}.tW{color:var(--chalk)!important}
+.tG{background:linear-gradient(90deg,#ff8a3d 44%,#3fb4e6 56%);-webkit-background-clip:text;background-clip:text;color:transparent!important;-webkit-text-fill-color:transparent;padding-right:.04em}
 /* saved players */
+.roster details.rlist summary{cursor:pointer;list-style:none;display:flex;align-items:center;justify-content:space-between;gap:10px;padding:8px 12px;border:1px solid var(--line);border-radius:8px;background:var(--bg);font-weight:600}
+.roster details.rlist summary::-webkit-details-marker{display:none}
+.roster details.rlist summary::before{content:'▸';color:var(--muted);transition:transform .15s;margin-right:2px}
+.roster details.rlist[open] summary::before{transform:rotate(90deg)}
+.roster details.rlist summary .rsum{flex:1}
+.roster details.rlist summary .rhint{font-size:13px;color:var(--muted);font-weight:500}
+.roster details.rlist .rchips{margin-top:8px}
 .roster{border:1px dashed var(--line);border-radius:12px;padding:12px;display:flex;flex-direction:column;gap:10px;background:color-mix(in srgb,var(--panel) 60%,transparent)}
 .roster .rhead{display:flex;justify-content:space-between;align-items:baseline;gap:8px;flex-wrap:wrap}
 .roster .rnote{font-size:12.5px;color:var(--muted)}
@@ -573,7 +585,10 @@ function nameSelect(id,value,cls){const r=rosterGet();const opts=(value&&!r.incl
 function rosterHTML(){const r=rosterGet();
   return`<div class="roster"><div class="rhead"><span class="fieldlabel" style="margin:0">Saved players</span><span class="rnote">Saved on this device. Pick them from each player's list.</span></div>
     <div class="radd"><input id="rosterNew" maxlength="14" placeholder="New player name" autocomplete="off" aria-label="New player name"><button type="button" class="btn primary" data-act="r-add">＋ Add new player</button></div>
-    <div class="rchips">${r.length?r.map(n=>`<span class="rchip">${esc(n)}<button type="button" data-act="r-del" data-name="${esc(n)}" aria-label="Delete ${esc(n)}" title="Delete ${esc(n)}">×</button></span>`).join(''):'<span class="rempty">No saved players yet. Add your crew once and they stay here.</span>'}</div></div>`}
+    ${r.length?`<details class="rlist"${rosterOpen()?' open':''}><summary><span class="rsum">${r.length} saved player${r.length===1?'':'s'}</span><span class="rhint">${rosterOpen()?'Hide':'Show all · delete'}</span></summary>
+      <div class="rchips">${r.map(n=>`<span class="rchip">${esc(n)}<button type="button" data-act="r-del" data-name="${esc(n)}" aria-label="Delete ${esc(n)}" title="Delete ${esc(n)}">×</button></span>`).join('')}</div></details>`:'<span class="rempty">No saved players yet. Add your crew once and they stay here.</span>'}</div>`}
+function rosterOpen(){try{return localStorage.getItem('darts.rosterOpen')==='1'}catch(e){return false}}
+document.addEventListener('toggle',e=>{const d=e.target;if(!d||!d.classList||!d.classList.contains('rlist'))return;try{localStorage.setItem('darts.rosterOpen',d.open?'1':'0')}catch(err){}const h=d.querySelector('.rhint');if(h)h.textContent=d.open?'Hide':'Show all · delete'},true);
 function rosterRerender(target,name){if(appMode==='classic'){readC();renderClassic()}else{readSetup();render()}
   if(target&&name){const el=document.getElementById(target);if(el){el.value=name;el.dataset.prev=name;if(appMode==='classic'){readC();csave()}else readSetup()}}}
 document.addEventListener('click',e=>{const b=e.target.closest&&e.target.closest('[data-act^="r-"]');if(!b)return;
@@ -1072,6 +1087,9 @@ function cload(){try{const d=JSON.parse(localStorage.getItem(CSTORE)||'null');if
 const pv=v=>{try{return JSON.parse(v)}catch(e){return v}};
 const cP=()=>C.players[C.turn];
 const bbT=r=>r>20?25:r;
+/* titles: our own games are orange + blue, classic bar games are white */
+const ORIG_TITLES={turf:['Turf','War'],fog:['Fog of','War'],bingo:['Dart','Bingo'],pirate:['☠ Pirate','Bingo'],grab:['Land','Grab'],king:['King of the','Hill'],bounty:['Bounty'],siege:['Siege'],heist:['Heist'],sniper:['Sniper']};
+function gTitle(k){const t=ORIG_TITLES[k];if(!t)return`<b class="tW">${esc((GAMES[k]||{name:k}).name)}</b>`;return t.length===2?`<b class="tO">${t[0]}</b> <b class="tB">${t[1]}</b>`:`<b class="tG">${t[0]}</b>`}
 const nbrs=n=>{const i=ORDER.indexOf(n);return[ORDER[(i+19)%20],ORDER[(i+1)%20]]};
 const randNum=(not)=>{let n;do{n=1+Math.floor(Math.random()*20)}while(n===not);return n};
 /* ---------- Land Grab ---------- */
@@ -1144,21 +1162,23 @@ function menuView(){
     <div class="menuhead"><div><div class="eyebrow">Tap a game to start</div><h1 class="menutitle">Pick your game</h1></div></div>
     ${turfLive||cLive?`<div class="resume">${turfLive?`<button class="btn big primary" data-act="g-turf">Resume Turf War · ${roundLabel().replace(/<[^>]+>/g,'')}</button>`:''}${cLive?`<button class="btn big primary" data-act="g-cresume">Resume ${esc(GAMES[C.game].name)} · round ${C.round}</button>`:''}</div>`:''}
     <div class="menugrid">
-      ${card('g-turf','','<span style="color:var(--t0)">Turf</span> <span style="color:var(--t1)">War</span>','Claim numbers, lock them, steal them, and chain neighbors for bonus points. Our house game.','2–10 players · solo or teams','feature')}
-      ${card('g-classic','data-game="x01"','301 / 501',GAMES.x01.tag,'1–8 players · double-out optional')}
-      ${card('g-classic','data-game="cricket"','Cricket',GAMES.cricket.tag,'2–8 players · the bar classic')}
-      ${card('g-classic','data-game="atw"','Around the World',GAMES.atw.tag,'1–8 players · great for beginners')}
-      ${card('g-classic','data-game="killer"','Killer',GAMES.killer.tag,'2–8 players · last one standing')}
-      ${card('g-classic','data-game="bounty"','Bounty',GAMES.bounty.tag,'2–10 players · ends at High Noon')}
-      ${card('g-classic','data-game="bingo"','Dart Bingo',GAMES.bingo.tag,'1–8 players · 5×5 card, Bullseye in the middle')}
-      ${card('g-classic','data-game="baseball"','Baseball',GAMES.baseball.tag,'1–8 players · extra innings if tied')}
-      ${card('g-classic','data-game="knockout"','Knockout',GAMES.knockout.tag,'2–8 players · lives, not points')}
-      ${card('g-classic','data-game="grab"','<span style="color:var(--t0)">Land</span> <span style="color:var(--t1)">Grab</span>',GAMES.grab.tag,'2–8 players · new house game')}
-      ${card('g-classic','data-game="siege"','<span style="color:var(--t0)">Siege</span>',GAMES.siege.tag,'2–6 players · new house game')}
-      ${card('g-classic','data-game="heist"','<span style="color:var(--t1)">Heist</span>',GAMES.heist.tag,'2–8 players · new house game')}
-      ${card('g-classic','data-game="king"','King <span style="color:var(--t0)">of the</span> Hill',GAMES.king.tag,'2–8 players · new house game')}
-      ${card('g-fog','','<span style="color:var(--muted)">Fog</span> <span style="color:var(--t0)">of</span> <span style="color:var(--t1)">War</span>','Turf War, but you can\'t see how strong anyone else\'s numbers are. A bullseye scouts the board.','2–10 players · Turf War variant')}
-      ${card('g-classic','data-game="sniper"','<span style="color:var(--t0)">Sniper</span>',GAMES.sniper.tag,'Solo or up to 8 · saves your best score')}
+      <div class="menusep">Bar Darts originals</div>
+      ${card('g-turf','',gTitle('turf'),'Claim numbers, lock them, steal them, and chain neighbors for bonus points. Our house game.','2–10 players · solo or teams','feature')}
+      ${card('g-fog','',gTitle('fog'),'Turf War, but you can\'t see how strong anyone else\'s numbers are. A bullseye scouts the board.','2–10 players · Turf War variant')}
+      ${card('g-classic','data-game="grab"',gTitle('grab'),GAMES.grab.tag,'2–8 players · new house game')}
+      ${card('g-classic','data-game="siege"',gTitle('siege'),GAMES.siege.tag,'2–6 players · new house game')}
+      ${card('g-classic','data-game="heist"',gTitle('heist'),GAMES.heist.tag,'2–8 players · new house game')}
+      ${card('g-classic','data-game="king"',gTitle('king'),GAMES.king.tag,'2–8 players · new house game')}
+      ${card('g-classic','data-game="bounty"',gTitle('bounty'),GAMES.bounty.tag,'2–10 players · ends at High Noon')}
+      ${card('g-classic','data-game="bingo"',gTitle('bingo'),GAMES.bingo.tag,'1–8 players · 5×5 card, Bullseye in the middle')}
+      ${card('g-classic','data-game="sniper"',gTitle('sniper'),GAMES.sniper.tag,'Solo or up to 8 · saves your best score')}
+      <div class="menusep">Classic bar games</div>
+      ${card('g-classic','data-game="x01"',gTitle('x01'),GAMES.x01.tag,'1–8 players · double-out optional')}
+      ${card('g-classic','data-game="cricket"',gTitle('cricket'),GAMES.cricket.tag,'2–8 players · the bar classic')}
+      ${card('g-classic','data-game="atw"',gTitle('atw'),GAMES.atw.tag,'1–8 players · great for beginners')}
+      ${card('g-classic','data-game="killer"',gTitle('killer'),GAMES.killer.tag,'2–8 players · last one standing')}
+      ${card('g-classic','data-game="baseball"',gTitle('baseball'),GAMES.baseball.tag,'1–8 players · extra innings if tied')}
+      ${card('g-classic','data-game="knockout"',gTitle('knockout'),GAMES.knockout.tag,'2–8 players · lives, not points')}
     </div>
     <div style="display:flex;align-items:center;gap:12px;flex-wrap:wrap;color:var(--muted);font-size:14px"><button type="button" class="btn" data-act="g-assist" aria-pressed="${assistOn()}">Tap assist: ${assistOn()?'On':'Off'}</button><span>Tap a number, then pick single, double or triple. Handy on phones.</span></div>
     </div>`;
@@ -1277,7 +1297,7 @@ function cSetupView(){
   return`<div class="setup">
     <div class="form">
       <button type="button" class="btn" data-act="g-menu" style="align-self:flex-start">← All games</button>
-      <div class="hero"><h1 style="font-size:clamp(48px,8vw,88px)">${esc(G.name)}</h1><p>${esc(G.tag)}</p></div>
+      <div class="hero"><h1 style="font-size:clamp(48px,8vw,88px)">${gTitle(g==='bingo'&&o.bsteal?'pirate':g)}</h1><p>${esc(G.tag)}</p></div>
       ${gamePicker(g)}
       <div><span class="fieldlabel">Players</span><div class="seg-ctl">${counts.map(k=>`<button type="button" data-act="c-n" data-v="${k}" aria-pressed="${k===d.n}">${k}</button>`).join('')}</div></div>
       ${opts}
@@ -1577,7 +1597,7 @@ function checkout(rem,darts,dout){if(rem<=0||rem>170||darts<1)return null;const 
 /* ---------- game screen ---------- */
 function cShell(){const G=GAMES[C.game];return`
   <header class="top">
-    <div class="titleblock"><h1 class="brand"><span>${C.game==='bingo'&&C.opts.bsteal?'☠ Pirate Bingo':esc(G.name)}</span></h1><div class="round" id="cround"></div><div class="timer" id="ctimer"></div></div>
+    <div class="titleblock"><h1 class="brand">${gTitle(C.game==='bingo'&&C.opts.bsteal?'pirate':C.game)}</h1><div class="round" id="cround"></div><div class="timer" id="ctimer"></div></div>
     <div class="spacer"></div>
     <button class="btn" data-act="c-undo" id="cundo">↶ Undo</button>
     <button class="btn" data-act="g-menu">All games</button>
