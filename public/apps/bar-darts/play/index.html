@@ -428,6 +428,14 @@ button:focus-visible,input:focus-visible{outline:2px solid var(--chalk);outline-
 .bcell.projsteal{box-shadow:0 0 0 4px var(--sc) inset;animation:stealpulse 1s ease-in-out infinite}
 .bcell.projsteal .bp{color:var(--chalk);background:var(--sc);padding:2px 4px;border-radius:3px}
 @keyframes stealpulse{50%{box-shadow:0 0 0 7px var(--sc) inset}}
+/* sniper */
+.snposter .tgt{font-size:96px;color:var(--t0)}
+.snbar{height:8px;border-radius:4px;background:var(--line);overflow:hidden;margin:8px 0 2px}
+.snbar span{display:block;height:100%;background:var(--t0)}
+.sngrid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}
+.sngrid>div{border:1px solid var(--line);border-radius:10px;background:var(--panel);padding:10px 12px;display:flex;flex-direction:column;gap:2px}
+.sngrid b{font-family:var(--font-display);font-size:34px;line-height:1;font-weight:600;color:var(--chalk)}
+.sngrid span{font-size:12px;letter-spacing:.08em;text-transform:uppercase;color:var(--muted)}
 /* saved players */
 .roster{border:1px dashed var(--line);border-radius:12px;padding:12px;display:flex;flex-direction:column;gap:10px;background:color-mix(in srgb,var(--panel) 60%,transparent)}
 .roster .rhead{display:flex;justify-content:space-between;align-items:baseline;gap:8px;flex-wrap:wrap}
@@ -1038,14 +1046,15 @@ const GAMES={
   bounty:{name:'Bounty',tag:'A new number every round. Cash per mark, rob the leader with triples.',min:2,max:10},
   bingo:{name:'Dart Bingo',tag:'Close squares on a shared bingo card. First full row wins.',min:1},
   baseball:{name:'Baseball',tag:'Nine innings, one number per inning. Singles, doubles and triples score runs.',min:1},
-  knockout:{name:'Knockout',tag:'Beat the score before you or lose a life. Last one standing wins.',min:2}
+  knockout:{name:'Knockout',tag:'Beat the score before you or lose a life. Last one standing wins.',min:2},
+  sniper:{name:'Sniper',tag:'Solo accuracy challenge. Hit the called shot, climb the levels, chase your best score.',min:1,max:1}
 };
 const BSTEAL=25,BBUST=10;
 const gMax=g=>GAMES[g].max||8;
 const CRICK=[20,19,18,17,16,15,25];
 let appMode='menu',cview='setup',C=null,chist=[];
 let cdraft={game:'x01',n:2,players:DEF_TEAMS.map(t=>({name:t.solo,color:t.color})).concat([{name:'Player 9',color:'silver'},{name:'Player 10',color:'olive'}]),
-  opts:{start:501,dout:true,din:false,cpts:true,atwBull:true,atwSkip:false,atwLast:true,bdiag:true,bsteal:false,lives:3,kmode:'double',brounds:7,bbInn:9,koLives:3,koTie:'survive'}};
+  opts:{start:501,dout:true,din:false,cpts:true,atwBull:true,atwSkip:false,atwLast:true,bdiag:true,bsteal:false,lives:3,kmode:'double',brounds:7,bbInn:9,koLives:3,koTie:'survive',snLives:3,snStart:1}};
 function csave(){try{localStorage.setItem(CSTORE,JSON.stringify({C,chist:chist.slice(-60),cdraft,appMode,cview}))}catch(e){}}
 function cload(){try{const d=JSON.parse(localStorage.getItem(CSTORE)||'null');if(!d)return;
   if(d.cdraft){cdraft.game=d.cdraft.game||cdraft.game;cdraft.n=d.cdraft.n||cdraft.n;Object.assign(cdraft.opts,d.cdraft.opts||{});
@@ -1054,6 +1063,37 @@ function cload(){try{const d=JSON.parse(localStorage.getItem(CSTORE)||'null');if
 const pv=v=>{try{return JSON.parse(v)}catch(e){return v}};
 const cP=()=>C.players[C.turn];
 const bbT=r=>r>20?25:r;
+/* ---------- Sniper (solo accuracy) ---------- */
+const SN_PER=5;
+const SN_RANKS=['Rookie','Plinker','Marksman','Sharpshooter','Bull Hunter','Sniper','Legend'];
+const snRank=l=>SN_RANKS[Math.min(l,SN_RANKS.length)-1];
+const SN_BASE={num:1,S:2,D:4,T:6,B:5,BULL:10};
+function snLevelInfo(l){return l===1?{name:'Any part of the number',types:['num'],darts:3}:l===2?{name:'Singles only',types:['S'],darts:3}:l===3?{name:'Doubles',types:['D'],darts:3}:l===4?{name:'Triples',types:['T'],darts:3}:l===5?{name:'The Bull',types:['B','B','BULL'],darts:3}:l===6?{name:'Doubles & triples',types:['D','T'],darts:3}:{name:'Legend: 2 darts a shot',types:['D','T','BULL'],darts:2}}
+function snLabel(t){return t.type==='num'?String(t.n):t.type==='B'?'BULL':t.type==='BULL'?'BULLSEYE':t.type+t.n}
+function snHit(t,n,m){if(n<=0)return false;if(t.type==='B')return n===25;if(t.type==='BULL')return n===25&&m===2;if(n!==t.n)return false;return t.type==='num'||(t.type==='S'&&m===1)||(t.type==='D'&&m===2)||(t.type==='T'&&m===3)}
+function snNew(){const p=C.players[0],L=snLevelInfo(p.level);const type=L.types[Math.floor(Math.random()*L.types.length)];
+  let n=25;if(type!=='B'&&type!=='BULL'){do{n=1+Math.floor(Math.random()*20)}while(C.target&&n===C.target.n)}
+  C.target={type,n,darts:L.darts};C.target.label=snLabel(C.target);C.darts=[];C.turnLog=[];C.round++}
+function snMult(st){return st>=6?3:st>=3?2:1}
+function snBestGet(){try{return JSON.parse(localStorage.getItem('darts.sniper.best')||'{}')||{}}catch(e){return{}}}
+function snToast(big,quip,i){let el=$('#offtoast');if(el)el.remove();el=document.createElement('div');el.id='offtoast';el.className='offtoast bonus';el.setAttribute('role','status');el.style.setProperty('--tc',`var(--t${i})`);
+  el.innerHTML=`<div class="inner"><div class="big">${big}</div><div class="quip">${quip}</div></div>`;document.body.appendChild(el);setTimeout(()=>el.remove(),1900)}
+function snThrow(n,m,label){const p=C.players[0],t=C.target,di=C.darts.length,o=C.opts;C.darts.push(label);
+  if(snHit(t,n,m)){p.streak++;p.bestStreak=Math.max(p.bestStreak,p.streak);const mult=snMult(p.streak),bonus=t.darts-di,pts=SN_BASE[t.type]*bonus*mult;
+    p.score+=pts;p.hits++;p.targetsHit++;p.cleared++;if(di===0)p.firstDart++;
+    C.feed.unshift({pi:0,who:p.name,label,text:`hit ${t.label}${di===0?' first dart':''}${mult>1?` · streak ×${mult}`:''}`,delta:pts,r:C.round});
+    let lvl=false;if(p.cleared>=SN_PER){p.level++;p.cleared=0;p.lives=Math.min(o.snLives,p.lives+1);lvl=true;
+      C.feed.unshift({pi:0,who:p.name,label:'LEVEL',text:`level ${p.level}: ${snLevelInfo(p.level).name}`,delta:null,r:C.round})}
+    snNew();csave();renderClassic();
+    if(lvl)snToast(`Level ${p.level}`,`${esc(snRank(p.level))} · ${esc(snLevelInfo(p.level).name)}`,0);else if(p.streak===3||p.streak===6)snToast(`Streak ×${mult}`,`${p.streak} in a row · ${mult}× points`,0);return}
+  C.feed.unshift({pi:0,who:p.name,label,text:`needed ${t.label}`,delta:null,r:C.round});
+  if(C.darts.length>=t.darts){p.streak=0;p.lives--;p.targetsMissed++;
+    C.feed.unshift({pi:0,who:p.name,label:'MISS',text:p.lives?`missed ${t.label}, ${p.lives} ${p.lives===1?'life':'lives'} left`:`missed ${t.label}, out of lives`,delta:null,r:C.round});
+    if(p.lives<=0){C.phase='over';C.winner=0;C.endedAt=Date.now();const best=snBestGet(),k=p.name.toLowerCase(),prev=best[k];
+      C.snPrev=prev?prev.score:0;C.newBest=!prev||p.score>prev.score;if(C.newBest){best[k]={score:p.score,level:p.level,at:Date.now()};try{localStorage.setItem('darts.sniper.best',JSON.stringify(best))}catch(e){}}
+      const tt=$('#offtoast');if(tt)tt.remove();csave();renderClassic();return}
+    snNew();csave();renderClassic();snToast('Missed!',`${p.lives} ${p.lives===1?'life':'lives'} left`,0);return}
+  csave();renderClassic()}
 const koNeed=t=>C.opts.koTie==='strike'?`more than ${t}`:`${t} or more`;
 const atwTargets=()=>{const t=[];for(let i=1;i<=20;i++)t.push(i);if(C.opts.atwBull)t.push(25);return t};
 
@@ -1074,6 +1114,7 @@ function menuView(){
       ${card('g-classic','data-game="bingo"','Dart Bingo',GAMES.bingo.tag,'1–8 players · 5×5 card, Bullseye in the middle')}
       ${card('g-classic','data-game="baseball"','Baseball',GAMES.baseball.tag,'1–8 players · extra innings if tied')}
       ${card('g-classic','data-game="knockout"','Knockout',GAMES.knockout.tag,'2–8 players · lives, not points')}
+      ${card('g-classic','data-game="sniper"','<span style="color:var(--t0)">Sniper</span>',GAMES.sniper.tag,'Solo practice · saves your best score')}
     </div>
     <div style="display:flex;align-items:center;gap:12px;flex-wrap:wrap;color:var(--muted);font-size:14px"><button type="button" class="btn" data-act="g-assist" aria-pressed="${assistOn()}">Tap assist: ${assistOn()?'On':'Off'}</button><span>Tap a number, then pick single, double or triple. Handy on phones.</span></div>
     </div>`;
@@ -1122,6 +1163,12 @@ function cRules(g){const o=C?C.opts:cdraft.opts;return({
     <li><b>Runs:</b> single = 1, double = 2, triple = 3. Only the inning's number counts.</li>
     <li>Your target glows on the board. Most runs after ${o.bbInn} innings wins.</li>
     <li><b>Tied?</b> The tied players go to extra innings (${o.bbInn+1}, ${o.bbInn+2}…) until someone leads after a full inning. Past 20, extra innings are on the Bull: outer bull 1 run, bullseye 2.</li>`,
+  sniper:`<li><b>The app calls a shot</b> and lights it up on the board. You get 3 darts to hit it.</li>
+    <li><b>Hit it sooner, score more:</b> first dart scores 3×, second 2×, third 1×. Doubles, triples and bullseyes are worth more than singles.</li>
+    <li><b>Streaks:</b> hit 3 shots in a row for ×2 points, 6 in a row for ×3.</li>
+    <li><b>Miss all your darts</b> and you lose a life. Start with ${o.snLives}. Every level you clear gives one back.</li>
+    <li><b>Levels:</b> clear ${SN_PER} shots to move up. Any part of the number → singles only → doubles → triples → the Bull → doubles & triples → Legend (doubles, triples and bullseyes with only 2 darts).</li>
+    <li>Run out of lives and the game ends. Your best score is saved on this device.</li>`,
   knockout:`<li>Everyone starts with <b>${o.koLives} lives</b>.</li>
     <li><b>Opening throw:</b> the first player's 3-dart total sets the score to beat. Nobody loses a life on it.</li>
     <li><b>Stay alive:</b> your 3-dart total must ${o.koTie==='strike'?'beat':'match or beat'} the score to beat. Make it and your total becomes the new score to beat.</li>
@@ -1148,6 +1195,9 @@ function cSetupView(){
       <div style="font-size:13px;color:var(--muted);margin-top:6px">${d.n} shooters × ${o.brounds} rounds ≈ ${Math.max(5,Math.round(d.n*o.brounds*25/60/5)*5)} minutes. The last round is always High Noon on the Bull.</div></div>`
 ,
     baseball:`<div><span class="fieldlabel">Innings</span>${seg('bbInn',[[7,'7'],[9,'9']])}<div style="font-size:13px;color:var(--muted);margin-top:6px">${d.n} ${d.n===1?'player':'players'} × ${o.bbInn} innings ≈ ${Math.max(5,Math.round(d.n*o.bbInn*25/60/5)*5)} minutes.</div></div>`,
+    sniper:`<div class="pair"><div><span class="fieldlabel">Lives</span>${seg('snLives',[[3,'3'],[5,'5']])}</div>
+      <div><span class="fieldlabel">Start at</span>${seg('snStart',[[1,'Level 1'],[3,'Doubles'],[4,'Triples']])}</div></div>
+      ${(()=>{const b=snBestGet(),k=(d.players[0].name||'').toLowerCase();return b[k]?`<div style="font-size:14px;color:var(--muted)">${esc(d.players[0].name)}'s best: <b style="color:var(--chalk)">${b[k].score}</b> (level ${b[k].level}, ${esc(snRank(b[k].level))})</div>`:''})()}`,
     knockout:`<div class="pair"><div><span class="fieldlabel">Lives</span>${seg('koLives',[[3,'3'],[5,'5']])}</div>
       <div><span class="fieldlabel">Tie with the score to beat</span>${seg('koTie',[['survive','Survives'],['strike','Loses a life']])}</div></div>`,
     bingo:`<div><span class="fieldlabel">Rules</span>${seg('bsteal',[[false,'Classic'],[true,'☠ Pirate Bingo']])}<div style="font-size:13px;color:var(--muted);margin-top:6px">${o.bsteal?'Pirate Bingo: steal a claimed square with a triple of its number (bullseye for the BULL).':'Classic: once a square is claimed, it stays claimed.'}</div></div>
@@ -1188,12 +1238,14 @@ function cNew(){
     if(d.game==='bounty')Object.assign(p,{score:0,marks:0,tops:0,steals:0,busts:0,darts:0});
     if(d.game==='bingo')Object.assign(p,{claims:0,darts:0});
     if(d.game==='baseball')Object.assign(p,{runs:0,inn:[],darts:0,out:false});
+    if(d.game==='sniper')Object.assign(p,{score:0,lives:o.snLives,level:o.snStart||1,cleared:0,streak:0,bestStreak:0,hits:0,darts:0,targetsHit:0,targetsMissed:0,firstDart:0});
     if(d.game==='knockout')Object.assign(p,{lives:o.koLives,out:false,darts:0,last:null,best:0,strikes:0});
   });
   C={game:d.game,opts:o,players,turn:0,round:1,darts:[],turnLog:[],pending:false,phase:'play',winner:null,feed:[],startedAt:Date.now(),endedAt:null};
   if(d.game==='bingo'){const nn=shuffle([...Array(20)].map((_,i)=>i+1)),cs=shuffle(['DOUBLE','TRIPLE','BW','OE']);C.card=[];let ni=0,ci=0;
     for(let i=0;i<25;i++){const k=i===12?'BULL':[0,4,20,24].includes(i)?cs[ci++]:nn[ni++];C.card.push({k,owner:null,marks:players.map(()=>0)})}}
   if(d.game==='knockout'){C.koTarget=null;C.koBy=null}
+  if(d.game==='sniper'){C.round=0;C.target=null;snNew()}
   if(d.game==='bounty'){C.rounds=o.brounds;C.targets=nums.slice(0,o.brounds-1).concat([25]);C.wanted=null}
   chist=[];cview='game';csave();renderClassic();
 }
@@ -1206,6 +1258,7 @@ function cThrow(n,m){buzz(n);
   cSnap();const p=cP(),o=C.opts,g=C.game;const popCol=`var(--t${C.turn})`;setTimeout(()=>hitPop(n,m,popCol),0);
   const label=n===-1?'OFF':n===0?'Miss':hitLabel(n,m);
   let text='',delta=null,endTurn=false,win=false,atwHit=false;p.darts++;
+  if(g==='sniper'){snThrow(n,m,label);if(n===-1)cOff(p.name);return}
   if(g==='bingo'){C.darts.push(label);C.bDarts=C.bDarts||[];C.bDarts.push({n,m,label});
     if(C.darts.length===3){const opts=C.bDarts.map(d=>bingoOpts(d.n,d.m));C.alloc={opts,sel:opts.map(o=>o.length?0:-1),combos:bingoCombos(C.bDarts),combo:null}}
     csave();renderClassic();if(n===-1)cOff(p.name);if(n>0)cFlash(n,m);return}
@@ -1453,13 +1506,14 @@ function cAim(p){const g=C.game,o=C.opts;
   if(g==='killer')return p.killer?'Killer · hit their numbers':o.kmode==='double'?`Hit D${p.num} to become a killer`:`Hit ${p.num} to become a killer · ${p.hits||0} of 3`;
   if(g==='bingo'){const b=bingoBest(C.turn);return b?`Best line ${b} of 5 · claim 3 marks per square`:'Claim squares: 3 marks each'}
   if(g==='bounty'){const t=C.targets[C.round-1];const w=C.wanted;return`Aim ${t===25?'Bull':t} · $${t===25?25:t}/mark${w!=null&&w!==C.turn?` · ${t===25?'bullseye':'triple'} robs ${C.players[w].name}`:w===C.turn?' · you\'re Wanted':''}`}
+  if(g==='sniper'){const t=C.target,pp=C.players[0],di=C.darts.length;return`Hit ${t.label} · worth ${SN_BASE[t.type]*(t.darts-di)*snMult(pp.streak+1)}`}
   if(g==='baseball'){const t=bbT(C.round);return`Inning ${C.round} · aim ${numName(t)} · ${p.runs} run${p.runs===1?'':'s'}`}
   if(g==='knockout'){const sum=C.turnLog.reduce((a,d)=>a+(d.delta||0),0);return C.koTarget==null?`Opening throw sets the score${sum?` · ${sum} so far`:''}`:`Need ${koNeed(C.koTarget)}${sum?` · ${sum} so far`:''}`}
   if(g==='cricket'){const open=CRICK.filter(k=>p.marks[k]<3);return open.length?`${open.length} number${open.length>1?'s':''} to close`:'All closed'}
   return''}
 function cFill(){
   const over=C.phase==='over',p=cP(),g=C.game;
-  $('#cround').innerHTML=g==='baseball'?(C.round>C.opts.bbInn?`Extra inning <b>${C.round}</b>`:`Inning <b>${C.round}</b> of ${C.opts.bbInn}`):g==='bounty'?`Round <b>${Math.min(C.round,C.rounds)}</b> of ${C.rounds}${C.targets[Math.min(C.round,C.rounds)-1]===25?' · High Noon':''}`:`Round <b>${C.round}</b>`;
+  $('#cround').innerHTML=g==='sniper'?`Level <b>${C.players[0].level}</b> · shot ${C.round}`:g==='baseball'?(C.round>C.opts.bbInn?`Extra inning <b>${C.round}</b>`:`Inning <b>${C.round}</b> of ${C.opts.bbInn}`):g==='bounty'?`Round <b>${Math.min(C.round,C.rounds)}</b> of ${C.rounds}${C.targets[Math.min(C.round,C.rounds)-1]===25?' · High Noon':''}`:`Round <b>${C.round}</b>`;
   $('#cundo').disabled=!chist.length;
   $('#ctimer').innerHTML=`Game <b>${fmtDur((C.endedAt||Date.now())-C.startedAt)}</b>`;
   $('#cconfirm').innerHTML=ui.cconfirm?`<div class="confirm"><span>Start over with new players? This game will be cleared.</span><button class="btn" data-act="c-keep">Keep playing</button><button class="btn primary" data-act="c-setup">New game</button></div>`:'';
@@ -1476,7 +1530,7 @@ function cFill(){
   $('#dartbar').innerHTML=over?'':(C.pending||C.alloc)?`<div class="slots">${slots}</div>`:`<div class="slots">${slots}</div><button class="btn missbtn" data-act="c-miss">Miss</button><button class="btn missbtn offbtn" data-act="c-off">Off board</button>${bTog}`;
   const th=$('#thrower'),od=$('#ondeck');
   th.style.setProperty('--tc',`var(--t${C.turn})`);
-  th.innerHTML=over||C.pending||C.alloc?'':`<span class="dartn">Throwing</span><span class="tname">${esc(p.name)}</span>${C.bonus?`<span class="dartn" style="color:var(--tc)">Bonus round${C.bonus>1?' ×'+C.bonus:''}</span>`:''}<span class="dartn">Dart ${C.darts.length+1} of 3</span>${coBigHTML(p)}<span class="dartn aim">${esc(cAim(p))}</span>`;
+  th.innerHTML=over||C.pending||C.alloc?'':`<span class="dartn">Throwing</span><span class="tname">${esc(p.name)}</span>${C.bonus?`<span class="dartn" style="color:var(--tc)">Bonus round${C.bonus>1?' ×'+C.bonus:''}</span>`:''}<span class="dartn">Dart ${C.darts.length+1} of ${g==='sniper'?C.target.darts:3}</span>${coBigHTML(p)}<span class="dartn aim">${esc(cAim(p))}</span>`;
   const ni=cNextIdx(C.turn);
   if(!over&&!C.pending&&!C.alloc&&ni!==C.turn){od.style.setProperty('--tc',`var(--t${ni})`);od.innerHTML=`<span class="lbl">On deck</span><span class="dname">${esc(C.players[ni].name)}</span>`}else od.innerHTML='';
   fitNames();
@@ -1504,7 +1558,7 @@ function cRecapHTML(){const p=cP(),g=C.game,ni=cNextIdx(C.turn),nx=C.players[ni]
     <div style="display:flex;gap:8px;flex-wrap:wrap"><button class="btn big" data-act="c-undo">↶ Undo last dart</button><button class="btn primary big" data-act="c-next">Start ${esc(nx.name)}'s turn</button></div></div></div>`}
 
 function cMiniHTML(){const g=C.game,over=C.phase==='over';
-  const val=p=>g==='x01'?p.rem:g==='cricket'?p.pts:g==='atw'?(p.ti>=atwTargets().length?'✓':numName(atwTargets()[p.ti])):g==='killer'||g==='knockout'?(p.out?'out':'♥'+p.lives):g==='bingo'?p.claims+'□':g==='baseball'?p.runs+'R':'$'+p.score;
+  const val=p=>g==='x01'?p.rem:g==='cricket'?p.pts:g==='atw'?(p.ti>=atwTargets().length?'✓':numName(atwTargets()[p.ti])):g==='killer'||g==='knockout'?(p.out?'out':'♥'+p.lives):g==='bingo'?p.claims+'□':g==='baseball'?p.runs+'R':g==='sniper'?p.score+' pts':'$'+p.score;
   return C.players.map((p,i)=>`<span class="mchip${!over&&C.turn===i?' on':''}" style="--tc:var(--t${i})">${esc(p.name)} <b>${val(p)}</b></span>`).join('')}
 function cScoreHTML(){const g=C.game,over=C.phase==='over';
   const row=(i,rank,mid,right,extra='')=>{const p=C.players[i],act=!over&&C.turn===i;
@@ -1527,6 +1581,17 @@ function cScoreHTML(){const g=C.game,over=C.phase==='over';
   if(g==='bounty'){const t=C.targets[Math.min(C.round,C.rounds)-1];idx.sort((a,b)=>C.players[b].score-C.players[a].score);
     return`<div class="bposter"><span class="r">Round ${Math.min(C.round,C.rounds)}/${C.rounds}</span>${t===25?'<span class="noon">High Noon</span>':''}<div class="w">Wanted</div><div class="tgt">${t===25?'BULL':t}</div><div class="pay">$${t===25?25:t} per mark${C.wanted!=null?` · leader: <b style="color:var(--t${C.wanted})">${esc(C.players[C.wanted].name)}</b>`:''}</div></div>
     <div class="teams">${idx.map(i=>{const p=C.players[i];return row(i,idx.findIndex(j=>C.players[j].score===p.score)+1,`<div class="stats">${i===C.wanted?'<span class="kchip">WANTED</span> ':''}${p.marks} marks · ${p.tops} ${'triples'} · ${p.steals} robberies${p.busts?` · ${p.busts} busts`:''}</div>`,`<div class="score">$${p.score}</div>`)}).join('')}</div>`}
+  if(g==='sniper'){const p=C.players[0],t=C.target,L=snLevelInfo(p.level),b=snBestGet()[p.name.toLowerCase()];const acc=p.darts?Math.round(p.hits/p.darts*100):0;
+    const hearts='♥'.repeat(Math.max(0,p.lives))+'<span style="opacity:.25">'+'♥'.repeat(Math.max(0,C.opts.snLives-p.lives))+'</span>';
+    return`<div class="bposter snposter"><span class="r">Level ${p.level} · ${esc(snRank(p.level))}</span><div class="w">Shot called</div><div class="tgt">${over?'–':t.label}</div><div class="pay">${esc(L.name)} · ${L.darts} darts</div>
+      <div class="snbar"><span style="width:${p.cleared/SN_PER*100}%"></span></div><div class="pay" style="color:var(--muted)">${p.cleared} of ${SN_PER} to level ${p.level+1}</div></div>
+    <div class="sngrid">
+      <div><b>${p.score}</b><span>score</span></div>
+      <div><b class="hearts" style="color:var(--t0)">${hearts}</b><span>lives</span></div>
+      <div><b>${snMult(p.streak)>1?'×'+snMult(p.streak):p.streak}</b><span>${snMult(p.streak)>1?`streak · ${p.streak} in a row`:'streak'}</span></div>
+      <div><b>${acc}%</b><span>accuracy</span></div>
+    </div>
+    <div style="font-size:13.5px;color:var(--muted);text-align:center">${b?`Your best: <b style="color:var(--chalk)">${b.score}</b> · level ${b.level}`:'No best score yet on this device'}</div>`}
   if(g==='baseball'){const N=Math.max(C.opts.bbInn,C.round),cols=[...Array(N).keys()];const lead=Math.max(...C.players.map(p=>p.runs));
     return`<div class="card" style="padding:10px 8px;overflow-x:auto"><table class="ctable"><thead><tr><th></th>${cols.map(k=>`<th class="${k+1===C.round&&!over?'cur':''}" style="${k+1===C.round&&!over?'color:var(--chalk)':''}">${bbT(k+1)===25?'B':k+1}</th>`).join('')}<th>R</th></tr></thead>
       <tbody>${C.players.map((p,i)=>`<tr class="${!over&&C.turn===i?'act':''}" style="--tc:var(--t${i});${p.out&&!over?'opacity:.45':''}"><td class="pn">${esc(p.name)}</td>${cols.map(k=>`<td style="color:var(--tc)">${p.inn[k]!=null?p.inn[k]:''}</td>`).join('')}<td class="pts${p.runs===lead&&lead>0?' lead':''}">${p.runs}</td></tr>`).join('')}</tbody></table></div>`}
@@ -1568,6 +1633,8 @@ function cPaint(){const svg=$('#board');if(!svg)return;const g=C.game,p=cP(),ove
       if(mg&&!over){[1,2,3].forEach(j=>mg.querySelectorAll('.X'+j).forEach(e=>e.style.opacity=k>=j?1:0));mg.querySelectorAll('.c').forEach(e=>e.style.stroke=`var(--t${C.turn})`)}}
     if(!over){const om={};C.card.forEach(c=>{if(typeof c.k==='number'&&c.owner==null)om[c.k]=c.marks.map((v,j)=>({j,v})).filter(x=>x.j!==C.turn&&x.v>0)});oppMarks(om)}}
   if(g==='bounty'){const t=C.targets[Math.min(C.round,C.rounds)-1];for(const n of all){if(n!==t)dim(n)}if(!over){glow(t);badge(t,`var(--t${C.turn})`,true)}}
+  if(g==='sniper'&&C.target){const t=C.target,tn=t.type==='B'||t.type==='BULL'?25:t.n;for(const n of all){if(n!==tn)dim(n)}
+    if(!over){const sel=t.type==='num'||t.type==='B'?`.seg[data-n="${tn}"]`:`.seg[data-n="${tn}"][data-m="${t.type==='S'?1:t.type==='D'?2:t.type==='T'?3:2}"]`;svg.querySelectorAll(sel).forEach(e=>e.classList.add('tbt'));badge(tn,'var(--t0)',true)}}
   if(g==='baseball'){const t=bbT(C.round);for(const n of all){if(n!==t)dim(n)}if(!over){glow(t);badge(t,`var(--t${C.turn})`,true)}}
   if(g==='killer'){const owned={};C.players.forEach((q,i)=>{if(!q.out)owned[q.num]=i});
     for(const n of all){if(owned[n]==null){dim(n);continue}const i=owned[n];const o=$('#ov-'+n);o.style.fill=`var(--t${i})`;o.setAttribute('fill-opacity',.32);badge(n,`var(--t${i})`,true)}
@@ -1585,15 +1652,16 @@ function oppMarks(map){const svg=$('#board');if(!svg)return;let gEl=svg.querySel
   gEl.innerHTML=out}
 function cResultHTML(){const g=C.game,w=C.winner,W=w==null?null:C.players[w];
   const rows=C.players.map((p,i)=>({p,i})).sort(g==='bounty'?(a,b)=>b.p.score-a.p.score:g==='baseball'?(a,b)=>b.p.runs-a.p.runs:(a,b)=>a.i===w?-1:b.i===w?1:0);
-  const head={x01:['Left','Darts','3-dart avg','Best turn'],cricket:['Points','Closed','Darts','Marks/round'],atw:['Reached','Darts'],killer:['Lives','KOs','Darts'],bounty:['Cash','Marks','Triples','Robberies','Busts'],bingo:['Squares','Best line','Darts'],baseball:['Runs','Best inning','Darts'],knockout:['Lives','Best turn','Lives lost']}[g];
+  const head={x01:['Left','Darts','3-dart avg','Best turn'],cricket:['Points','Closed','Darts','Marks/round'],atw:['Reached','Darts'],killer:['Lives','KOs','Darts'],bounty:['Cash','Marks','Triples','Robberies','Busts'],bingo:['Squares','Best line','Darts'],baseball:['Runs','Best inning','Darts'],sniper:['Score','Level','Shots hit','Accuracy','Best streak'],knockout:['Lives','Best turn','Lives lost']}[g];
   const cells=p=>({x01:()=>[p.rem,p.darts,p.darts?(p.scored/p.darts*3).toFixed(1):'–',p.best||0],
     cricket:()=>[p.pts,CRICK.filter(k=>p.marks[k]>=3).length+' of 7',p.darts,p.darts?(p.mpr/p.darts*3).toFixed(2):'–'],
     atw:()=>[p.ti>=atwTargets().length?'Finished':numName(atwTargets()[p.ti]),p.darts],
     killer:()=>[p.out?'Out':p.lives,p.kills,p.darts],bounty:()=>['$'+p.score,p.marks,p.tops,p.steals,p.busts],bingo:()=>[p.claims,bingoBest(C.players.indexOf(p))+' of 5',p.darts],
+    sniper:()=>[p.score,`${p.level} · ${snRank(p.level)}`,`${p.targetsHit} of ${p.targetsHit+p.targetsMissed}`,(p.darts?Math.round(p.hits/p.darts*100):0)+'%',p.bestStreak],
     baseball:()=>[p.runs,Math.max(0,...p.inn.map(v=>v||0)),p.darts],knockout:()=>[p.out?'Out':p.lives,p.best||0,p.strikes]})[g]();
   return`<div class="overlay"><div class="result wide">
     <div><div style="font-size:12px;letter-spacing:.14em;text-transform:uppercase;color:var(--muted);font-weight:600">${esc(GAMES[g].name)} · ${C.round} round${C.round>1?'s':''} · ${fmtDur(C.endedAt-C.startedAt)}</div>
-    ${g==='bingo'&&C.cats?`<h2 class="winner">Cat's game</h2><div style="color:var(--muted)">Every row is blocked, so nobody can make a line. ${(()=>{const mx=Math.max(...C.players.map(q=>q.claims));const top=C.players.filter(q=>q.claims===mx);return mx?`Most squares: ${top.map(q=>esc(q.name)).join(' & ')} (${mx}).`:''})()}</div>`:W?`<h2 class="winner" style="color:var(--t${w})">${esc(W.name)} wins</h2>${g==='bounty'?`<div style="color:var(--muted)">$${W.score} in the saddlebag</div>`:''}`:`<h2 class="winner">Tied at $${C.players[C.tied[0]].score}</h2><div style="color:var(--muted)">${C.tied.map(i=>esc(C.players[i].name)).join(' & ')}: shoot for the bull, closest takes it.</div>`}</div>
+    ${g==='sniper'?`<h2 class="winner" style="color:var(--t0)">${C.players[0].score} points</h2><div style="color:var(--muted)">${C.newBest?`<b style="color:var(--chalk)">New personal best!</b>${C.snPrev?` Beat ${C.snPrev}.`:''}`:`Best is ${snBestGet()[C.players[0].name.toLowerCase()].score}.`} Reached level ${C.players[0].level}: ${esc(snRank(C.players[0].level))}.</div>`:g==='bingo'&&C.cats?`<h2 class="winner">Cat's game</h2><div style="color:var(--muted)">Every row is blocked, so nobody can make a line. ${(()=>{const mx=Math.max(...C.players.map(q=>q.claims));const top=C.players.filter(q=>q.claims===mx);return mx?`Most squares: ${top.map(q=>esc(q.name)).join(' & ')} (${mx}).`:''})()}</div>`:W?`<h2 class="winner" style="color:var(--t${w})">${esc(W.name)} wins</h2>${g==='bounty'?`<div style="color:var(--muted)">$${W.score} in the saddlebag</div>`:''}`:`<h2 class="winner">Tied at $${C.players[C.tied[0]].score}</h2><div style="color:var(--muted)">${C.tied.map(i=>esc(C.players[i].name)).join(' & ')}: shoot for the bull, closest takes it.</div>`}</div>
     <div style="overflow-x:auto"><table class="pstats"><thead><tr><th>Player</th>${head.map(h=>`<th>${h}</th>`).join('')}</tr></thead>
     <tbody>${rows.map(({p,i})=>`<tr><td><span style="color:var(--t${i})">${esc(p.name)}</span>${i===w?' 🏆':''}${C.tied&&C.tied.length>1&&C.tied.includes(i)?' (tied)':''}</td>${cells(p).map(c=>`<td>${c}</td>`).join('')}</tr>`).join('')}</tbody></table></div>
     <div class="actions"><button class="btn primary big" data-act="c-rematch">Rematch</button><button class="btn big" data-act="c-setup">Change players</button><button class="btn big" data-act="g-menu">All games</button><button class="btn big" data-act="c-review">View board</button><button class="btn big" data-act="c-undo">↶ Undo last dart</button></div>
