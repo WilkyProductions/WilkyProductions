@@ -196,6 +196,13 @@ export const websiteDesignExamples: Photo[] = [
     href: "https://cookcoatingsinc.com",
   },
   {
+    src: "/design/Webdesign4.jpg",
+    alt: "Showtime Auto Body website preview",
+    width: 1600,
+    height: 1347,
+    href: "https://www.showtimeautobody.com/",
+  },
+  {
     src: "/design/Webdesign2.jpg",
     alt: "CageWRX website preview",
     width: 1600,
