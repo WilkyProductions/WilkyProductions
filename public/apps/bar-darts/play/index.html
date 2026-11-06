@@ -323,6 +323,8 @@ button:focus-visible,input:focus-visible{outline:2px solid var(--chalk);outline-
 .gcard .gname{font-family:var(--font-display);font-size:44px;line-height:.9;text-transform:uppercase;letter-spacing:.02em}
 .gcard .gtag{color:var(--chalk);opacity:.85;max-width:40ch}
 .gcard .gmeta{margin-top:auto;font-size:13px;color:var(--muted);font-weight:600;letter-spacing:.04em}
+.gcard.locked{opacity:.6}
+.gcard.locked .gmeta{color:var(--chalk)}
 .gcard.feature{border-color:var(--t0);background:color-mix(in srgb,var(--t0) 8%,var(--panel))}
 .gcard.feature .gname{font-size:56px}
 /* ---- classic games ---- */
@@ -546,7 +548,7 @@ const STORE='turfwar.v2';
 const $=s=>document.querySelector(s);
 const esc=s=>String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 
-let S=null; let history=[]; let ui={confirm:false};
+let S=null; let history=[]; let ui={confirm:false,locked:null};
 const COLORS={orange:{c:'#ff8a3d',ink:'#2a1606',label:'Orange'},blue:{c:'#3fb4e6',ink:'#06202b',label:'Blue'},purple:{c:'#c08cff',ink:'#1f0d38',label:'Purple'},lime:{c:'#a6e04a',ink:'#1a2606',label:'Lime'},red:{c:'#ff5a5f',ink:'#2e0709',label:'Red'},yellow:{c:'#ffd23f',ink:'#2b2104',label:'Yellow'},pink:{c:'#ff6fb5',ink:'#33081d',label:'Pink'},teal:{c:'#2fd4b0',ink:'#052a22',label:'Teal'},silver:{c:'#c9d1d9',ink:'#1b2126',label:'Silver'},olive:{c:'#a3a83a',ink:'#22240a',label:'Olive'}};
 const DEF_TEAMS=['Home','Away','Wild','Rogue','Storm','Ace','Blaze','Comet'].map((name,i)=>({name,color:['orange','blue','purple','lime','red','teal','yellow','pink'][i],solo:`Player ${i+1}`,players:[`Player ${2*i+1}`,`Player ${2*i+2}`]}));
 function applyColors(teams){const r=document.documentElement.style;teams.forEach((t,i)=>{let k=COLORS[t.color]?t.color:(DEF_TEAMS[i]||DEF_TEAMS[0]).color;if(teams.slice(0,i).some(o=>o.color===k))k=Object.keys(COLORS).find(c=>!teams.slice(0,i).some(o=>o.color===c));t.color=k;r.setProperty('--t'+i,COLORS[k].c);r.setProperty('--t'+i+'-ink',COLORS[k].ink)})}
@@ -1073,6 +1075,35 @@ const GAMES={
   heist:{name:'Heist',tag:'A pot of cash lands on a new number every round. Grab it, crack the vault, don\'t get caught empty-handed.',min:2},
   king:{name:'King of the Hill',tag:'Take the throne, collect a point for every dart that misses you, hold on to win.',min:2}
 };
+/* ---------- browser demo: Cricket + 301/501 free, rest unlocks with the app or a code ---------- */
+const APP_STORE_URL='https://apps.apple.com/us/app/bar-darts/id6825570461';
+const FREE_GAMES=new Set(['x01','cricket']);
+const UNLOCK_CODE='JWILKY';
+function isUnlocked(){try{return localStorage.getItem('darts.unlocked')==='1'}catch(e){return false}}
+function tryUnlock(code){if((code||'').trim().toUpperCase()!==UNLOCK_CODE)return false;try{localStorage.setItem('darts.unlocked','1')}catch(e){}return true}
+function gameLocked(key){return !isUnlocked()&&!FREE_GAMES.has(key)}
+function startTurf(){if(S&&S.phase==='over'){S=null;history=[];ui.confirm=false;ui.review=false;save()}appMode='turf';csave();render()}
+function startFog(){if(S&&S.phase==='over'){S=null;history=[];save()}if(!S)setupDraft.fog=true;appMode='turf';csave();render()}
+function startClassicGame(gk){appMode='classic';cdraft.game=gk;if(cdraft.n<GAMES[gk].min)cdraft.n=GAMES[gk].min;if(cdraft.n>gMax(gk))cdraft.n=gMax(gk);cview='setup';csave();render()}
+function lockedHTML(){
+  if(!ui.locked)return'';
+  const lk=ui.locked;
+  const name=lk.act==='turf'?'Turf War':lk.act==='fog'?'Fog of War':GAMES[lk.game].name;
+  return`<div class="overlay" style="z-index:40"><div class="result" role="dialog" aria-label="Unlock ${esc(name)}">
+    <h2 class="winner" style="font-size:32px">🔒 ${esc(name)} is in the full app</h2>
+    <div style="color:var(--muted)">Cricket and 301/501 are free to play here. Every other game — Turf War, Siege, Heist, King of the Hill, Land Grab, Bounty, Dart Bingo, Sniper, Fog of War and the rest of the classics — comes with Bar Darts on the App Store. One price, every game, no ads.</div>
+    <a class="btn primary big" href="${APP_STORE_URL}" target="_blank" rel="noopener" style="text-align:center;text-decoration:none;justify-content:center">Get Bar Darts on the App Store</a>
+    <div style="border-top:1px solid var(--line);padding-top:14px">
+      <span class="fieldlabel">Have a code?</span>
+      <div style="display:flex;gap:8px;margin-top:6px">
+        <input id="unlockcode" maxlength="20" placeholder="Enter code" autocapitalize="characters" style="flex:1;background:var(--bg);border:1px solid var(--line);border-radius:8px;padding:9px 10px;color:var(--chalk);font:inherit">
+        <button type="button" class="btn" data-act="lock-unlock">Unlock</button>
+      </div>
+      ${lk.err?'<div style="color:#e2574c;font-size:13px;margin-top:6px">That code didn\'t work. Check it and try again.</div>':''}
+    </div>
+    <button type="button" class="btn big" data-act="lock-close">Not now</button>
+  </div></div>`
+}
 const BSTEAL=25,BBUST=10;
 const gMax=g=>GAMES[g].max||8;
 const CRICK=[20,19,18,17,16,15,25];
@@ -1157,31 +1188,32 @@ const atwTargets=()=>{const t=[];for(let i=1;i<=20;i++)t.push(i);if(C.opts.atwBu
 /* ---------- menu ---------- */
 function menuView(){
   const turfLive=S&&S.phase!=='over';const cLive=C&&C.phase==='play';
-  const card=(act,extra,title,tag,meta,cls='')=>`<button type="button" class="gcard ${cls}" data-act="${act}" ${extra}><span class="gname">${title}</span><span class="gtag">${tag}</span><span class="gmeta">${meta}</span></button>`;
+  const card=(act,extra,title,tag,meta,cls='',key=null)=>{const lk=key&&gameLocked(key);return`<button type="button" class="gcard ${cls}${lk?' locked':''}" data-act="${act}" ${extra}><span class="gname">${title}</span><span class="gtag">${tag}</span><span class="gmeta">${lk?'🔒 Full app':meta}</span></button>`};
   return`<div class="menu">
     <div class="menuhead"><div><div class="eyebrow">Tap a game to start</div><h1 class="menutitle">Pick your game</h1></div></div>
     ${turfLive||cLive?`<div class="resume">${turfLive?`<button class="btn big primary" data-act="g-turf">Resume Turf War · ${roundLabel().replace(/<[^>]+>/g,'')}</button>`:''}${cLive?`<button class="btn big primary" data-act="g-cresume">Resume ${esc(GAMES[C.game].name)} · round ${C.round}</button>`:''}</div>`:''}
+    ${isUnlocked()?'':'<div style="color:var(--muted);font-size:13px;margin:-8px 0 2px">Cricket and 301/501 are free to play here. Everything else comes with the app — or unlock it all with a code.</div>'}
     <div class="menugrid">
       <div class="menusep">Bar Darts originals</div>
-      ${card('g-turf','',gTitle('turf'),'Claim numbers, lock them, steal them, and chain neighbors for bonus points. Our house game.','2–10 players · solo or teams','feature')}
-      ${card('g-fog','',gTitle('fog'),'Turf War, but you can\'t see how strong anyone else\'s numbers are. A bullseye scouts the board.','2–10 players · Turf War variant')}
-      ${card('g-classic','data-game="grab"',gTitle('grab'),GAMES.grab.tag,'2–8 players · new house game')}
-      ${card('g-classic','data-game="siege"',gTitle('siege'),GAMES.siege.tag,'2–6 players · new house game')}
-      ${card('g-classic','data-game="heist"',gTitle('heist'),GAMES.heist.tag,'2–8 players · new house game')}
-      ${card('g-classic','data-game="king"',gTitle('king'),GAMES.king.tag,'2–8 players · new house game')}
-      ${card('g-classic','data-game="bounty"',gTitle('bounty'),GAMES.bounty.tag,'2–10 players · ends at High Noon')}
-      ${card('g-classic','data-game="bingo"',gTitle('bingo'),GAMES.bingo.tag,'1–8 players · 5×5 card, Bullseye in the middle')}
-      ${card('g-classic','data-game="sniper"',gTitle('sniper'),GAMES.sniper.tag,'Solo or up to 8 · saves your best score')}
+      ${card('g-turf','',gTitle('turf'),'Claim numbers, lock them, steal them, and chain neighbors for bonus points. Our house game.','2–10 players · solo or teams','feature','turf')}
+      ${card('g-fog','',gTitle('fog'),'Turf War, but you can\'t see how strong anyone else\'s numbers are. A bullseye scouts the board.','2–10 players · Turf War variant','','fog')}
+      ${card('g-classic','data-game="grab"',gTitle('grab'),GAMES.grab.tag,'2–8 players · new house game','','grab')}
+      ${card('g-classic','data-game="siege"',gTitle('siege'),GAMES.siege.tag,'2–6 players · new house game','','siege')}
+      ${card('g-classic','data-game="heist"',gTitle('heist'),GAMES.heist.tag,'2–8 players · new house game','','heist')}
+      ${card('g-classic','data-game="king"',gTitle('king'),GAMES.king.tag,'2–8 players · new house game','','king')}
+      ${card('g-classic','data-game="bounty"',gTitle('bounty'),GAMES.bounty.tag,'2–10 players · ends at High Noon','','bounty')}
+      ${card('g-classic','data-game="bingo"',gTitle('bingo'),GAMES.bingo.tag,'1–8 players · 5×5 card, Bullseye in the middle','','bingo')}
+      ${card('g-classic','data-game="sniper"',gTitle('sniper'),GAMES.sniper.tag,'Solo or up to 8 · saves your best score','','sniper')}
       <div class="menusep">Classic bar games</div>
-      ${card('g-classic','data-game="x01"',gTitle('x01'),GAMES.x01.tag,'1–8 players · double-out optional')}
-      ${card('g-classic','data-game="cricket"',gTitle('cricket'),GAMES.cricket.tag,'2–8 players · the bar classic')}
-      ${card('g-classic','data-game="atw"',gTitle('atw'),GAMES.atw.tag,'1–8 players · great for beginners')}
-      ${card('g-classic','data-game="killer"',gTitle('killer'),GAMES.killer.tag,'2–8 players · last one standing')}
-      ${card('g-classic','data-game="baseball"',gTitle('baseball'),GAMES.baseball.tag,'1–8 players · extra innings if tied')}
-      ${card('g-classic','data-game="knockout"',gTitle('knockout'),GAMES.knockout.tag,'2–8 players · lives, not points')}
+      ${card('g-classic','data-game="x01"',gTitle('x01'),GAMES.x01.tag,'1–8 players · double-out optional','','x01')}
+      ${card('g-classic','data-game="cricket"',gTitle('cricket'),GAMES.cricket.tag,'2–8 players · the bar classic','','cricket')}
+      ${card('g-classic','data-game="atw"',gTitle('atw'),GAMES.atw.tag,'1–8 players · great for beginners','','atw')}
+      ${card('g-classic','data-game="killer"',gTitle('killer'),GAMES.killer.tag,'2–8 players · last one standing','','killer')}
+      ${card('g-classic','data-game="baseball"',gTitle('baseball'),GAMES.baseball.tag,'1–8 players · extra innings if tied','','baseball')}
+      ${card('g-classic','data-game="knockout"',gTitle('knockout'),GAMES.knockout.tag,'2–8 players · lives, not points','','knockout')}
     </div>
     <div style="display:flex;align-items:center;gap:12px;flex-wrap:wrap;color:var(--muted);font-size:14px"><button type="button" class="btn" data-act="g-assist" aria-pressed="${assistOn()}">Tap assist: ${assistOn()?'On':'Off'}</button><span>Tap a number, then pick single, double or triple. Handy on phones.</span></div>
-    </div>`;
+    </div>${lockedHTML()}`;
 }
 
 /* ---------- setup ---------- */
@@ -1839,10 +1871,12 @@ function bindClassic(){
   $('#app').addEventListener('click',e=>{const b=e.target.closest('[data-act]');if(!b||b.disabled)return;const a=b.dataset.act;
     if(a==='g-assist'){setAssist(!assistOn());render();return}
     if(a==='g-menu'){appMode='menu';ui.cconfirm=false;csave();render();return}
-    if(a==='g-fog'){if(S&&S.phase==='over'){S=null;history=[];save()}if(!S)setupDraft.fog=true;appMode='turf';csave();render();return}
-    if(a==='g-turf'){if(S&&S.phase==='over'){S=null;history=[];ui.confirm=false;ui.review=false;save()}appMode='turf';csave();render();return}
-    if(a==='g-classic'){appMode='classic';cdraft.game=b.dataset.game;if(cdraft.n<GAMES[cdraft.game].min)cdraft.n=GAMES[cdraft.game].min;if(cdraft.n>gMax(cdraft.game))cdraft.n=gMax(cdraft.game);cview='setup';csave();render();return}
+    if(a==='g-fog'){if(gameLocked('fog')){ui.locked={act:'fog'};render();return}startFog();return}
+    if(a==='g-turf'){if(gameLocked('turf')){ui.locked={act:'turf'};render();return}startTurf();return}
+    if(a==='g-classic'){const gk=b.dataset.game;if(gameLocked(gk)){ui.locked={act:'classic',game:gk};render();return}startClassicGame(gk);return}
     if(a==='g-cresume'){appMode='classic';cview='game';csave();render();return}
+    if(a==='lock-close'){ui.locked=null;render();return}
+    if(a==='lock-unlock'){const inp=$('#unlockcode');if(tryUnlock(inp?inp.value:'')){const lk=ui.locked;ui.locked=null;if(lk.act==='turf')startTurf();else if(lk.act==='fog')startFog();else if(lk.act==='classic')startClassicGame(lk.game);else render()}else{ui.locked.err=true;render();const i=$('#unlockcode');if(i)i.focus()}return}
     if(!a.startsWith('c-'))return;
     if(a==='c-game'){readC();cdraft.game=b.dataset.v;if(cdraft.n<GAMES[cdraft.game].min)cdraft.n=GAMES[cdraft.game].min;if(cdraft.n>gMax(cdraft.game))cdraft.n=gMax(cdraft.game);csave();renderClassic()}
     if(a==='c-n'){readC();cdraft.n=+b.dataset.v;csave();renderClassic()}
@@ -1907,6 +1941,8 @@ document.addEventListener('keydown',e=>{
   if(ae&&(ae.tagName==='BUTTON'||ae.tagName==='SUMMARY'||ae.tagName==='A'))return; // let the focused control handle its own Enter
   // settings panel open: Enter saves
   if(ui.settings){const b=document.querySelector('[data-act="set-save"]');if(b){e.preventDefault();b.click()}return}
+  // unlock modal open: Enter submits the code
+  if(ui.locked){const b=document.querySelector('[data-act="lock-unlock"]');if(b){e.preventDefault();b.click()}return}
   // setup screen: Enter moves to the next name box, then starts the game
   if(!S){const st=$('#start');if(!st)return;e.preventDefault();
     const ins=[...document.querySelectorAll('.setup input')];const i=ins.indexOf(ae);
