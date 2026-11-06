@@ -354,7 +354,7 @@ export const apps: AppListing[] = [
       { src: "/apps/bar-darts/screenshots/07-x01.png", width: 1284, height: 2778 },
     ],
     features: ["Turf War", "Fog of War", "Land Grab", "Siege", "Heist", "King of the Hill", "Bounty", "Dart Bingo", "Pirate Bingo", "Sniper", "X01", "Cricket", "Around the World", "Killer", "Baseball", "Knockout"],
-    appStoreUrl: undefined,
+    appStoreUrl: "https://apps.apple.com/us/app/bar-darts/id6825570461",
     webAppUrl: "/apps/bar-darts/play",
   },
 ];
