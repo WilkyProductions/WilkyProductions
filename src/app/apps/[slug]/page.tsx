@@ -69,6 +69,8 @@ export default async function AppDetailPage({
               {app.webAppUrl && (
                 <a
                   href={app.webAppUrl}
+                  target="_blank"
+                  rel="noopener noreferrer"
                   className="rounded-sm bg-accent px-6 py-3 text-sm font-semibold uppercase tracking-wide text-black transition-colors hover:bg-accent-dark"
                 >
                   Play in your browser
