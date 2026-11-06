@@ -181,6 +181,13 @@ export const designCategories: { title: string; items: Photo[] }[] = [
 
 export const websiteDesignExamples: Photo[] = [
   {
+    src: "/design/Webdesign5.jpg",
+    alt: "Golden State Glazing website preview",
+    width: 1600,
+    height: 1347,
+    href: "https://goldenstateglazing.info/",
+  },
+  {
     src: "/design/Webdesign3.jpg",
     alt: "M81 Designs website preview",
     width: 1600,
