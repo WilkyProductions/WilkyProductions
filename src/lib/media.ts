@@ -299,6 +299,8 @@ export type AppListing = {
   features: string[];
   appStoreUrl?: string;
   playStoreUrl?: string;
+  /** Installable web version that runs in the browser. */
+  webAppUrl?: string;
 };
 
 export const apps: AppListing[] = [
@@ -344,7 +346,8 @@ export const apps: AppListing[] = [
       { src: "/apps/bar-darts/screenshots/06-cricket.png", width: 1284, height: 2778 },
       { src: "/apps/bar-darts/screenshots/07-x01.png", width: 1284, height: 2778 },
     ],
-    features: ["X01", "Cricket", "Bingo", "Bounty", "Turf War"],
+    features: ["Turf War", "Fog of War", "Land Grab", "Siege", "Heist", "King of the Hill", "Bounty", "Dart Bingo", "Pirate Bingo", "Sniper", "X01", "Cricket", "Around the World", "Killer", "Baseball", "Knockout"],
     appStoreUrl: undefined,
+    webAppUrl: "/apps/bar-darts/play",
   },
 ];

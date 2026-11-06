@@ -66,6 +66,14 @@ export default async function AppDetailPage({
                   Coming soon to the App Store
                 </span>
               )}
+              {app.webAppUrl && (
+                <a
+                  href={app.webAppUrl}
+                  className="rounded-sm bg-accent px-6 py-3 text-sm font-semibold uppercase tracking-wide text-black transition-colors hover:bg-accent-dark"
+                >
+                  Play in your browser
+                </a>
+              )}
               {app.playStoreUrl && (
                 <a
                   href={app.playStoreUrl}
